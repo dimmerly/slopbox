@@ -1,0 +1,6 @@
+<Project>
+  <!-- Add shared NuGet or project references here. Prowl preserves this file. -->
+  <ItemGroup />
+  <!-- Editor-only references belong in this group. -->
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Editor'))" />
+</Project>

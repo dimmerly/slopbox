@@ -1,0 +1,546 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.Resources.Scene, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "serializeObj": {
+    "$id": 2,
+    "array": [
+      {
+        "$id": 3,
+        "Name": "Game",
+        "Identifier": "c6b7583c-d064-4d91-b1c6-ead98fa61239",
+        "Static": 0B,
+        "Enabled": 1B,
+        "EnabledInHierarchy": 1B,
+        "TagIndex": 0,
+        "LayerIndex": 0,
+        "HideFlags": 0,
+        "Transform": {
+          "$id": 4,
+          "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+          "_localPosition": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F
+          },
+          "_localScale": {
+            "X": 1F,
+            "Y": 1F,
+            "Z": 1F
+          },
+          "_localRotation": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F,
+            "W": 1F
+          }
+        },
+        "Components": [
+          {
+            "$id": 5,
+            "$type": "Slopbox.GameManager, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "DefaultSpawn": {
+              "X": 0F,
+              "Y": 0.1F,
+              "Z": 0F
+            },
+            "KillHeight": -100F,
+            "Gravity": 15.2F,
+            "PropsFolder": "props",
+            "DefaultCameraEffects": true,
+            "_identifier": "b010fd1d-b7d6-44ab-bf28-d68772cbd70f",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "GameManager"
+          }
+        ],
+        "Children": [
+
+        ]
+      },
+      {
+        "$id": 6,
+        "Name": "Spawn",
+        "Identifier": "d6bc2eb4-5c41-4f59-827d-6704117885f4",
+        "Static": 0B,
+        "Enabled": 1B,
+        "EnabledInHierarchy": 1B,
+        "TagIndex": 0,
+        "LayerIndex": 0,
+        "HideFlags": 0,
+        "Transform": {
+          "$id": 7,
+          "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+          "_localPosition": {
+            "X": 0F,
+            "Y": 0.05F,
+            "Z": -4F
+          },
+          "_localScale": {
+            "X": 1F,
+            "Y": 1F,
+            "Z": 1F
+          },
+          "_localRotation": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F,
+            "W": 1F
+          }
+        },
+        "Components": [
+          {
+            "$id": 8,
+            "$type": "Slopbox.SpawnPoint, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "_identifier": "2daf06a1-bf96-4fd6-9792-31addf2e2cc8",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "SpawnPoint"
+          }
+        ],
+        "Children": [
+
+        ]
+      },
+      {
+        "$id": 9,
+        "Name": "Main Camera",
+        "Identifier": "e3a794eb-fc50-4309-b2ea-cac7b513d826",
+        "Static": 0B,
+        "Enabled": 1B,
+        "EnabledInHierarchy": 1B,
+        "TagIndex": 1,
+        "LayerIndex": 0,
+        "HideFlags": 0,
+        "Transform": {
+          "$id": 10,
+          "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+          "_localPosition": {
+            "X": 0F,
+            "Y": 5F,
+            "Z": -15F
+          },
+          "_localScale": {
+            "X": 1F,
+            "Y": 1F,
+            "Z": 1F
+          },
+          "_localRotation": {
+            "X": 0.1305262F,
+            "Y": 0F,
+            "Z": 0F,
+            "W": 0.9914449F
+          }
+        },
+        "Components": [
+          {
+            "$id": 11,
+            "$type": "Prowl.Runtime.Camera, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "PostProcessing": true,
+            "Profile": NULL,
+            "VolumeMask": {
+              "mask": 4294967295U
+            },
+            "VolumeTrigger": NULL,
+            "AntiAliasing": 0L,
+            "Fxaa": {
+              "$id": 12,
+              "EdgeThresholdMax": 0.0625F,
+              "EdgeThresholdMin": 0.0312F,
+              "SubpixelQuality": 0.75F
+            },
+            "Smaa": {
+              "$id": 13,
+              "EdgeThreshold": 0.1F
+            },
+            "Taa": {
+              "$id": 14,
+              "BlendFactor": 0.95F,
+              "MotionBlendFactor": 0.85F,
+              "MotionScale": 2F,
+              "Sharpness": 0.025F,
+              "JitterSpread": 8
+            },
+            "Background": 0L,
+            "BackgroundColor": {
+              "R": 0F,
+              "G": 0F,
+              "B": 0F,
+              "A": 1F
+            },
+            "CullingMask": {
+              "mask": 4294967295U
+            },
+            "ProjectionMode": 0L,
+            "FieldOfView": 60F,
+            "OrthographicSize": 5F,
+            "NearClipPlane": 0.1F,
+            "FarClipPlane": 100F,
+            "ViewportRect": {
+              "X": 0F,
+              "Y": 0F,
+              "Z": 1F,
+              "W": 1F
+            },
+            "Depth": -1,
+            "Target": NULL,
+            "RenderScale": 1F,
+            "StereoTargetEye": 3L,
+            "_identifier": "9f382385-63bd-46c4-8d8f-388f75f4c1b8",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "NewCamera"
+          }
+        ],
+        "Children": [
+
+        ]
+      },
+      {
+        "$id": 15,
+        "Name": "Directional Light",
+        "Identifier": "ed9f8ece-5cba-4c9b-b61d-61958adee992",
+        "Static": 0B,
+        "Enabled": 1B,
+        "EnabledInHierarchy": 1B,
+        "TagIndex": 0,
+        "LayerIndex": 0,
+        "HideFlags": 0,
+        "Transform": {
+          "$id": 16,
+          "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+          "_localPosition": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F
+          },
+          "_localScale": {
+            "X": 1F,
+            "Y": 1F,
+            "Z": 1F
+          },
+          "_localRotation": {
+            "X": -0.1464466F,
+            "Y": 0.8535534F,
+            "Z": -0.3535534F,
+            "W": -0.35355335F
+          }
+        },
+        "Components": [
+          {
+            "$id": 17,
+            "$type": "Prowl.Runtime.Light, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "Type": 0L,
+            "Color": {
+              "R": 1F,
+              "G": 1F,
+              "B": 1F,
+              "A": 1F
+            },
+            "Intensity": 1F,
+            "Range": 10F,
+            "InnerAngle": 30F,
+            "OuterAngle": 45F,
+            "Width": 1F,
+            "Height": 1F,
+            "Length": 1F,
+            "SourceRadius": 0F,
+            "AngularRadius": 0.27F,
+            "Cookie": NULL,
+            "IesProfile": NULL,
+            "LayerMask": {
+              "mask": 4294967295U
+            },
+            "CastShadows": true,
+            "ShadowStrength": 1F,
+            "ShadowResolution": 1024L,
+            "ShadowFilter": 1L,
+            "DepthBias": 1F,
+            "NormalBias": 1F,
+            "Cascades": 2L,
+            "ShadowDistance": 50F,
+            "CascadeBlend": 0.1F,
+            "BakeMode": 0L,
+            "_identifier": "348e6aa8-cd76-4393-a5bc-9c2be9779bc7",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "NewDirectionalLight"
+          }
+        ],
+        "Children": [
+
+        ]
+      },
+      {
+        "$id": 18,
+        "Name": "Floor",
+        "Identifier": "59664926-be8a-4758-928e-0bdb3046d3e2",
+        "Static": 0B,
+        "Enabled": 1B,
+        "EnabledInHierarchy": 1B,
+        "TagIndex": 0,
+        "LayerIndex": 0,
+        "HideFlags": 0,
+        "Transform": {
+          "$id": 19,
+          "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+          "_localPosition": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F
+          },
+          "_localScale": {
+            "X": 6F,
+            "Y": 0F,
+            "Z": 6F
+          },
+          "_localRotation": {
+            "X": 0F,
+            "Y": 0F,
+            "Z": 0F,
+            "W": 1F
+          }
+        },
+        "Components": [
+          {
+            "$id": 20,
+            "$type": "Prowl.Runtime.MeshRenderer, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "Mesh": {
+              "$asset": "38151a92-9ae6-525d-b9cd-13fbcd700c8a"
+            },
+            "Materials": {
+              "$id": 21,
+              "$values": [
+                {
+                  "$asset": "0858c848-9450-4e38-a310-140b4c9c7fa8"
+                }
+              ]
+            },
+            "ShadowCasting": 1L,
+            "ReceiveShadows": true,
+            "_identifier": "3af79c2c-b546-4797-b63b-b774229fd235",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "NewMeshRenderer"
+          },
+          {
+            "$id": 22,
+            "$type": "Prowl.Runtime.BoxCollider, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "size": {
+              "X": 10F,
+              "Y": 0.01F,
+              "Z": 10F
+            },
+            "center": {
+              "X": 0F,
+              "Y": 0F,
+              "Z": 0F
+            },
+            "rotation": {
+              "X": 0F,
+              "Y": 0F,
+              "Z": 0F
+            },
+            "_identifier": "13ca492a-5d5a-4758-923c-9fc1166d9614",
+            "_enabled": true,
+            "_enabledInHierarchy": true,
+            "HideFlags": 0L,
+            "Name": "NewBoxCollider"
+          }
+        ],
+        "Children": [
+
+        ]
+      }
+    ]
+  },
+  "Environment": {
+    "$id": 23,
+    "SkyMaterial": {
+      "$id": 24,
+      "_shader": {
+        "$asset": "73295c5c-0e55-4550-ae74-f13cd62796d2"
+      },
+      "_parent": NULL,
+      "_properties": {
+        "$id": 25,
+        "_colors": {
+          "$id": 26,
+          "entries": [
+
+          ]
+        },
+        "_vectors2": {
+          "$id": 27,
+          "entries": [
+
+          ]
+        },
+        "_vectors3": {
+          "$id": 28,
+          "entries": [
+
+          ]
+        },
+        "_vectors4": {
+          "$id": 29,
+          "entries": [
+
+          ]
+        },
+        "_floats": {
+          "$id": 30,
+          "entries": [
+
+          ]
+        },
+        "_ints": {
+          "$id": 31,
+          "entries": [
+
+          ]
+        },
+        "_matrices": {
+          "$id": 32,
+          "entries": [
+
+          ]
+        },
+        "_textures": {
+          "$id": 33,
+          "entries": [
+
+          ]
+        },
+        "_textures3D": {
+          "$id": 34,
+          "entries": [
+
+          ]
+        },
+        "_texturesCube": {
+          "$id": 35,
+          "entries": [
+
+          ]
+        }
+      },
+      "_overrides": {
+        "$id": 36,
+        "$values": [
+
+        ]
+      },
+      "_keywords": {
+        "$id": 37,
+        "entries": [
+
+        ]
+      },
+      "_renderQueue": -1,
+      "_castShadows": true,
+      "_surface": NULL,
+      "Name": "Procedural Sky"
+    },
+    "SkyColor": {
+      "R": 0.2F,
+      "G": 0.3F,
+      "B": 0.5F,
+      "A": 1F
+    },
+    "Ambient": {
+      "Mode": 0L,
+      "Intensity": 1F,
+      "Color": {
+        "R": 0.43F,
+        "G": 0.55F,
+        "B": 0.65F,
+        "A": 1F
+      },
+      "SkyColor": {
+        "R": 0.3F,
+        "G": 0.3F,
+        "B": 0.4F,
+        "A": 1F
+      },
+      "GroundColor": {
+        "R": 0.2F,
+        "G": 0.2F,
+        "B": 0.2F,
+        "A": 1F
+      }
+    },
+    "Fog": {
+      "Mode": 3L,
+      "Color": {
+        "R": 0.5F,
+        "G": 0.5F,
+        "B": 0.5F,
+        "A": 1F
+      },
+      "Density": 0.01F,
+      "Start": 20F,
+      "End": 100F,
+      "UseSky": false
+    },
+    "SkyCapture": {
+      "Mode": 0L,
+      "Resolution": 128,
+      "Interval": 2
+    }
+  },
+  "BakedLighting": {
+    "$id": 38,
+    "Lightmaps": {
+      "$id": 39,
+      "$values": [
+
+      ]
+    },
+    "Placements": {
+      "$id": 40,
+      "entries": [
+
+      ]
+    },
+    "ProbePositions": {
+      "$id": 41,
+      "array": [
+
+      ]
+    },
+    "ProbeSH": {
+      "$id": 42,
+      "array": [
+
+      ]
+    },
+    "ProbeTetrahedra": {
+      "$id": 43,
+      "array": [
+
+      ]
+    },
+    "ProbeTetNeighbours": {
+      "$id": 43
+    }
+  },
+  "LightmapBake": {
+    "$id": 44,
+    "AtlasSize": 1024,
+    "TexelsPerUnit": 20F,
+    "DilatePixels": 2,
+    "Bounces": 2,
+    "Samples": 64,
+    "ProbeSamples": 256,
+    "DoBackfaceCull": false,
+    "SparseStride": 1,
+    "BakeSkyLighting": false,
+    "IgnoreAlbedo": false
+  },
+  "Name": "flatgrass"
+}

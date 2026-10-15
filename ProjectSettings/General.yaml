@@ -1,0 +1,6 @@
+CompanyName: "DefaultCompany"
+ProductName: "My Game"
+Version: "0.1.0"
+LastScenePath: "scenes/flatgrass.scene"
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.GeneralSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

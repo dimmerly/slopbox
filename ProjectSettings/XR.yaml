@@ -1,0 +1,6 @@
+StartInPlayMode: false
+StartInPlayer: false
+TrackingOrigin: 0
+RenderScale: 1
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.XRSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

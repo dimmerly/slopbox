@@ -1,0 +1,16 @@
+Library/
+Temp/
+Logs/
+Backups/
+*.csproj
+*.sln
+*.slnx
+.vs/
+bin/
+obj/
+# MacOS
+.DS_Store
+
+.idea/
+
+Builds/

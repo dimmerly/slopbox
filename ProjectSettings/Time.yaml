@@ -1,0 +1,5 @@
+FixedTimestep: 0.016666668
+MaxFixedIterations: 3
+DefaultTimeScale: 1
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.TimeSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
