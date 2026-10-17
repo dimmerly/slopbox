@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Prowl.Graphite.ShaderDef.Compiler</name>
+    </assembly>
+    <members>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslStageSource">
+            <summary>
+            One preprocessed stage: its tokens and top level declarations, rewritten against a program layout.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslStageSource.Locate(System.Int32)">
+            <summary>
+            Maps a text offset back to the file and line named by the preceding #line directive.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslStageSource.Rewrite(Prowl.Graphite.ShaderDef.Compiler.GlslProgramLayout)">
+            <summary>
+            Applies the program layout: the merged uniform block, bindings, locations and Vulkan builtins.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslStageSource.ApplyMaterial(Prowl.Graphite.ShaderDef.MaterialAbi,System.Collections.Generic.IReadOnlyList{Prowl.Graphite.ShaderDef.ShaderGlobal},System.Boolean@)">
+            <summary>
+            Puts the material ABI in place of the stage's loose uniforms, before the program is laid out. Properties and the
+            pass's globals become macros over the ABI's reads, other loose uniforms an error where they are used, and a stage
+            reading a property or global starts with the ABI's declarations it does not make itself.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslProgramLayout">
+            <summary>
+            Bindings, locations and the merged uniform block of one program, shared by all of its stages.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.ShaderCompileException">
+            <summary>
+            A shader failed to compile. The message lists every diagnostic as file:line: error: text.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.ShaderCompileException.#ctor(System.String)">
+            <summary>
+            A shader failed to compile. The message lists every diagnostic as file:line: error: text.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions">
+            <summary>
+            Settings for <see cref="T:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler"/>.
+            </summary>
+        </member>
+        <member name="F:Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions.ResolveInclude">
+            <summary>
+            Resolves an include that is not part of the Graphite library: (name, including file) to source, or null when missing.
+            </summary>
+        </member>
+        <member name="F:Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions.Optimize">
+            <summary>
+            Runs the SPIR-V optimizer.
+            </summary>
+        </member>
+        <member name="F:Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions.Defines">
+            <summary>
+            Macros defined for every stage of every shader.
+            </summary>
+        </member>
+        <member name="F:Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions.CacheDirectory">
+            <summary>
+            A folder compiled SPIR-V is kept in across runs, keyed by the stage's full source and settings, so a variant
+            compiles once per machine. Null keeps compiled stages in memory only.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslProgram">
+            <summary>
+            A compiled program variant.
+            </summary>
+        </member>
+        <member name="P:Prowl.Graphite.ShaderDef.Compiler.GlslProgram.Description">
+            <summary>
+            Stages, vertex inputs and resource layouts. Render state is applied by the pass at bind time.
+            </summary>
+        </member>
+        <member name="P:Prowl.Graphite.ShaderDef.Compiler.GlslProgram.ThreadGroupSize">
+            <summary>
+            Thread group size of a compute program.
+            </summary>
+        </member>
+        <member name="P:Prowl.Graphite.ShaderDef.Compiler.GlslProgram.Warnings">
+            <summary>
+            Compiler warnings, empty when there were none.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslProgram.ToCompute">
+            <summary>
+            The compute description of a compute program.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler">
+            <summary>
+            Compiles GLSLPROGRAM passes to SPIR-V through Prism. Thread safe, one instance can serve every shader.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.#ctor(Prowl.Graphite.ShaderDef.Compiler.GlslCompilerOptions)">
+            <summary>
+            Makes a compiler.
+            </summary>
+        </member>
+        <member name="P:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.SessionVersion">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.Invalidate">
+            <summary>
+            Call after included files change, so cached axes are rescanned and failed variants retry.
+            </summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.GetAxes(Prowl.Graphite.ShaderDef.ShaderPass)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.GetGlobals(Prowl.Graphite.ShaderDef.ShaderPass)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.Compile(Prowl.Graphite.ShaderDef.ShaderPass,Prowl.Graphite.ShaderDef.Keyword[],Prowl.Graphite.GraphicsBackend)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.CompileCompute(Prowl.Graphite.ShaderDef.ShaderPass,Prowl.Graphite.ShaderDef.Keyword[],Prowl.Graphite.GraphicsBackend)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslShaderCompiler.CompileProgram(Prowl.Graphite.ShaderDef.ShaderPass,System.ReadOnlySpan{Prowl.Graphite.ShaderDef.Keyword})">
+            <summary>
+            Compiles one variant of a pass, keeping the compute thread group size and the warnings.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslSection">
+            <summary>
+            A Shared, Vertex, Fragment or Compute section of a GLSLPROGRAM block.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.GlslPragmas">
+            <summary>
+            The pragmas and directives the compiler handles itself.
+            </summary>
+        </member>
+        <member name="F:Prowl.Graphite.ShaderDef.Compiler.GlslPragmas.GlobalTypes">
+            <summary>The GLSL types a global pragma can declare.</summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslPragmas.IsGraphitePragma(System.String)">
+            <summary>True for the variant and global pragmas, which only Graphite reads and which are removed before compiling.</summary>
+        </member>
+        <member name="M:Prowl.Graphite.ShaderDef.Compiler.GlslPragmas.Collect(System.String,System.String,System.Collections.Generic.List{Prowl.Graphite.ShaderDef.VariantSpace},System.Collections.Generic.List{Prowl.Graphite.ShaderDef.ShaderGlobal},System.Collections.Generic.HashSet{System.String},System.Func{System.String,System.String,System.String})">
+            <summary>
+            Collects every variant and global pragma of a source and of everything it includes, whether or not the include
+            is active.
+            </summary>
+        </member>
+        <member name="T:Prowl.Graphite.ShaderDef.Compiler.SpirvReflector">
+            <summary>
+            Reads resources, vertex inputs and the thread group size out of SPIR-V. Names come from the front end
+            layout, keyed by the bindings and locations it assigned, because optimized SPIR-V carries none.
+            </summary>
+        </member>
+    </members>
+</doc>

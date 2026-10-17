@@ -16,8 +16,8 @@ PlatformProfiles:
   $values:
     - Platform: 0
       SelectedTargetId: ""
-      SelfContained: false
-      PublishTrimmed: false
+      SelfContained: true
+      PublishTrimmed: true
       PublishAot: false
       WindowWidth: 1920
       WindowHeight: 1080

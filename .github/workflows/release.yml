@@ -1,0 +1,32 @@
+name: Release
+
+# Builds are made in the Prowl editor and committed to Builds/Slopbox. Whenever that folder changes on main,
+# it is zipped and published as a new release.
+on:
+  push:
+    branches: [main]
+    paths: ["Builds/Slopbox/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package
+        id: package
+        run: |
+          tag="build-$(date -u +%Y%m%d-%H%M)-${GITHUB_SHA::7}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          (cd Builds && zip -qr "../Slopbox-windows.zip" Slopbox)
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ steps.package.outputs.tag }}" Slopbox-windows.zip
+          --target "$GITHUB_SHA" --title "Slopbox ${{ steps.package.outputs.tag }}" --generate-notes --latest

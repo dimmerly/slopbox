@@ -1,0 +1,6 @@
+GracePeriodSeconds: 10
+MemoryBudgetMB: 0
+GenerateMeshSDFs: false
+SDFVoxelSize: 0.1
+SDFMaxResolution: 128
+$id: 1

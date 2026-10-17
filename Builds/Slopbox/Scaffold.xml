@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Scaffold</name>
+    </assembly>
+    <members>
+        <member name="T:Prowl.Scaffold.LayoutTree">
+            <summary>A single-threaded persistent layout forest. Storage grows only on creation/Reserve.
+            Geometry is parent-local. GetWorldRect composes origins without walking unchanged descendants.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.LayoutTree.MeasureCache">
+            <summary>The four most recent measurements of one node. A node is commonly measured under a
+            handful of constraints per pass (natural, then forced main and/or cross), so keeping the last
+            few avoids re-running content callbacks within a single layout.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.GetContentRect(Prowl.Scaffold.NodeId)">
+            <summary>The area inside a node's padding, relative to the node's own top left. This is where
+            measured content such as text belongs, since it was measured to fit exactly this size.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.SetStyle(Prowl.Scaffold.NodeId,Prowl.Scaffold.Style@)">
+            <summary>Exact value comparison: declaring an identical style does not invalidate layout.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.SetMeasure(Prowl.Scaffold.NodeId,Prowl.Scaffold.MeasureContent,System.Object)">
+            <summary>Register the intrinsic measurement for a node. Always invalidates: the context is
+            opaque, so re-declaring is the caller saying the content may have moved. Register once and
+            use <see cref="M:Prowl.Scaffold.LayoutTree.MarkDirty(Prowl.Scaffold.NodeId)"/> for updates if you want to keep a node's measurement cached.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.Detach(Prowl.Scaffold.NodeId)">
+            <summary>Turn a subtree into a root without destroying its nodes or cached geometry.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.MarkSubtreeDirty(Prowl.Scaffold.NodeId)">
+            <summary>Invalidate every measurement in a subtree, e.g. after a global font/DPI change.
+            Visits the subtree once, then propagates through its ancestors once.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.PlaceAfter(Prowl.Scaffold.NodeId,Prowl.Scaffold.NodeId,Prowl.Scaffold.NodeId)">
+            <summary>Move a subtree, or reorder it immediately after a sibling. Default after means first.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.Remove(Prowl.Scaffold.NodeId)">
+            <summary>Remove a subtree and invalidate every handle into it.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.Layout(Prowl.Scaffold.NodeId,Prowl.Scaffold.Size)">
+            <summary>Lay out a root into an exact viewport. Clean repeated calls are O(1).
+            Root width/height are overridden by the viewport. Padding and child layout still apply.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.ValidateBound(Prowl.Scaffold.Length,System.String)">
+            <summary>Size bounds take pixels and percentages. Intrinsic content and flex weights are
+            properties of a size, not of a limit on one.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.GetSubtreeCount(Prowl.Scaffold.NodeId)">
+            <summary>Count this node and all its descendants in O(subtree size).</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.CopyWorldRects(Prowl.Scaffold.NodeId,System.Span{Prowl.Scaffold.LayoutResult})">
+            <summary>Copy a subtree in parent-first hierarchy order to caller-owned storage.
+            Returns entries written, including hidden nodes (zero rectangles). O(subtree size + depth),
+            zero allocations. An undersized destination throws before writing anything.
+            Call after successful Layout. Sibling order follows the tree, unaffected by Style.Reverse.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.LayoutTree.Resolved">
+            <summary>A style with its percentage-bearing lengths collapsed against a known available
+            size. Everything else passes straight through to the declared style.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutTree.MeasureFlow(System.Int32,System.Int32,Prowl.Scaffold.Size,System.Boolean,System.Single,System.Boolean)">
+            <summary>Measure one flow child. While the parent's cross axis is still intrinsic, a stretching
+            child resolves to its own natural size: stretching against the provisional available space
+            would let an empty spacer inflate an auto-sized container to the whole viewport.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.LayoutResult">
+            <summary>A node identity and its world rectangle, produced by CopyWorldRects.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutResult.#ctor(Prowl.Scaffold.NodeId,Prowl.Scaffold.Rect)">
+            <summary>A node identity and its world rectangle, produced by CopyWorldRects.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.Length">
+            <summary>Pixel + percentage (0-100) + intrinsic content, with flex grow/shrink weights.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.Length.#ctor(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>Pixel + percentage (0-100) + intrinsic content, with flex grow/shrink weights.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.LengthEdges">
+            <summary>Box edges that each carry a full <see cref="T:Prowl.Scaffold.Length"/>, so pixels, percentages and
+            grow weights travel together instead of in parallel fields.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LengthEdges.#ctor(Prowl.Scaffold.Length,Prowl.Scaffold.Length,Prowl.Scaffold.Length,Prowl.Scaffold.Length)">
+            <summary>Box edges that each carry a full <see cref="T:Prowl.Scaffold.Length"/>, so pixels, percentages and
+            grow weights travel together instead of in parallel fields.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.Style">
+            <summary>Immutable value inputs. Use Style.Default, then with-expressions. A default(Style) is a zero-sized box.</summary>
+        </member>
+        <member name="P:Prowl.Scaffold.Style.MinWidth">
+            <summary>Size bounds in pixels, percent of the parent, or both. Percentages replace the
+            default rather than adding to it, so MaxWidth = Length.Percentage(50) means exactly half.</summary>
+        </member>
+        <member name="P:Prowl.Scaffold.Style.Margin">
+            <summary>Edge spacing. A grow weight here makes the edge a flexible spacer that shares
+            surplus with the element's own grow dimension.</summary>
+        </member>
+        <member name="P:Prowl.Scaffold.Style.Left">
+            <summary>Offsets of an absolute element from its parent's content box, in pixels, percent of
+            that box, or both. Null leaves the edge free.</summary>
+        </member>
+        <member name="P:Prowl.Scaffold.Style.AspectRatio">
+            <summary>Width / height. Derives an auto axis from a definite axis. Zero disables.</summary>
+        </member>
+        <member name="P:Prowl.Scaffold.Style.GridColumns">
+            <summary>Number of equal-width grid columns. Rows size to their tallest item.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.NodeId">
+            <summary>Owner- and generation-checked node identity. Default is an invalid handle.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.MeasureContent">
+            <summary>Measure intrinsic content in the supplied nonnegative finite available space.
+            Register it once and call MarkDirty when its external content changes. Re-registering
+            through SetMeasure always invalidates. Must not mutate the tree.</summary>
+        </member>
+        <member name="T:Prowl.Scaffold.LayoutStatistics">
+            <summary>Work-operation counts from the last Layout call. A node measured under multiple
+            constraints contributes multiple measurements. These are not distinct-node counts.</summary>
+        </member>
+        <member name="M:Prowl.Scaffold.LayoutStatistics.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>Work-operation counts from the last Layout call. A node measured under multiple
+            constraints contributes multiple measurements. These are not distinct-node counts.</summary>
+        </member>
+    </members>
+</doc>

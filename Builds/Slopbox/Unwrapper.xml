@@ -1,0 +1,800 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Unwrapper</name>
+    </assembly>
+    <members>
+        <member name="T:Prowl.Unwrapper.AtlasPacker">
+            <summary>
+            Drives the chart atlas layout: every chart is sorted by extent and fed into a bin packer at a
+            shared scale, and the largest scale that still fits is found by bisection.
+            Successful placements are baked back into each chart's UVs.
+            </summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.AtlasPacker.ScaleTolerance">
+            <summary>Bisection stops once the bracket is this close in relative terms.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.AtlasPacker.TryPackAt(Prowl.Unwrapper.AtlasSlot[],Prowl.Unwrapper.BinRect[],Prowl.Unwrapper.BinPackTree,System.Double,System.Double)">
+            <summary>Lay every chart out at one shared scale; false if any of them ran out of room.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.AtlasPacker.CompareByOrigin3D(Prowl.Unwrapper.AtlasSlot,Prowl.Unwrapper.AtlasSlot)">
+            <summary>
+            Lexicographic by 3D centroid, descending — only matters as a tiebreaker when two charts have
+            identical extents and need a deterministic ordering.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.AtlasPacker.StableSortByExtentDesc(System.Int32[],Prowl.Unwrapper.AtlasSlot[])">
+            <summary>Stable sort by (Extent.X, Extent.Y) descending; uses original position as the tiebreaker.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.AtlasSlot">
+            <summary>
+            Per-chart book-keeping for the packer. Stores both source (pre-scale) and current iteration
+            origin/extent so the outer scale loop can rescale without losing the original layout.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.AtlasSlot.Rescale(System.Double)">
+            <summary>Apply a uniform scale; <see cref="F:Prowl.Unwrapper.AtlasSlot.SourceExtent"/> is preserved as the unscaled reference.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.BinRect">
+            <summary>One rectangle being placed by <see cref="T:Prowl.Unwrapper.BinPackTree"/>.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.BinPackTree">
+            <summary>
+            Recursive binary bin packer. Each leaf is either free or filled; on insert we split a node
+            into a child that exactly fits the new rectangle and a sibling holding the leftover.
+            </summary>
+            <remarks>
+            Every node carries the largest free width and height anywhere beneath it, so a search can skip
+            a whole subtree instead of walking to its leaves. Without that, placing the n-th rectangle
+            costs a full tree walk and packing an atlas of thousands of charts goes quadratic.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.BinPackTree.TryInsert(Prowl.Unwrapper.BinRect@,System.Double)">
+            <summary>Attempt to place <paramref name="rect"/>. On success, its origin is filled in.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.BinPackTree.PropagateFreeExtents(System.Int32)">
+            <summary>Refresh cached free extents up the ancestor chain, stopping once nothing changes.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.CgSolver">
+            <summary>
+            Preconditioned conjugate-gradient solver for sparse, symmetric, positive-definite systems.
+            Drives both the angle-based flattening solve and the conformal-map least-squares solve.
+            </summary>
+            <remarks>
+            Instances cache the four N-sized scratch buffers (<c>r</c>, <c>p</c>, <c>z</c>, <c>g</c>)
+            and grow them on demand. Reusing one <see cref="T:Prowl.Unwrapper.CgSolver"/> across many solves with similar
+            sizes avoids the per-call allocation cost — significant when the merge loop runs hundreds
+            of small CG solves per region.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.CgSolver.Solve(System.Int32,Prowl.Unwrapper.SparseMatrix,Prowl.Unwrapper.SparseMatrix,System.Double[],System.Double[],System.Double,System.Int32)">
+            <summary>
+            Solve <c>A * x = b</c>. <paramref name="x"/> is the initial guess on entry and the
+            solution on return; the number of iterations actually executed is returned.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ChartBuilder">
+            <summary>
+            Builds UV charts from a mesh region using Lloyd-style iterative clustering.
+            Each chart maintains a planar "proxy" (a centre + normal) and grows greedily into the
+            best-fitting facets; an outer loop re-fits proxies and re-seeds until things settle.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ChartBuilder.Candidate">
+            <summary>
+            Candidate facet sitting on a chart's frontier. Priority is an error score, so lower is a
+            better fit and gets added sooner. Frontiers are kept sorted descending for that reason.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ChartBuilder.ChartBoundary">
+            <summary>
+            An adjacent pair of charts. After the Lloyd loop converges, these are ranked by how
+            well a single proxy would still fit the union — the lowest-error pairs get merged.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.InitialiseWithForcedSplit(System.Double)">
+            <summary>Force at least two charts even on uniform regions (used during force-resegmentation).</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.RunLloydPass(System.Int32,System.Double)">
+            <summary>
+            Run <paramref name="innerIters"/> Lloyd iterations. Returns <c>false</c> when the
+            segmentation has stabilised (most facets keep the same chart across iterations).
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.ClaimRemainingFaces(System.Double,System.Double)">
+            <summary>Claim any facets left without a chart by spawning fresh charts for them.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.EmitRegions(System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion})">
+            <summary>Emit one <see cref="T:Prowl.Unwrapper.MeshRegion"/> per chart, sharing the source mesh.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.GrowChartsFromFrontier(System.Double)">
+            <summary>
+            Multi-source flood: at each step pick the cheapest pending insertion across all charts,
+            commit it, then refresh any newly-dirty queues. Best-first growth.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.MarkNeighboursChanged(System.Int32)">
+            <summary>
+            Claiming a face only moves the shared-vs-cut split of its direct neighbours, so their
+            straightness scores are the only ones a rescore can change.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.ExtendFrontier(Prowl.Unwrapper.MeshFace)">
+            <summary>For each neighbour of <paramref name="face"/>, propose adding it to any adjacent chart.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.PruneTinyCharts">
+            <summary>Drop charts that ended up too small to justify their own UV island.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.NormalDeviation(Prowl.Vector.Double3,Prowl.Vector.Double3)">
+            <summary>Squared deviation between two unit normals — used as a "fit" score.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.InPlaneDistanceSq(System.Int32,System.Int32)">
+            <summary>Quadrature of squared in-plane distance from triangle vertices to the chart's proxy plane.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.BuildCornerTables">
+            <summary>
+            Flatten the per-corner edge length and across-edge neighbour into contiguous arrays.
+            The growth loop rescores candidates hundreds of millions of times on large regions, and
+            walking the half-edge objects for every one of those is the bulk of the segmentation cost.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.StraightnessRatio(System.Int32,System.Int32)">
+            <summary>Ratio of shared-vs-cut edges — pushes the segmentation toward contiguous charts.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ChartBuilder.CollectChartBoundaries(System.Collections.Generic.List{Prowl.Unwrapper.ChartBuilder.ChartBoundary})">
+            <summary>Find every adjacent chart pair and rank by merged-proxy fit error.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ProxyAccumulator">
+            <summary>Area-weighted average of triangle normals and centroids — yields a chart's proxy plane.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ConvexHull2D">
+            <summary>
+            2D convex hull construction. Implements Andrew's monotone-chain method; the resulting hull
+            is used as the polygon the rotating-caliper OBB fitter walks around.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ConvexHull2D.Build(Prowl.Vector.Double2[],System.Int32)">
+            <summary>
+            Build the convex hull of <paramref name="points"/> in place.
+            On return, the first <c>hullCount</c> entries of <paramref name="points"/> form the
+            hull in counter-clockwise order.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ConvexHull2D.SignedDoubledArea(Prowl.Vector.Double2,Prowl.Vector.Double2,Prowl.Vector.Double2)">
+            <summary>Twice the signed area of the triangle (p0, p1, p2). Positive = CCW.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.DistortionStats">
+            <summary>Distortion summary used to accept or reject a parametrisation.</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.DistortionStats.MeanAngularDistortion">
+            <summary>Average per-corner angular distortion (0 = perfect).</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.DistortionStats.TotalAngularDistortion">
+            <summary>Area-weighted average angular distortion.</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.DistortionStats.MeanAreaDistortion">
+            <summary>Average per-face area distortion (0 = perfect).</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.DistortionStats.UvAreaRatio">
+            <summary>UV-area / bounding-rect-area; closer to 1 = tighter chart bounds.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.DistortionMetrics.EvaluateAngularOnly(Prowl.Unwrapper.HalfEdgeMesh,System.Double[],Prowl.Unwrapper.DistortionStats@)">
+            <summary>Lighter variant: only the angular part, fed direct per-corner angles.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.CleanedGeometry">
+            <summary>
+            Triangle/vertex array view of the input mesh — what the unwrapper actually consumes.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.GeometryPrep">
+            <summary>
+            Cleans up the input mesh before feeding it to the half-edge builder:
+            fits it inside a unit cube, welds duplicate vertices, drops degenerate triangles,
+            removes the now-unused vertices, and surfaces a remap from the cleaned triangles
+            back to the original triangle indices.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.GeometryPrep.FitIntoCube(System.Double[],Prowl.Vector.Double3,System.Double)">
+            <summary>Scale and recentre so the longest axis fits inside [-side/2, side/2].</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.GeometryPrep.WeldVertices(System.Double[],System.Int32,System.Int32[],System.Int32,Prowl.Vector.Double3[],System.Int32@)">
+            <summary>
+            Per-corner vertex weld, guarded by normal compatibility so creases survive.
+            Walks triangle-by-triangle: each corner gets a normal (per-vertex if the caller provided one,
+            otherwise the auto-computed face normal of the current triangle) and is find-or-added into the
+            position hash. Triangles are rewritten in place to reference the welded slots.
+            </summary>
+            <remarks>
+            When no per-vertex normals are supplied, we fall back to the triangle's face normal so
+            two corners at the same position from triangles that face nearly-opposite directions
+            (dot &lt; -0.9) stay separate — that keeps thin shells and back-to-back walls from collapsing.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.GeometryPrep.RemoveDegenerate(System.Double[]@,System.Int32@,System.Int32[],System.Int32@,System.Int32[],System.Int32[]@)">
+            <summary>Drop tris that collapsed to a line/point or have a near-zero angle. Compacts position list too.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.HalfEdgeMesh">
+            <summary>
+            A connected half-edge graph. Owns vertices, half-edges (with cached length/seam/crease flags
+            plus per-corner UVs) and triangles. Supports connected-component splitting and topological cuts.
+            </summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.HalfEdgeMesh.CreaseThresholdDegrees">
+            <summary>Crease threshold cached so derived sub-meshes preserve it.</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.HalfEdgeMesh.ProgressSink">
+            <summary>Optional progress sink — receives per-phase timing while <see cref="M:Prowl.Unwrapper.HalfEdgeMesh.Build(System.Int32,System.Double[],System.Int32,System.Int32[],System.Double,System.Double[],System.Boolean)"/> runs.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.Build(System.Int32,System.Double[],System.Int32,System.Int32[],System.Double,System.Double[],System.Boolean)">
+            <summary>Build a new mesh from positions + indices, with optional per-corner UV hints.</summary>
+            <param name="assumeManifold">
+            Skip the per-vertex non-manifold detection walk. Pass <c>true</c> when the caller can
+            guarantee the input topology is already manifold (e.g. when re-building from a region
+            of an already-cleaned source mesh). Saves an O(V) star walk per build.
+            </param>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.BuildFromRegion(Prowl.Unwrapper.MeshRegion,System.Collections.Generic.IList{System.Int32},System.Collections.Generic.IDictionary{System.Int32,System.Int32})">
+            <summary>
+            Re-build this mesh from a subset of another mesh's faces.
+            Preserves vertex order so the parametriser stays aligned with the source.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.PeelFan(Prowl.Unwrapper.Vertex,Prowl.Unwrapper.HalfEdge,System.Collections.Generic.HashSet{Prowl.Unwrapper.HalfEdge},System.Collections.Generic.List{Prowl.Unwrapper.HalfEdge},System.Int32)">
+            <summary>
+            Walk one manifold fan starting at <paramref name="fanStart"/>, reassigning each
+            half-edge's apex to <paramref name="owner"/> and removing it from <paramref name="remaining"/>.
+            The walks are bounded by <paramref name="cap"/> in case the input is non-manifold in
+            a way that produces an unbounded cycle.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.FindConnectedRegions(Prowl.Unwrapper.HalfEdgeMesh,System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion})">
+            <summary>Split the mesh into its connected components by face adjacency.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.FindConnectedRegionsIn(Prowl.Unwrapper.HalfEdgeMesh,System.Collections.Generic.IList{System.Int32},System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion})">
+            <summary>Treat <paramref name="cutoutFacets"/> as the foreground and find the components within it.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.HalfEdgeMesh.FindRegionsExcluding(Prowl.Unwrapper.HalfEdgeMesh,System.Collections.Generic.IList{System.Int32},System.Collections.Generic.IList{Prowl.Unwrapper.MeshRegion},System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion})">
+            <summary>Find components of <paramref name="sourceFacets"/> that aren't inside <paramref name="cutoutRegions"/>.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.LongDoubleMap">
+            <summary>
+            Open-addressing hash map keyed on <see cref="T:System.Int64"/> with <see cref="T:System.Double"/> values.
+            Insert-or-update + iterate are the only ops the sparse-matrix assembler needs, so the rest
+            (delete, ordered access) are omitted.
+            </summary>
+            <remarks>
+            Designed for the tight inner loop in LSCM/LinABF assembly: millions of upserts per region
+            during merge trials. A dedicated map avoids the boxing, generic-dispatch and bucket-chain
+            indirection of <see cref="T:System.Collections.Generic.Dictionary`2"/> at this key/value pair.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongDoubleMap.Clear">
+            <summary>Reset to empty without shrinking the backing arrays.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongDoubleMap.Set(System.Int64,System.Double)">
+            <summary>Replace (or insert) the value associated with <paramref name="key"/>.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongDoubleMap.Add(System.Int64,System.Double)">
+            <summary>Add <paramref name="addend"/> to the value at <paramref name="key"/>, inserting if missing.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongDoubleMap.GetOrThrow(System.Int64)">
+            <summary>Return the value at <paramref name="key"/>, or throw if missing.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongDoubleMap.GetEnumerator">
+            <summary>Iterate every (key, value) pair currently in the map. Order is implementation-defined.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.LongIntMap">
+            <summary>
+            Open-addressing hash map keyed on <see cref="T:System.Int64"/> with <see cref="T:System.Int32"/> values.
+            Same shape as <see cref="T:Prowl.Unwrapper.LongDoubleMap"/>; the sparse-matrix assembler and the non-manifold
+            fixer both upsert millions of times with similar keys, where the per-op overhead of
+            <see cref="T:System.Collections.Generic.Dictionary`2"/> matters.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongIntMap.TryGetOrAdd(System.Int64,System.Int32,System.Int32@)">
+            <summary>Returns true if the key existed; otherwise inserts <paramref name="defaultValue"/>.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.LongIntMap.TryGet(System.Int64,System.Int32@)">
+            <summary>Non-mutating lookup. Returns true and sets <paramref name="value"/> if present.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.Vertex">
+            <summary>
+            A vertex inside the half-edge graph. Keeps one incident half-edge so we can walk
+            the vertex star, plus the source index it came from (preserved across cleanup).
+            </summary>
+            <remarks>
+            <see cref="F:Prowl.Unwrapper.Vertex.Index"/> mirrors the slot this vertex occupies in its owning <see cref="T:Prowl.Unwrapper.HalfEdgeMesh"/>.
+            It's stamped in at insert time to keep <c>HalfEdgeMesh.IndexOf</c> O(1) (vs O(N) on a List).
+            </remarks>
+        </member>
+        <member name="T:Prowl.Unwrapper.MeshFace">
+            <summary>A triangular face — owns one of its three half-edges.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.HalfEdge">
+            <summary>
+            One side of an edge in the half-edge data structure. Linked into a ring around its face;
+            every interior edge has a twin going the other way. A half-edge with no <see cref="F:Prowl.Unwrapper.HalfEdge.Face"/>
+            is a border edge bordering a hole.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.FaceAttribute">
+            <summary>Cached per-face properties precomputed during topology build.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.EdgeAttribute">
+            <summary>Cached per-half-edge flags driving segmentation.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.MeshOps">
+            <summary>
+            Free queries over a half-edge graph. Nothing here mutates the topology.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.TouchesBorder(Prowl.Unwrapper.Vertex,System.Int32)">
+            <summary>True if any half-edge in this vertex's fan is a border.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.TouchesBorder(Prowl.Unwrapper.MeshFace,System.Int32)">
+            <summary>True if any of this face's three opposing twins is a border.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.FanSize(Prowl.Unwrapper.Vertex,System.Int32)">
+            <summary>
+            Number of half-edges in this vertex's fan. The walk is capped to keep non-manifold
+            inputs from spinning indefinitely; a typical mesh vertex has degree well under 32.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.EdgeVector(Prowl.Unwrapper.HalfEdge)">
+            <summary>Vector from the half-edge's origin to its apex.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.StepAroundVertex(Prowl.Unwrapper.HalfEdge)">
+            <summary>Move to the next half-edge that starts at the same vertex.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.CornerAngleAt(Prowl.Unwrapper.HalfEdge)">
+            <summary>Interior angle of the corner at this half-edge's apex.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshOps.WalkVertexStar(Prowl.Unwrapper.Vertex,System.Action{Prowl.Unwrapper.HalfEdge},System.Int32)">
+            <summary>
+            Walk the half-edges in a vertex's star, invoking <paramref name="visit"/> on each.
+            Bounded by <paramref name="cap"/> so a broken (non-manifold) topology can't spin forever.
+            Returns the number of steps actually taken.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.MeshRegion">
+            <summary>
+            A subset of triangles within a <see cref="T:Prowl.Unwrapper.HalfEdgeMesh"/>. The mesh is shared; multiple
+            regions can coexist with overlapping or disjoint triangle sets.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshRegion.CollectVertices(System.Collections.Generic.List{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Int32})">
+            <summary>
+            Walk every corner of every triangle and fill <paramref name="vertexList"/> with the dense
+            list of source-vertex indices used here. <paramref name="vertexLookup"/> is its inverse
+            (original vertex index → dense slot).
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshRegion.BuildTriangleLookup(System.Collections.Generic.Dictionary{System.Int32,System.Int32})">
+            <summary>Map each triangle's source-mesh index to its slot within this region.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.MeshRegion.RemapTriangles(System.Collections.Generic.Dictionary{System.Int32,System.Int32},System.Collections.Generic.List{System.Int32})">
+            <summary>For every triangle of this region, look up its position in the supplied table.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.NonManifoldFixer">
+            <summary>
+            "Local cutting" non-manifold fixer. Detects edges shared by &gt;2 triangles, edges with
+            inconsistent winding, and double-sided triangles, then splits the vertices whose stars
+            fall into multiple manifold components — duplicating positions in the process.
+            </summary>
+            <remarks>
+            Algorithm follows Gueziec, Taubin, Lazarus and Horn -- "Cutting and Stitching: Converting
+            Sets of Polygons to Manifold Surfaces" (cutting half only; we don't try to stitch).
+            Storage layout is CSC-style flat int arrays so the per-edge and per-vertex List allocations
+            stay out of the hot path on large meshes.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.NonManifoldFixer.Fix(System.Int32,System.Int32[],System.Action{System.String})">
+            <summary>
+            Run the fixer in place on <paramref name="triangles"/>. Position duplicates are
+            appended via the returned <see cref="F:Prowl.Unwrapper.NonManifoldFixer.FixResult.ExtraVertexSourceIndices"/> list;
+            callers expand their own position buffer accordingly.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.NonManifoldFixer.FixResult">
+            <summary>Vertex-position duplicates added by the fixer; each entry is the original index they cloned.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.NonManifoldFixer.WhySingular(System.Int32,System.Int32,System.Int32[],System.Byte[],System.Int32[])">
+            <summary>Returns 0 for manifold, 1 for &gt;2 triangles, 2 for inconsistent winding, 3 for double-sided.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.NonManifoldFixer.MarkNeighborhood(System.Int32[],System.Int32[],System.Int32,System.Int32,Prowl.Unwrapper.LongIntMap,System.Int32[],System.Int32[],System.Boolean[],System.Int32[],System.Collections.Generic.Queue{System.Int32},System.Int32[],System.Int32[],System.Int32)">
+            <summary>
+            BFS over the triangles touching one vertex (described as a span of <paramref name="vertexTriEntry"/>
+            from <paramref name="starStart"/> for <paramref name="starCount"/> entries), treating singular
+            edges as walls. Each connected sub-fan gets its own label 0..K-1. Returns K.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.NumericHelpers">
+            <summary>
+            Floating-point comparisons used across the solver. Each comparison takes an explicit
+            epsilon so behaviour stays predictable when values are nearly equal.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.NumericHelpers.Pow(System.Double,System.Double)">
+            <summary>
+            <see cref="M:System.Math.Pow(System.Double,System.Double)"/> with the unit exponent short-circuited. The segmentation
+            tunables default to 1.0 and the growth loop calls this on a very hot path.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.OrientedBox2D">
+            <summary>Tight 2D oriented bounding box fit for a set of points.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.OrientedBox2D.#ctor(Prowl.Vector.Double2,Prowl.Vector.Double2,Prowl.Vector.Double2,Prowl.Vector.Double2,System.Double)">
+            <summary>Tight 2D oriented bounding box fit for a set of points.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.OrientedBox2DFit">
+            <summary>
+            Rotating-caliper OBB fitter. Walks the convex hull and tracks the tightest rectangle
+            at each edge orientation; returns whichever has the smallest area.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.OverlapChecker">
+            <summary>
+            Rasterises a chart at low resolution to detect UV overlaps, then decides which sub-regions
+            can be re-flattened in place and which need full re-segmentation.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.OverlapChecker.Validate(Prowl.Unwrapper.UvChart,System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion},System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion})">
+            <summary>
+            Returns <c>true</c> if the chart has no overlaps. Otherwise <paramref name="reflattenList"/>
+            receives sub-regions to re-flatten and <paramref name="resegmentList"/> receives sub-regions
+            that need to go back through chart building.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.OverlapChecker.PrepareScanRanges(Prowl.Vector.Double2,Prowl.Vector.Double2,Prowl.Vector.Double2,System.Int32@,System.Int32@)">
+            <summary>
+            Compute per-row pixel ranges for a triangle. Y-sorted, slope-based, with deliberate
+            half-pixel offsets to avoid double-counting shared edges between triangles.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ProjectionUnwrapper">
+            <summary>
+            Box-projection unwrapper. Every triangle picks the projection direction its normal points
+            closest to, connected same-direction triangles become a chart, and each chart is flattened by
+            dropping it onto that direction's plane. No solve, no iteration.
+            </summary>
+            <remarks>
+            A chart is fold-free because every triangle in it faces the projection plane, but a surface
+            that spirals back over itself while staying within one direction bucket can still self-overlap.
+            That needs a genuinely curved, connected, single-direction region to happen, so it is rare on
+            the architectural and prop geometry this is aimed at — and unlike the conformal path there is
+            no overlap validation pass to catch it.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Unwrapper.ProjectionUnwrapper.Run(Prowl.Unwrapper.CleanedGeometry,Prowl.Unwrapper.UnwrapOptions,Prowl.Vector.Double2[],System.Action{System.String})">
+            <summary>
+            Entry point mirroring <see cref="M:Prowl.Unwrapper.UnwrapPipeline.Run(Prowl.Unwrapper.CleanedGeometry,Prowl.Unwrapper.UnwrapOptions,Prowl.Vector.Double2[],System.Action{System.String})"/>: take a cleaned mesh through
+            segmentation, projection and packing, then write one Double2 per triangle corner.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ProjectionUnwrapper.AbsorbSmallClusters(Prowl.Unwrapper.HalfEdgeMesh,Prowl.Vector.Double3[],System.Int32[],System.Int32)">
+            <summary>
+            Re-label clusters below the size cut-off to the direction of the neighbouring cluster they
+            share the most edge length with. A handful of triangles straddling a direction boundary
+            would otherwise each become a chart, and every chart costs a packing margin.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ProjectionUnwrapper.LabelClusters(Prowl.Unwrapper.HalfEdgeMesh,System.Int32[],System.Int32[])">
+            <summary>Flood-fill faces into connected same-direction clusters; returns the cluster count.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ProjectionUnwrapper.ProjectChart(Prowl.Unwrapper.MeshRegion,Prowl.Vector.Double3)">
+            <summary>Drop a chart's corners onto its projection plane, then square it up for packing.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.ProjectionUnwrapper.BuildBasis(Prowl.Vector.Double3,Prowl.Vector.Double3@,Prowl.Vector.Double3@)">
+            <summary>Right-handed basis for a projection plane: <c>cross(u, v)</c> is the direction itself.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.SparseMatrix">
+            <summary>
+            Sparse matrix in compressed sparse column (CSC) layout.
+            <para>
+            Storage: three parallel arrays.
+            <c>Values</c> holds non-zero values walked column-by-column,
+            <c>RowIndices</c> gives the row of each value, and
+            <c>ColumnRanges</c> has length <c>ColumnCount + 1</c> with
+            <c>ColumnRanges[c]..ColumnRanges[c+1]</c> the span of entries for column <c>c</c>.
+            </para>
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrix.Reset(System.Int32,System.Int32,System.Int32)">
+            <summary>Drop previous contents and resize to the given shape.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrix.Multiply(System.Double[],Prowl.Unwrapper.SparseMatrix,System.Double[])">
+            <summary>y := M * x. <paramref name="y"/> must already be sized to <see cref="F:Prowl.Unwrapper.SparseMatrix.RowCount"/>.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrix.Transpose(Prowl.Unwrapper.SparseMatrix,Prowl.Unwrapper.SparseMatrix)">
+            <summary>Fill <paramref name="result"/> with the transpose of <paramref name="source"/>.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrix.MultiplyByTranspose(Prowl.Unwrapper.SparseMatrix,Prowl.Unwrapper.SparseMatrix,Prowl.Unwrapper.SparseMatrix)">
+            <summary>
+            Compute M * M^T into <paramref name="result"/>. Done in two passes: first the
+            structure (so we know how much to allocate), then the numeric values.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrix.BuildJacobiInverse(Prowl.Unwrapper.SparseMatrix,Prowl.Unwrapper.SparseMatrix)">
+            <summary>Build the inverse Jacobi (diagonal) preconditioner for a square matrix.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.SparseMatrixAssembler">
+            <summary>
+            Coordinate-format accumulator used while building the angle and conformal systems.
+            Callers <see cref="M:Prowl.Unwrapper.SparseMatrixAssembler.SetEntry(System.Int32,System.Int32,System.Double)"/> or <see cref="M:Prowl.Unwrapper.SparseMatrixAssembler.AccumulateEntry(System.Int32,System.Int32,System.Double)"/> by (row, col);
+            <see cref="M:Prowl.Unwrapper.SparseMatrixAssembler.Finalize(Prowl.Unwrapper.SparseMatrix,System.Int32,System.Int32)"/> writes the resulting CSC matrix into a <see cref="T:Prowl.Unwrapper.SparseMatrix"/>.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.SparseMatrixAssembler.Finalize(Prowl.Unwrapper.SparseMatrix,System.Int32,System.Int32)">
+            <summary>Emit the accumulated entries as a CSC matrix with the given shape.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapException">
+            <summary>
+            Thrown when the unwrapper can't produce a result -- usually because the input geometry
+            fully collapses during cleanup, or because UV inputs are inconsistent with the triangle count.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapMesh">
+             <summary>
+             Fluent builder for an unwrap call. Construct with positions + triangles, optionally chain
+             <see cref="M:Prowl.Unwrapper.UnwrapMesh.WithNormals(Prowl.Vector.Double3[])"/> and <see cref="M:Prowl.Unwrapper.UnwrapMesh.WithMaterialUVs(Prowl.Vector.Double2[])"/>, then call <see cref="M:Prowl.Unwrapper.UnwrapMesh.Unwrap(Prowl.Unwrapper.UnwrapOptions)"/>.
+            
+             Triangles are flat unsigned indices (three per triangle). Per-corner UVs, if provided,
+             are 3 × triangleCount Double2 values — they are only used as a hint when welding vertices.
+             </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.#ctor(Prowl.Vector.Double3[],System.Int32[])">
+            <param name="positions">One Double3 per vertex.</param>
+            <param name="triangles">Flat triangle list: indices into <paramref name="positions"/>, three per face.</param>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.WithNormals(Prowl.Vector.Double3[])">
+            <summary>Per-vertex normals. Used as a welding guard — coincident points with opposing normals are kept apart.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.WithMaterialUVs(Prowl.Vector.Double2[])">
+            <summary>
+            Per-corner material UVs (three per triangle). Disagreement across an edge gets marked as a UV seam
+            during segmentation, which biases chart growth to follow existing seams.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.WithProgress(System.Action{System.String})">
+            <summary>
+            Receive per-phase progress messages (cleanup, segmentation, parametrisation, packing).
+            Handy while diagnosing slow unwraps; ignored when null.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.Unwrap(Prowl.Unwrapper.UnwrapOptions)">
+            <summary>Run the unwrap with the supplied options.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapMesh.Unwrap(Prowl.Vector.Double3[],System.Int32[],Prowl.Unwrapper.UnwrapOptions)">
+            <summary>One-shot convenience: equivalent to <c>new UnwrapMesh(positions, triangles).Unwrap(options)</c>.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapResult">
+            <summary>Output of an unwrap call.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapResult.PerCornerUVs">
+            <summary>
+            One UV per triangle corner, indexed as <c>3*triangleIndex + cornerIndex</c>.
+            Triangle indices align with the original input — degenerate triangles get zero UVs.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapResult.DegenerateTriangleIndices">
+            <summary>Indices of input triangles that were dropped as degenerate during cleanup, or null if none.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapMethod">
+            <summary>Which algorithm produces the charts.</summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.UnwrapMethod.Projection">
+            <summary>
+            Group triangles by the cube face their normal points at, cut the groups into connected
+            charts, and flatten each by dropping it onto its projection plane. Near-instant and
+            overlap-free on well-formed geometry, at the cost of stretch on slanted surfaces and more
+            charts than a conformal solve would need.
+            </summary>
+        </member>
+        <member name="F:Prowl.Unwrapper.UnwrapMethod.Conformal">
+            <summary>
+            Lloyd-style chart segmentation, angle-based flattening (LinABF) and a least-squares
+            conformal map (LSCM), with per-chart overlap validation. Far lower distortion and far
+            fewer seams; orders of magnitude slower.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapOptions">
+            <summary>
+            Tunable parameters for an unwrap operation. Defaults are conservative values that work
+            well across a broad range of meshes; callers with unusual input can override individual knobs.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.Method">
+            <summary>Which algorithm to run. See <see cref="T:Prowl.Unwrapper.UnwrapMethod"/> for the trade-off.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.PackMargin">
+            <summary>
+            Per-chart packing border in UV space. 1/256 places a one-texel margin if the lightmap
+            is later rasterised at 256x256.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.HardAngle">
+            <summary>Dihedral-angle threshold (degrees) for marking edges as "hard". Edges sharper
+            than this are treated as creases and become preferred cut locations.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.MaxDegreeOfParallelism">
+            <summary>
+            Cap on worker threads used by the per-region pipeline. <c>-1</c> means
+            "use as many as the runtime sees fit" (defaults to one per logical CPU).
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.Projection">
+            <summary>Knobs specific to <see cref="F:Prowl.Unwrapper.UnwrapMethod.Projection"/>.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.UnwrapOptions.Conformal">
+            <summary>Knobs specific to <see cref="F:Prowl.Unwrapper.UnwrapMethod.Conformal"/>.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ProjectionOptions">
+            <summary>Settings for the projection unwrapper.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ProjectionOptions.UseDiagonalAxes">
+            <summary>
+            Project onto the eight cube-corner directions as well as the six face directions.
+            Drops the worst-case stretch from 1.73x to 1.18x, but splits curved surfaces into
+            more charts, which costs atlas space in packing margins.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ProjectionOptions.MinChartTriangles">
+            <summary>
+            Charts with fewer triangles than this are folded into the best-fitting adjacent chart
+            rather than being packed on their own. 0 keeps every chart.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ConformalOptions">
+            <summary>Settings for the conformal unwrapper.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.AngleDistortionThreshold">
+            <summary>Maximum allowed mean angular distortion before a chart is rejected (0..1).</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.AreaDistortionThreshold">
+            <summary>Maximum allowed mean area distortion before a chart is rejected (0..1).</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.ChartAreaThreshold">
+            <summary>
+            Minimum fraction of total component area a chart must cover to be kept.
+            Below this AND below <see cref="P:Prowl.Unwrapper.ConformalOptions.ChartFacetCountThreshold"/>, the chart is discarded.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.ChartFacetCountThreshold">
+            <summary>Minimum fraction of total triangle count a chart must cover to be kept.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.CompactnessPower">
+            <summary>Exponent applied to the 3D distance metric when scoring chart growth candidates.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.StraightnessPower">
+            <summary>Exponent applied to the straightness metric when scoring chart growth candidates.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.LloydChangePrevThreshold">
+            <summary>
+            Lloyd early-out: if fewer than this fraction of facets changed chart since the previous iteration,
+            segmentation is considered stable and the loop exits.
+            </summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.LloydChangePrev2Threshold">
+            <summary>Same as <see cref="P:Prowl.Unwrapper.ConformalOptions.LloydChangePrevThreshold"/> but compared against two iterations ago.</summary>
+        </member>
+        <member name="P:Prowl.Unwrapper.ConformalOptions.MergeTimeBudgetMs">
+            <summary>
+            Wall-clock budget for the chart-merge pass per region (milliseconds).
+            The merger walks every adjacent chart pair and trial-flattens the union;
+            on a dirty mesh that can blow up quadratically. Once this budget elapses
+            any remaining pairs are accepted as-is. Set high to disable the cap.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UnwrapPipeline">
+            <summary>
+            Drives the four phases end-to-end: chart a region into pieces, flatten each, validate the
+            resulting UVs, and either accept, re-flatten a subset, or re-chart from scratch.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapPipeline.ProcessRegion(Prowl.Unwrapper.MeshRegion,System.Collections.Generic.List{Prowl.Unwrapper.UvChart},Prowl.Unwrapper.UnwrapOptions,Prowl.Unwrapper.OverlapChecker,System.Action{System.String})">
+            <summary>Run the full pipeline on a single connected mesh region.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapPipeline.BuildCharts(Prowl.Unwrapper.MeshRegion,System.Collections.Generic.List{Prowl.Unwrapper.MeshRegion},Prowl.Unwrapper.UnwrapOptions,System.Action{System.String})">
+            <summary>
+            Chart segmentation + a greedy merge pass: any pair of adjacent charts whose union still
+            meets the distortion thresholds gets merged.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UnwrapPipeline.Run(Prowl.Unwrapper.CleanedGeometry,Prowl.Unwrapper.UnwrapOptions,Prowl.Vector.Double2[],System.Action{System.String})">
+            <summary>
+            Entry point: take a cleaned mesh through every connected component, then pack the resulting
+            charts and write one Double2 per triangle corner into <paramref name="outputUV"/>.
+            </summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UvChart">
+            <summary>
+            A 2D parametrised chart: three UVs per triangle, plus geometric/UV area accounting
+            and a tight 2D oriented box ready for the packer.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvChart.#ctor(Prowl.Unwrapper.MeshRegion)">
+            <summary>Build a fresh chart over <paramref name="region"/>; pre-sums geometric area.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvChart.TakeFrom(Prowl.Unwrapper.UvChart,System.Int32[])">
+            <summary>Copy UVs from a source chart through a per-face remap, then re-tighten.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvChart.TightenAndOrient">
+            <summary>
+            Re-orient the chart inside its tight 2D bounding box: wider than tall, axes flipped to
+            canonical signs, centred at the origin.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvChart.NormaliseToSurfaceArea">
+            <summary>Scale the UV layout so its area roughly matches the 3D area it came from.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.UvFlattener">
+            <summary>
+            Per-chart UV flattener. First runs angle-based flattening (LinABF) to find consistent
+            triangle angles, then a conformal least-squares solve (LSCM) to recover 2D positions.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.Setup">
+            <summary>
+            Build a private working mesh from the region (so we don't perturb the parent),
+            then recentre the geometry so the solver works in well-scaled coordinates.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.BuildAngleSystem">
+            <summary>
+            Assemble the LinABF sparse system. Three constraint blocks: vertex consistency (interior
+            star angles must sum to 2π), triangle consistency (per-face corners must sum to π), and
+            wheel consistency (log-sine product around each interior vertex). All premultiplied by Da
+            so values stay scaled.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.SolveAngleSystem(System.Double,System.Double)">
+            <summary>Solve C C^T y = b via preconditioned CG, then recover alpha = alpha0 * (1 + C^T y).</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.SolveConformalLayout(System.Double,System.Double)">
+            <summary>
+            Run LSCM with the LinABF-computed angles. Picks an initial PCA-like projection, locks the
+            two extremes along the dominant axis, and solves a least-squares conformal system.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.ExtractUvs(Prowl.Unwrapper.UvChart)">
+            <summary>Pull computed UVs out of the working mesh and into the supplied chart.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.ComputeInitialProjection(System.Double[],System.Int32[],Prowl.Unwrapper.ConformalRowBuffer)">
+            <summary>Project geometry along its two longest extents; lock the extreme U vertices.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.PushScalarCoefficient(Prowl.Unwrapper.ConformalRowBuffer,System.Int32,System.Double,System.Double)">
+            <summary>
+            Add a single (index, value) term to the row. Locked vars go into a separate bucket;
+            otherwise the index is collapsed past any locked slots before being recorded.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.PushVertexCoefficient(Prowl.Unwrapper.ConformalRowBuffer,System.Int32,System.Double[],System.Int32,System.Double[],System.Int32)">
+            <summary>Two-component variant: pushes both (2v, 2v+1) at once.</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.UvFlattener.CommitRow(Prowl.Unwrapper.ConformalRowBuffer,Prowl.Unwrapper.SparseMatrixAssembler,System.Double)">
+            <summary>Materialise the row into normal-equation entries and update the RHS.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.ConformalRowBuffer">
+            <summary>Scratch storage for assembling one LSCM row at a time.</summary>
+        </member>
+        <member name="T:Prowl.Unwrapper.VectorOps">
+            <summary>
+            Plain dense-vector kernels used by the conjugate-gradient loop.
+            Equivalent to the level-1 BLAS routines (copy, scale, axpy, dot) restricted to
+            the few we actually need. Vectorised with <see cref="T:System.Numerics.Vector`1"/> when the runtime supports it.
+            </summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.VectorOps.Assign(System.Int32,System.Double[],System.Double[])">
+            <summary>destination := source</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.VectorOps.ScaleInPlace(System.Int32,System.Double,System.Double[])">
+            <summary>vector := scalar * vector</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.VectorOps.AddScaled(System.Int32,System.Double,System.Double[],System.Double[])">
+            <summary>y := y + a * x  (AXPY)</summary>
+        </member>
+        <member name="M:Prowl.Unwrapper.VectorOps.InnerProduct(System.Int32,System.Double[],System.Double[])">
+            <summary>Inner product of <paramref name="x"/> and <paramref name="y"/>.</summary>
+        </member>
+    </members>
+</doc>

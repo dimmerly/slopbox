@@ -1,0 +1,4 @@
+FixedTimestep: 0.016666668
+MaxFixedIterations: 3
+DefaultTimeScale: 1
+$id: 1

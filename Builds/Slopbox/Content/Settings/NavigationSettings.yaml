@@ -1,0 +1,137 @@
+AreaNames:
+  $id: 2
+  $values:
+    - "Walkable"
+    - "Not Walkable"
+    - "Jump"
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+AreaCosts:
+  $id: 3
+  $values:
+    - 1
+    - 1
+    - 2
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+AgentTypes:
+  $id: 4
+  $values:
+    - Id: 0
+      Name: "Humanoid"
+      Radius: 0.5
+      Height: 2
+      MaxSlope: 45
+      MaxClimb: 0.4
+      $id: 5
+NextAgentTypeId: 1
+World:
+  MaxPolyPath: 1024
+  MaxStraightPath: 256
+  DefaultQueryExtents:
+    X: 1
+    Y: 2
+    Z: 1
+  CrowdMaxAgentRadius: 2
+  TileCacheMaxObstacles: 256
+  MaxTileUpdatesPerFrame: 4
+  LowQualityAvoidance:
+    VelocityBias: 0.4
+    DesiredVelocityWeight: 2
+    CurrentVelocityWeight: 0.75
+    SideWeight: 0.75
+    TimeOfImpactWeight: 2.5
+    HorizonTime: 2.5
+    GridSize: 33
+    AdaptiveDivisions: 5
+    AdaptiveRings: 2
+    AdaptiveDepth: 1
+  MediumQualityAvoidance:
+    VelocityBias: 0.4
+    DesiredVelocityWeight: 2
+    CurrentVelocityWeight: 0.75
+    SideWeight: 0.75
+    TimeOfImpactWeight: 2.5
+    HorizonTime: 2.5
+    GridSize: 33
+    AdaptiveDivisions: 5
+    AdaptiveRings: 2
+    AdaptiveDepth: 2
+  GoodQualityAvoidance:
+    VelocityBias: 0.4
+    DesiredVelocityWeight: 2
+    CurrentVelocityWeight: 0.75
+    SideWeight: 0.75
+    TimeOfImpactWeight: 2.5
+    HorizonTime: 2.5
+    GridSize: 33
+    AdaptiveDivisions: 7
+    AdaptiveRings: 2
+    AdaptiveDepth: 3
+  HighQualityAvoidance:
+    VelocityBias: 0.4
+    DesiredVelocityWeight: 2
+    CurrentVelocityWeight: 0.75
+    SideWeight: 0.75
+    TimeOfImpactWeight: 2.5
+    HorizonTime: 2.5
+    GridSize: 33
+    AdaptiveDivisions: 7
+    AdaptiveRings: 3
+    AdaptiveDepth: 3
+  $id: 6
+$id: 1

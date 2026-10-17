@@ -1,0 +1,496 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Prowl.Prism</name>
+    </assembly>
+    <members>
+        <member name="T:Prowl.Prism.Compiler.ShaderStage">
+            <summary>The pipeline stage a shader is compiled for (its SPIR-V entry-point model).</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.GlslCompiler">
+            <summary>
+            The public entry point: compiles GLSL source text into a SPIR-V module.
+            Pipeline is parse (with preprocessor) -> lower -> serialize. The optional defines dictionary
+            selects shader variants; the target selects the SPIR-V version and defaults to 1.0. The optional
+            includes callback resolves <c>#include</c> directives; without it, an include is a compile error.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Compiler.GlslCompiler.Preprocess(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Prowl.Prism.Glsl.IncludeCallback)">
+            <summary>
+            Runs only the preprocessor. Returns the preprocessed GLSL text and the state it found (version, extensions,
+            pragmas, defines, and included files), so a host can lay out a program before compiling it.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.CompileLane">
+            <summary>
+            One compile lane per calling thread: the parser and lowerer recurse once per nesting level, and
+            glslang's acceptance zone runs to ~5,000-deep paren nesting - far beyond what a default 1 MB
+            thread stack survives - so the pipeline executes on a dedicated 64 MB stack. The lane is reused
+            across compiles from the same thread, which keeps the ThreadStatic pools above warm.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Compiler.CompileLane.OnLane``1(System.Func{``0})">
+            <summary>Runs work on the calling thread's lane, or inline when already on a lane (no self-deadlock).</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.Scalar">
+            <summary>The base scalar of a GLSL type.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.BlockLayout">
+            <summary>The ruleset an interface block lays its members out under.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.GlslType">
+            <summary>A resolved GLSL type. The semantic model annotates expressions with these.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.Types">
+            <summary>Resolves built-in GLSL type names to <see cref="T:Prowl.Prism.Compiler.GlslType"/>.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Compiler.Types.Name(Prowl.Prism.Compiler.GlslType)">
+            <summary>The canonical GLSL spelling of a type, for user-facing diagnostics.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.Lowerer">
+            <summary>
+            Lowers a parsed GLSL translation unit into a SPIR-V <see cref="T:Prowl.Prism.SpirV.Module"/>. The growing
+            heart of the backend; it covers the constructs implemented so far and throws a clear
+            "not lowered yet" on anything new, so the unimplemented corpus is self-documenting.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Compiler.Lowerer.ReleaseCompileState">
+            <summary>Drop the references the last compile left behind (AST nodes, symbol tables, the lowered module's
+            contents) once its words are serialized, so they are garbage during optimization instead of being
+            carried (and promoted) through it. The next Reset re-arms the instance as usual.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Compiler.Lowerer.ParseInt64Literal(System.String)">
+            <summary>Parses a GLSL integer literal (decimal, 0x hex, or 0 octal) to its 64-bit value.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Compiler.PreciseAnalysis">
+             <summary>
+             glslang's <c>PropagateNoContraction</c> (propagateNoContraction.cpp), over Prism's AST: starting from every
+             assignment to a <c>precise</c> object, walks backwards through the assignments of every object its value
+             depends on (call arguments, constructor arguments and ternary conditions included, index expressions not),
+             and marks the arithmetic operations involved. The lowerer decorates a marked operation NoContraction.
+            
+             Objects are named by access chains like glslang's: a per-declaration symbol id, then one element per struct
+             member (a field name here, an index there; either only has to be consistent). Swizzles and array or vector
+             indexing name the whole object.
+             </summary>
+        </member>
+        <member name="F:Prowl.Prism.Compiler.PreciseAnalysis.Marked">
+            <summary>Marked operations. The value is true when the mark came from the propagator's binary visit,
+            which glslang applies only when the result is not a 32-bit signed int.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.PrecisionStmt">
+            <summary>A `precision qualifier type;` statement in a function body: sets the type's default for the rest of its block.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.PrecisionStmt.#ctor(System.String,System.String)">
+            <summary>A `precision qualifier type;` statement in a function body: sets the type's default for the rest of its block.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.AstPrinter">
+            <summary>
+            Prints an AST back to GLSL. Expressions are fully parenthesized so precedence is
+            explicit and unambiguous. Used to verify the parser round-trips (parse -> print ->
+            compile) and as the basis for GLSL re-emission.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.Lexer">
+            <summary>
+            Turns GLSL source into a flat token list. Comments and whitespace are skipped; '#'
+            is emitted as a <see cref="F:Prowl.Prism.Glsl.TokenKind.Hash"/> token for the preprocessor to interpret.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.Lexer.Tokenize(System.String,System.Collections.Generic.List{Prowl.Prism.Glsl.Token})">
+            <summary>Lexes into a caller-provided (poolable) list, cleared first, so no token list is allocated.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.Parser">
+            <summary>
+            A recursive-descent parser for GLSL (Vulkan profile). Declarations and statements are
+            parsed top-down; expressions use precedence climbing (one method for the whole binary
+            operator ladder). GLSL is a frozen spec, so this targets exactly it, no more.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.Parser.Parse(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Prowl.Prism.Glsl.IncludeCallback,System.Nullable{Prowl.Prism.Compiler.ShaderStage})">
+            <summary>Parses for a known stage, which selects the stage macro glslang predefines (GL_FRAGMENT_SHADER, ...).</summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.Preprocessor">
+             <summary>
+             The GLSL preprocessor. Runs before the parser: it handles <c>#define</c> (object and
+             function-like macros), <c>#undef</c>, the conditional family
+             (<c>#if/#ifdef/#ifndef/#elif/#else/#endif</c>) with <c>#if</c> constant-expression
+             evaluation and the <c>defined</c> operator, <c>##</c> token pasting, the predefined
+             macros <c>__LINE__ / __FILE__ / __VERSION__</c> and glslang's preamble (<c>VULKAN</c>,
+             <c>GL_ES</c>, the supported-extension macros, ...), records <c>#version</c>, and resolves
+             <c>#include</c> through an <see cref="T:Prowl.Prism.Glsl.IncludeCallback"/>. Callers may inject macros up front
+             (this is how shader variants are compiled).
+            
+             It consumes the raw token stream (including <see cref="F:Prowl.Prism.Glsl.TokenKind.Hash"/>) and produces
+             a clean token stream for the <see cref="T:Prowl.Prism.Glsl.Parser"/>.
+             </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.Preprocessor.Process(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Prowl.Prism.Glsl.IncludeCallback)">
+            <summary>
+            Preprocesses a shader source into a token stream. The returned list is owned by the caller.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.Preprocessor.Preprocess(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Prowl.Prism.Glsl.IncludeCallback)">
+            <summary>
+            Preprocesses a shader source and returns the result as GLSL text, along with the state the preprocessor found.
+            Unlike <see cref="M:Prowl.Prism.Glsl.Preprocessor.Process(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Prowl.Prism.Glsl.IncludeCallback)"/>, this does not run the version, reserved-word, or ES checks, so it can return text
+            for source that the compiler would reject.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.IncludeCallback">
+            <summary>
+            Resolves an <c>#include</c>. <paramref name="headerName"/> is the text between the quotes or angle brackets,
+            <paramref name="isSystem"/> is true for the <c>&lt;name&gt;</c> form, and <paramref name="requestingName"/> is the
+            <see cref="P:Prowl.Prism.Glsl.IncludeResult.Name"/> of the file holding the directive ("" for the main source). Returns null when the
+            header cannot be found, which is a compile error.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.IncludeResult">
+            <summary>
+            An included file. <see cref="P:Prowl.Prism.Glsl.IncludeResult.Name"/> identifies the file for include-once: a file is entered the first time its
+            name is resolved, and later includes of the same name are skipped. <see cref="P:Prowl.Prism.Glsl.IncludeResult.Content"/> is its GLSL source.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.IncludeResult.#ctor(System.String,System.String)">
+            <summary>
+            An included file. <see cref="P:Prowl.Prism.Glsl.IncludeResult.Name"/> identifies the file for include-once: a file is entered the first time its
+            name is resolved, and later includes of the same name are skipped. <see cref="P:Prowl.Prism.Glsl.IncludeResult.Content"/> is its GLSL source.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.MacroDefinition">
+            <summary>A macro as it stands at the end of preprocessing. <see cref="P:Prowl.Prism.Glsl.MacroDefinition.Parameters"/> is null for object-like macros.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.MacroDefinition.#ctor(System.String,System.Collections.Generic.IReadOnlyList{System.String},System.String)">
+            <summary>A macro as it stands at the end of preprocessing. <see cref="P:Prowl.Prism.Glsl.MacroDefinition.Parameters"/> is null for object-like macros.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.PreprocessResult">
+            <summary>
+            The output of the preprocessor. <see cref="P:Prowl.Prism.Glsl.PreprocessResult.Text"/> is GLSL with no directives left: macros are expanded, inactive
+            <c>#if</c> blocks are removed, and each <c>#include</c> is replaced by its file's contents. The version, extensions,
+            pragmas, and macros are the state the preprocessor found; <see cref="P:Prowl.Prism.Glsl.PreprocessResult.IncludedFiles"/> lists the files entered, in order.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.PreprocessResult.#ctor(System.String,System.Int32,System.Boolean,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{Prowl.Prism.Glsl.MacroDefinition},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+            The output of the preprocessor. <see cref="P:Prowl.Prism.Glsl.PreprocessResult.Text"/> is GLSL with no directives left: macros are expanded, inactive
+            <c>#if</c> blocks are removed, and each <c>#include</c> is replaced by its file's contents. The version, extensions,
+            pragmas, and macros are the state the preprocessor found; <see cref="P:Prowl.Prism.Glsl.PreprocessResult.IncludedFiles"/> lists the files entered, in order.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.Glsl.Token">
+            <summary>A lexed token. <see cref="P:Prowl.Prism.Glsl.Token.Text"/> is the source lexeme (identifier name,
+            numeric text, or operator like "&amp;&amp;"). <see cref="P:Prowl.Prism.Glsl.Token.Macro"/> marks a token produced by a macro
+            expansion, whose <see cref="P:Prowl.Prism.Glsl.Token.Column"/> refers to the macro body rather than the source.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Glsl.Token.#ctor(Prowl.Prism.Glsl.TokenKind,System.String,System.Int32,System.Int32,System.Boolean)">
+            <summary>A lexed token. <see cref="P:Prowl.Prism.Glsl.Token.Text"/> is the source lexeme (identifier name,
+            numeric text, or operator like "&amp;&amp;"). <see cref="P:Prowl.Prism.Glsl.Token.Macro"/> marks a token produced by a macro
+            expansion, whose <see cref="P:Prowl.Prism.Glsl.Token.Column"/> refers to the macro body rather than the source.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.SpirVOptimizer">
+             <summary>
+             Post-lowering optimizer. Takes the straight-lowered SPIR-V word stream and returns an optimized one,
+             targeting byte-for-byte parity with spirv-opt's Performance pipeline (the level shaderc runs at
+             <c>OptimizationLevel.Performance</c>).
+            
+             Phase 2 adds passes here one at a time, in spirv-opt's order. Until the pipeline reproduces every
+             transformation for a given module, its optimized parity test stays red and marks what is left to do.
+            
+             The full, verified feature-gap list (front-end AND optimizer) lives in /GAPS.md at the repo root. Passes
+             present here: StripDebug, DeadBranchElim, MergeReturn, Inline(=InlineExhaustive, O(n)), EliminateDeadFunctions,
+               PrivateToLocal, LocalSingleBlockElim, LocalSingleStoreElim, ScalarReplacement, LocalAccessChainConvert,
+               SsaRewrite(=LocalMultiStoreElim), GlobalCse(=RedundancyElimination), RedundantLoadElim, BlockMerge,
+               RecomputeBound. ReciprocalFDiv and FoldInsertWithConstants are folding rules inside Simplification/Ccp.
+             The dominant remaining blocker is NOT missing capability -- it is byte-parity: matching spirv-opt's exact
+             scratch/throwaway id-allocation and fold ORDER. Nearly every remaining red is functionally correct + valid.
+             </summary>
+        </member>
+        <member name="F:Prowl.Prism.Optimizer.SpirVOptimizer.Pipeline">
+            <summary>Runs the optimization pipeline over a lowered module's words.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.Folder">
+             <summary>
+             A faithful port of spirv-opt's shared folding engine: the ConstantManager (constants.cpp), the
+             InstructionFolder dispatch (fold.cpp), and const_folding_rules.cpp. CCP and the Simplification pass both go
+             through this, so the constants it materializes get their ids in exactly spirv-opt's order -- byte parity by
+             construction, instead of two separate approximations (the old inline CCP folder and SimplifyFolds).
+            
+             A "constant" is identified by its defining instruction (OpConstant / OpConstantTrue|False / OpConstantNull /
+             OpConstantComposite). Constants are created lazily and deduped by value, and appended to the types/constants
+             section (before the first OpFunction) with a fresh id from Header[3] -- matching ConstantManager::
+             GetDefiningInstruction -> FindDeclaredConstant / BuildInstructionAndAddToModule.
+             </summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.Commit">
+            <summary>Commit created constants into the module and write back the id counter. Call once when done.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.AsBool(System.UInt32,System.Boolean@)">
+            <summary>Whether <paramref name="id"/> is a boolean constant (incl. ones created this run), and its value.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.SwitchSelectorWord(System.UInt32,System.UInt32@)">
+            <summary>First word of an integer constant (0 for a null one), as CCP reads a switch selector.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.FoldToConstant(Prowl.Prism.Optimizer.SpvInstr,System.Func{System.UInt32,System.UInt32})">
+            <summary>Fold an instruction to a constant, mapping operand ids through <paramref name="map"/> (CCP's
+            lattice). Returns the constant id, or 0 if not foldable. Faithful to InstructionFolder::
+            FoldInstructionToConstant: const-folding rules first (in registered order), then FoldScalars, then
+            FoldIntegerOpToConstant.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.IsFoldable(Prowl.Prism.Optimizer.SpvInstr)">
+            <summary>Instruction::IsFoldable: FoldInstructionToConstant can act on it at all.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.Folder.FoldInstruction(Prowl.Prism.Optimizer.SpvInstr)">
+            <summary>Fold an instruction in place to a fixpoint (fold.cpp FoldInstruction). Returns true if changed.
+            If it folds to a constant, the instruction becomes OpCopyObject of that constant (the Simplification
+            driver then propagates and kills it).</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.SpvGrammar">
+            <summary>
+            The SPIR-V operand grammar, trimmed to what the optimizer needs: for any instruction it can walk the
+            operand words and say which are id references. That lets passes find an instruction's result id and
+            rewrite uses of an id without corrupting the literal operands that happen to share the id's numeric
+            value. Loaded once from the embedded trimmed grammar JSON.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvGrammar.Classify(System.Int32,System.UInt32[],System.Int32@,System.Boolean[]@)">
+            <summary>Marks which operand words are id references (see the compute overload). For value-independent
+            opcodes the answer depends only on the operand count, so it is memoized and a shared read-only array is
+            returned; callers must not mutate <paramref name="isId"/>.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvGrammar.ClassifyCompute(System.Int32,System.UInt32[],System.Int32@,System.Boolean[]@)">
+            <summary>Marks which operand words of an instruction are id references and where the result id sits
+            (-1 if the instruction defines none). Operand words are those after the opcode word.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.Pool">
+            <summary>Thread-static pools for the short-lived scratch collections passes allocate (id sets, instruction
+            sets, work stacks). Rent one, use it, Free it when done; forgetting to Free just means it is not reused (no
+            correctness impact). Thread-static keeps the parallel test collections independent.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.SpvInstr">
+            <summary>A parsed SPIR-V instruction: its opcode and the operand words that follow the opcode word.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvInstr.#ctor(System.Int32,System.UInt32[])">
+            <summary>A parsed SPIR-V instruction: its opcode and the operand words that follow the opcode word.</summary>
+        </member>
+        <member name="F:Prowl.Prism.Optimizer.SpvInstr.Serial">
+            <summary>Creation order (spirv-opt's Instruction::unique_id): def-use user lists are ordered by it. Only
+            the relative order within one module matters, so a process-wide counter is fine.</summary>
+        </member>
+        <member name="F:Prowl.Prism.Optimizer.SpvInstr.Mark">
+            <summary>Pass scratch: a stamp from <see cref="M:Prowl.Prism.Optimizer.SpvInstr.NewStamp"/> marks membership in a pass-local set, and Tag
+            holds a pass-local annotation. Stamps are unique process-wide, so a stale mark never matches.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvInstr.Classify(System.Int32@,System.Boolean[]@)">
+            <summary>Which operand words are id references, and where the result operand sits, cached on the
+            instruction. Read constantly (every def/user map, every liveness walk); the grammar lookup is done once
+            and reused, invalidated only when Opcode/Operands are reassigned (an in-place `Operands[k] = ...` never
+            changes the operand shape). Callers must not mutate the returned array.</summary>
+        </member>
+        <member name="P:Prowl.Prism.Optimizer.SpvInstr.ResultId">
+            <summary>The id this instruction defines, or 0 if it defines none.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.SpvModule">
+            <summary>
+            A SPIR-V module split into its 5-word header and a flat instruction list, so optimizer passes can walk,
+            rewrite and remove instructions and serialize back to a word stream. Ids are never renumbered here;
+            passes remove instructions and rewrite id uses, matching spirv-opt (which does not compact the id space).
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.ReplaceUses(System.UInt32,System.UInt32)">
+            <summary>Rewrites every id-reference use of <paramref name="from"/> to <paramref name="to"/>. Result
+            ids (definitions) are left alone, and literal operands are never touched.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.ReplaceUses(System.Collections.Generic.IReadOnlyDictionary{System.UInt32,System.UInt32})">
+            <summary>Applies many <see cref="M:Prowl.Prism.Optimizer.SpvModule.ReplaceUses(System.UInt32,System.UInt32)"/> rewrites in one pass over the module. Each id is
+            replaced by its mapped value once, so the result matches applying the pairs in order whenever no mapped value
+            is itself a key.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.UserMapOverHash(System.Collections.Generic.IEnumerable{Prowl.Prism.Optimizer.SpvInstr})">
+            <summary>UserMapOver with HashSet buckets (O(1) user removal), for passes that maintain the map by
+            removing individual users. Reused/recycled on the next UserMapOverHash call.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.UserMap">
+            <summary>Map from an id to every instruction that references it (as a non-result id operand), in
+            instruction order. The table and its lists are reused on the next UserMap()/UserMapOver() call, so a
+            caller must finish with it before then.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.UserMapRange(System.Int32,System.Int32)">
+            <summary>Like UserMap but over an explicit instruction sequence (a single function's blocks). The caller
+            may keep adding/removing entries; recycled on the next UserMap/UserMapOver call.</summary>
+            <summary>UserMapOver for the instructions at [from, to).</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.RentInstrList(System.Int32)">
+            <summary>An empty list to rebuild the instruction stream into (pass it to <see cref="M:Prowl.Prism.Optimizer.SpvModule.SetInstrs(System.Collections.Generic.List{Prowl.Prism.Optimizer.SpvInstr})"/>).</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.ReturnInstrList(System.Collections.Generic.List{Prowl.Prism.Optimizer.SpvInstr})">
+            <summary>Hand back a rented list that did not become the module's.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.SetInstrs(System.Collections.Generic.List{Prowl.Prism.Optimizer.SpvInstr})">
+            <summary>Install a rebuilt instruction list; the old one is cleared and kept as the spare.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.FindFunction(System.UInt32)">
+            <summary>Index of the OpFunction defining <paramref name="fnId"/>, or -1.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.DefMapForFolder">
+            <summary>A second pooled def table for the constant folder, which holds its own for a whole pass while
+            the pass itself uses DefMap(). Reused by the next Folder.</summary>
+        </member>
+        <member name="M:Prowl.Prism.Optimizer.SpvModule.DefMap">
+            <summary>Map from each defined id to its defining instruction. Reused on the next DefMap() call.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.DefTable">
+            <summary>Id -> defining instruction as a dense array indexed by id (ids are below the module bound), with
+            the Dictionary members the passes use. Lookups are an index, not a hash probe.</summary>
+        </member>
+        <member name="P:Prowl.Prism.Optimizer.DefTable.Values">
+            <summary>The defining instructions, dense ids in id order, then any placeholder ids.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.UserIndex">
+            <summary>A read-only id -> users index over an instruction range, stored flat (compressed rows): users of
+            an id are a contiguous slice, in instruction order. Two linear passes, no hashing, buffers reused. For
+            passes that only read users; the next Build on this instance invalidates earlier slices.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.IdSet">
+            <summary>A set of ids as a stamped array: starting a new set is O(1) (bump the stamp), membership is an
+            index. Ids at or past the dense limit spill to a hash set.</summary>
+        </member>
+        <member name="T:Prowl.Prism.Optimizer.UserTable">
+            <summary>Id -> users list as a dense array indexed by id, with the Dictionary members the passes use. Lists
+            are recycled through a capped pool across builds.</summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirVModule">
+            <summary>
+            An in-memory SPIR-V module: the 32-bit word stream plus parsed header fields.
+            This is the output of the compiler and the unit of comparison against the
+            reference corpus. The header parsing here is fully implemented; it is what the
+            reference tests exercise today while code generation is still being built.
+            </summary>
+        </member>
+        <member name="F:Prowl.Prism.SpirVModule.MagicNumber">
+            <summary>The SPIR-V magic number, first word of every valid module.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.Words">
+            <summary>The raw 32-bit word stream, including the header.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.WordCount">
+            <summary>Word count of the module (header + instructions).</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.VersionWord">
+            <summary>Encoded version word (byte layout 0x00MMmm00).</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.VersionMajor">
+            <summary>SPIR-V major version, e.g. 1 for SPIR-V 1.x.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.VersionMinor">
+            <summary>SPIR-V minor version, e.g. 3 for SPIR-V 1.3.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.GeneratorMagic">
+            <summary>Generator magic number identifying the tool that produced the module.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.Bound">
+            <summary>The id bound: all result ids in the module are strictly less than this.</summary>
+        </member>
+        <member name="P:Prowl.Prism.SpirVModule.Schema">
+            <summary>Reserved instruction schema word (currently always 0).</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirVModule.ToBytes">
+            <summary>Copies the module to a little-endian byte array (SPIR-V is little-endian on disk).</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirVModule.FromBytes(System.ReadOnlySpan{System.Byte})">
+            <summary>Parses a module from a little-endian byte buffer.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirVModule.Load(System.String)">
+            <summary>Loads a <c>.spv</c> file from disk.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirVModule.Save(System.String)">
+            <summary>Writes the module to a <c>.spv</c> file on disk.</summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirV.Instruction">
+            <summary>
+            A single SPIR-V instruction. Word layout is
+            <c>[wordCount &lt;&lt; 16 | opcode] [resultType?] [resultId?] [operands...]</c>;
+            a zero <see cref="P:Prowl.Prism.SpirV.Instruction.TypeId"/> or <see cref="P:Prowl.Prism.SpirV.Instruction.ResultId"/> means that slot is absent
+            (ids are always &gt;= 1).
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Instruction.#ctor(Prowl.Prism.SpirV.Op,System.UInt32,System.UInt32)">
+            <summary>
+            A single SPIR-V instruction. Word layout is
+            <c>[wordCount &lt;&lt; 16 | opcode] [resultType?] [resultId?] [operands...]</c>;
+            a zero <see cref="P:Prowl.Prism.SpirV.Instruction.TypeId"/> or <see cref="P:Prowl.Prism.SpirV.Instruction.ResultId"/> means that slot is absent
+            (ids are always &gt;= 1).
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirV.InstrPool">
+            <summary>
+            A per-thread bump pool of <see cref="T:Prowl.Prism.SpirV.Instruction"/> objects, mirroring glslang's TPoolAllocator: a
+            compile reuses the objects (and their operand lists) allocated by the previous compile on this thread,
+            so after warm-up the front-end allocates zero instructions. <see cref="M:Prowl.Prism.SpirV.InstrPool.Reset"/> is called at the start
+            of every compile (nothing is individually freed; the used-index simply rewinds). Thread-static, so
+            concurrent compiles on different threads never share.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.InstrPool.PushBypass">
+            <summary>
+            Suspends pooling on this thread while a second, concurrently-live compile runs. The pooled
+            instructions belong to the compile that claimed them; rewinding or handing them out again would
+            overwrite instructions that compile still references.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirV.SpirVReader">
+            <summary>Reads a serialized module back into its instruction stream (opcode + operand words).</summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirV.Module">
+            <summary>
+            Builds a SPIR-V module: allocates result ids, de-duplicates types and constants, and
+            serializes the sections in the order the spec requires (capabilities, memory model,
+            entry points, execution modes, debug, decorations, types/constants/globals, then
+            function bodies). Mirrors the role of glslang's SpvBuilder.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.TypeRuntimeArrayUnique(System.UInt32)">
+            <summary>A runtime array that is never de-duplicated; an interface block's array member carries
+            block-specific ArrayStride decoration, so each block needs its own array type identity.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.TypeArrayUnique(System.UInt32,System.UInt32)">
+            <summary>A sized array that is never de-duplicated, for the same reason as TypeRuntimeArrayUnique.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.TypeStructUnique(System.UInt32[])">
+            <summary>A distinct struct type that is never de-duplicated; interface blocks need their own
+            identity because each carries block-specific decorations (Block/BufferBlock, offsets).</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.SpecConstantOp(System.UInt32,Prowl.Prism.SpirV.Op,System.UInt32[])">
+            <summary>An operation on specialization constants: it stays specializable rather than folding,
+            so the opcode it performs is its first operand.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.GlobalStorage(System.UInt32)">
+            <summary>The storage class a global-variable id was created with (the entry-point interface
+            filter needs it: SPIR-V &lt;=1.3 may list only Input/Output variables). Null when the id is
+            not a global variable emitted so far.</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.AddFunction(System.Collections.Generic.IEnumerable{Prowl.Prism.SpirV.Instruction})">
+            <summary>Appends a function's instruction stream (OpFunction ... OpFunctionEnd).</summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.PostProcessNarrowTypes(System.UInt32)">
+            <summary>
+            glslang's Builder::postProcessFeatures for the narrow (8/16-bit) arithmetic capabilities. glslang does
+            not add Int8/Int16/Float16 when it declares an 8/16-bit type: a module that only moves narrow values in
+            and out of storage needs just the storage capabilities (and only the device features they imply). The
+            arithmetic capability is added when a constant of the type exists or an instruction in a function body
+            uses it beyond loading, storing, copying or converting it (postProcessType). Pointer types into
+            PhysicalStorageBuffer get their storage capability here too, since such memory has no variable.
+            </summary>
+        </member>
+        <member name="M:Prowl.Prism.SpirV.Module.PostProcessImageSignExtension">
+            <summary>
+            SPIR-V 1.4's SignExtend/ZeroExtend image operands: from 1.4 on glslang marks every texel-producing or
+            texel-consuming image instruction on a 32-bit integer image with the image's signedness
+            (TGlslangToSpvTraverser's signExtensionMask). Depth-compare forms only ever return float and are left alone.
+            </summary>
+        </member>
+        <member name="T:Prowl.Prism.SpirV.SpirVVersion">
+            <summary>The SPIR-V version to target. The value is the module header's version word directly
+            (byte layout 0.major.minor.0), so a module's header word is just <c>(uint)version</c>.</summary>
+        </member>
+    </members>
+</doc>

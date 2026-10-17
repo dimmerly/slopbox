@@ -1,0 +1,50 @@
+GravityX: 0
+GravityY: -9.81
+GravityZ: 0
+SolverIterations: 12
+RelaxIterations: 4
+SubSteps: 3
+AllowSleep: true
+UseMultithreading: true
+AutoSyncTransforms: true
+EnhancedDeterminism: false
+ThreadModel: 0
+EnableAuxiliaryContactPoints: true
+PersistentContactManifold: true
+SpeculativeRelaxationFactor: 0.9
+CollisionMatrixRows:
+  array:
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+    - 4294967295
+  $id: 2
+$id: 1

@@ -1,0 +1,723 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Echo</name>
+    </assembly>
+    <members>
+        <member name="P:Prowl.Echo.EchoObject.Tags">
+            <summary> A read only view of this compound's tags, in insertion order. </summary>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.Item(System.String)">
+            <summary>
+            Get or set a tag by name in this CompoundTag.
+            </summary>
+            <param name="tagName">The name of the tag to check for</param>
+            <returns>The tag if found, otherwise null</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty or the value that is being set is null</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.GetNames">
+            <summary> Gets a collection containing all tag names in this CompoundTag. </summary>
+            <returns>A collection of all tag names</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.GetAllTags">
+            <summary> Gets a collection containing all tags in this CompoundTag. </summary>
+            <returns>A collection of all tags</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Get(System.String)">
+            <summary>
+            Get a tag from this compound tag by name.
+            </summary>
+            <param name="tagName">The name of the tag to check for</param>
+            <returns>The tag if found, otherwise null</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.TryGet(System.String,Prowl.Echo.EchoObject@)">
+            <summary>
+            Try to get a tag from this compound tag by name.
+            </summary>
+            <param name="tagName">The name of the tag to check for</param>
+            <param name="result">The tag if found, otherwise null</param>
+            <returns>True if the tag was found, otherwise false</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Contains(System.String)">
+            <summary>
+            Check if this compound tag contains a tag by name.
+            </summary>
+            <param name="tagName">The name of the tag to check for</param>
+            <returns>True if the tag exists, otherwise false</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Add(System.String,Prowl.Echo.EchoObject)">
+            <summary>
+            Add a tag to this compound tag.
+            </summary>
+            <param name="name">The name of the tag</param>
+            <param name="newTag">The tag to add</param>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty</exception>
+            <exception cref="T:System.ArgumentException">Thrown if the new tag is null or the same as this tag</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Remove(System.String)">
+            <summary>
+            Remove a tag from this compound tag by name.
+            </summary>
+            <param name="name">The name of the tag to remove</param>
+            <returns>True if the tag was removed, otherwise false</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the name is null or empty</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Rename(System.String,System.String)">
+            <summary>
+            Rename a tag in this compound tag.
+            </summary>
+            <param name="oldName">The old name of the tag</param>
+            <param name="newName">The new name of the tag</param>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the old or new name is null or empty</exception>
+            <exception cref="T:System.ArgumentException">Thrown if the old name doesn't exist or the new name already exists</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.GetStoredType">
+             <summary>
+             Get the type stored inside this compound if it was serialized with type information.
+             This is useful in networked environments for security reasons, when you want to confirm the type of the object before deserializing it.
+             Otherwise a malicious actor could send a serialized object with a malicious type and cause a security vulnerability.
+            
+             For example, Maybe in your networked game you have an IPacket type that gets serialized by Echo and sent back and forth.
+             When the server goes to deserialize the packet, it can use this method to confirm that the type is actually IPacket before deserializing it.
+             Otherwise a client could send a malicious packet with a different type maybe a OpenGL Texture type or something and trigger a memory leak.
+             </summary>
+             <returns>The type stored in this compound tag, or null if no type was stored</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToBinary(System.IO.FileInfo,Prowl.Echo.BinarySerializationOptions)">
+            <summary>
+            Write this tag to a binary file in the Echo format.
+            </summary>
+            <param name="file">The file to write to</param>
+            <param name="options">Optional serialization options</param>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToBinary(System.IO.BinaryWriter,Prowl.Echo.BinarySerializationOptions)">
+            <summary>
+            Write this tag to a binary file in the Echo format.
+            </summary>
+            <param name="writer">The writer to write to</param>
+            <param name="options">Optional serialization options</param>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromBinary(System.IO.FileInfo,Prowl.Echo.BinarySerializationOptions)">
+            <summary>
+            Read a tag from a binary file in the Echo format.
+            </summary>
+            <param name="file">The file to read from</param>
+            <param name="options">Optional serialization options</param>
+            <returns>The tag read from the file</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromBinary(System.IO.BinaryReader,Prowl.Echo.BinarySerializationOptions)">
+            <summary>
+            Read a tag from a binary file in the Echo format.
+            </summary>
+            <param name="reader">The reader to read from</param>
+            <param name="options">Optional serialization options</param>
+            <returns>The tag read from the file</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToString(System.IO.FileInfo)">
+            <summary>
+            Write this tag to a string in the Echo format.
+            </summary>
+            <param name="file">The file to write to</param>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToString">
+            <summary>
+            Write this tag to a string in the Echo format.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromString(System.IO.FileInfo)">
+            <summary>
+            Read a tag from a file in the Echo format.
+            </summary>
+            <param name="file">The file to read from</param>
+            <returns>The tag read from the file</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromString(System.String)">
+            <summary>
+            Read a tag from a string in the Echo format.
+            </summary>
+            <param name="input">The string to read from</param>
+            <returns>The tag read from the string</returns>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.Count">
+            <summary>
+            Gets the number of tags in this tag.
+            Returns 0 for all tags except Compound and List.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.IsPrimitive">
+            <summary>
+            Returns true if tags of this type have a primitive value attached.
+            All tags except Compound and List have values.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.SetValue(System.Object)">
+            <summary>
+            Utility to set the value of this tag with safety checks.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.BoolValue">
+            <summary> Returns the value of this tag, cast as a bool. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than BoolTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.ByteValue">
+            <summary> Returns the value of this tag, cast as a byte. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than ByteTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.sByteValue">
+            <summary> Returns the value of this tag, cast as a sbyte. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than sByteTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.ShortValue">
+            <summary> Returns the value of this tag, cast as a short. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than ShortTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.IntValue">
+            <summary> Returns the value of this tag, cast as a int. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than IntTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.LongValue">
+            <summary> Returns the value of this tag, cast as a long. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than LongTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.UShortValue">
+            <summary> Returns the value of this tag, cast as a ushort. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than UShortTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.UIntValue">
+            <summary> Returns the value of this tag, cast as an uint. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than UIntTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.ULongValue">
+            <summary> Returns the value of this tag, cast as a ulong. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than ULongTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.FloatValue">
+            <summary> Returns the value of this tag, cast as a float. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than FloatTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.DoubleValue">
+            <summary> Returns the value of this tag, cast as a double. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than DoubleTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.DecimalValue">
+            <summary> Returns the value of this tag, cast as a decimal.
+            Only supported by DecimalTag. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on an a tag other than DecimalTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.ByteArrayValue">
+            <summary> Returns the value of this tag, cast as a byte array. </summary>
+            <exception cref="T:System.InvalidCastException"> Can throw when used on a tag other than ByteArrayTag. </exception>
+        </member>
+        <member name="P:Prowl.Echo.EchoObject.StringValue">
+            <summary> Returns the value of this tag, cast as a string.
+            Returns exact value for StringTag, and ToString(InvariantCulture) value for Byte, SByte, Double, Float, Int, UInt, Long, uLong, Short, UShort, Decimal, Bool.
+            ByteArray returns a Base64 string.
+            Null returns a string with contents "NULL".
+            Not supported by CompoundTag, ListTag. </summary>
+            <exception cref="T:System.InvalidCastException"> Will throw when used on an unsupported tag. </exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.CreateDelta(Prowl.Echo.EchoObject,Prowl.Echo.EchoObject)">
+            <summary>
+            Creates a delta representing the differences between two EchoObjects.
+            The delta is itself an EchoObject that can be serialized.
+            </summary>
+            <param name="from">The baseline/original EchoObject</param>
+            <param name="to">The target/modified EchoObject</param>
+            <returns>An EchoObject containing the delta operations</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ApplyDelta(Prowl.Echo.EchoObject,Prowl.Echo.EchoObject)">
+            <summary>
+            Applies a delta to a baseline EchoObject, producing a new modified EchoObject.
+            </summary>
+            <param name="baseline">The baseline EchoObject to apply the delta to</param>
+            <param name="delta">The delta EchoObject created by CreateDelta</param>
+            <returns>A new EchoObject with the delta applied</returns>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToJson">
+            <summary>
+            Write this EchoObject to a JSON string.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromJson(System.String)">
+            <summary>
+            Read an EchoObject from a JSON string. Supports generic JSON.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToBson">
+            <summary>
+            Write this EchoObject to a BSON byte array.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromBson(System.Byte[])">
+            <summary>
+            Read an EchoObject from a BSON byte array.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToYaml">
+            <summary>
+            Write this EchoObject to a YAML string.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromYaml(System.String)">
+            <summary>
+            Read an EchoObject from a YAML string. Supports generic YAML.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.WriteToXml">
+            <summary>
+            Write this EchoObject to an XML string.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.ReadFromXml(System.String)">
+            <summary>
+            Read an EchoObject from an XML string. Supports generic XML.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.TryFind(System.String,Prowl.Echo.EchoObject@)">
+            <inheritdoc cref="M:Prowl.Echo.EchoObject.Find(System.String)"/>"
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.Find(System.String)">
+            <summary>
+            Find a tag by path. For example, if you have a compound tag with a tag called "stats" and that tag has a tag called "stamina",
+            you can find the health tag by calling Find("stats/stamina").
+            Lists can be indexed by their position in the list, for example Find("Players/0") will return the first player tag in a players list.
+            </summary>
+            <param name="path">The path to the tag</param>
+            <returns>The tag if found, otherwise null</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if this tag is not a compound tag</exception>
+        </member>
+        <member name="M:Prowl.Echo.EchoObject.GetDictionaryAt(System.String)">
+            <summary> A copy of the compound at the path. Changing it does not change the compound. </summary>
+        </member>
+        <member name="T:Prowl.Echo.CompoundTags">
+            <summary> A read only view of a compound's tags, in insertion order. Change tags through the EchoObject itself. </summary>
+        </member>
+        <member name="T:Prowl.Echo.BsonFileFormat">
+            <summary>
+            BSON (Binary JSON) file format for EchoObject serialization.
+            Implements the BSON spec (bsonspec.org) with no external dependencies.
+            Note: Some type precision may be lost (e.g., byte/short → int32, float → double, decimal → string).
+            For exact type preservation, use EchoTextFormat or EchoBinaryFormat.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.BinaryEncodingMode">
+            <summary>
+            Specifies the binary encoding mode for the Echo format.
+            </summary>
+        </member>
+        <member name="F:Prowl.Echo.BinaryEncodingMode.Performance">
+            <summary>
+            Optimized for performance with fixed-width integers.
+            Results in larger file sizes but faster read/write operations.
+            </summary>
+        </member>
+        <member name="F:Prowl.Echo.BinaryEncodingMode.Size">
+            <summary>
+            Optimized for size using LEB128 encoding for integers.
+            Results in smaller file sizes but slightly slower read/write operations.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.BinarySerializationOptions">
+            <summary>
+            Configuration options for binary serialization.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.BinarySerializationOptions.EncodingMode">
+            <summary>
+            Gets or sets the encoding mode for binary serialization.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.BinarySerializationOptions.Default">
+            <summary>
+            Creates a new instance of BinarySerializationOptions with default settings.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.EchoBinaryFormat">
+            <summary>
+            IFileFormat wrapper around the Echo binary format.
+            Preserves all EchoObject types exactly during roundtrip.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.EchoBinaryFormat.Options">
+            <summary>
+            Options controlling binary encoding mode (Performance vs Size).
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.EchoTextFormat">
+            <summary>
+            IFileFormat wrapper around the Echo text format.
+            Preserves all EchoObject types exactly during roundtrip.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.IFileFormat">
+            <summary>
+            Interface for reading and writing EchoObject trees to different file formats.
+            Implement this interface to add support for custom serialization formats.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.IFileFormat.WriteTo(Prowl.Echo.EchoObject,System.IO.Stream)">
+            <summary>
+            Write an EchoObject to a stream.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.IFileFormat.ReadFrom(System.IO.Stream)">
+            <summary>
+            Read an EchoObject from a stream.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.FileFormatExtensions">
+            <summary>
+            Extension methods providing string, file, and byte[] convenience methods for IFileFormat.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.WriteToString(Prowl.Echo.IFileFormat,Prowl.Echo.EchoObject)">
+            <summary>
+            Write an EchoObject to a UTF-8 string.
+            Best suited for text-based formats (JSON, YAML, XML, EchoText).
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.ReadFromString(Prowl.Echo.IFileFormat,System.String)">
+            <summary>
+            Read an EchoObject from a UTF-8 string.
+            Best suited for text-based formats (JSON, YAML, XML, EchoText).
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.WriteToBytes(Prowl.Echo.IFileFormat,Prowl.Echo.EchoObject)">
+            <summary>
+            Write an EchoObject to a byte array.
+            Works for both text and binary formats.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.ReadFromBytes(Prowl.Echo.IFileFormat,System.Byte[])">
+            <summary>
+            Read an EchoObject from a byte array.
+            Works for both text and binary formats.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.WriteToFile(Prowl.Echo.IFileFormat,Prowl.Echo.EchoObject,System.String)">
+            <summary>
+            Write an EchoObject to a file.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.FileFormatExtensions.ReadFromFile(Prowl.Echo.IFileFormat,System.String)">
+            <summary>
+            Read an EchoObject from a file.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.JsonFileFormat">
+            <summary>
+            JSON file format for EchoObject serialization. Zero external dependencies.
+            Writes clean, standard JSON. Reads both Echo-produced and generic JSON.
+            Note: Some type precision may be lost (e.g., byte/short → int, float → double, ByteArray → base64 string).
+            For exact type preservation, use EchoTextFormat or EchoBinaryFormat.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.JsonFileFormat.Indented">
+            <summary>
+            Whether to indent the output for readability. Default true.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.LEB128">
+            <summary>
+            Implements LEB128 (Little Endian Base 128) encoding for variable-length integer encoding.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.LEB128.WriteUnsigned(System.IO.BinaryWriter,System.UInt64)">
+            <summary>
+            Writes an unsigned integer to the stream using ULEB128 encoding.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.LEB128.WriteSigned(System.IO.BinaryWriter,System.Int64)">
+            <summary>
+            Writes a signed integer to the stream using SLEB128 encoding.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.LEB128.ReadUnsigned(System.IO.BinaryReader)">
+            <summary>
+            Reads an unsigned integer from the stream using ULEB128 encoding.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.LEB128.ReadSigned(System.IO.BinaryReader)">
+            <summary>
+            Reads a signed integer from the stream using SLEB128 encoding.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.XmlFileFormat">
+            <summary>
+            XML file format for EchoObject serialization. Zero external dependencies.
+            Uses type attributes to preserve all EchoObject types during roundtrip.
+            Also supports reading generic XML without type attributes (types are inferred).
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.YamlFileFormat">
+            <summary>
+            YAML file format for EchoObject serialization. Zero external dependencies.
+            Writes clean, human-readable YAML. Reads both Echo-produced and generic YAML.
+            Supports mappings, sequences, scalars (strings, numbers, booleans, null), and !!binary.
+            Note: Some type precision may be lost (e.g., byte/short → int, float → double).
+            For exact type preservation, use EchoTextFormat or EchoBinaryFormat.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.YamlFileFormat.SplitFlowItems(System.String)">
+            <summary>
+            Split flow-style items by commas, respecting nested brackets and quotes.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.Formatters.AnonymousTypeFormat">
+            <summary>
+            Handles serialization of anonymous types. Deserialization is not supported
+            as anonymous types cannot be reconstructed at runtime.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Formatters.AnonymousTypeFormat.IsAnonymousType(System.Type)">
+            <summary>
+            Determines if a type is an anonymous type by checking compiler-generated attributes
+            and naming conventions.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Formatters.AnonymousTypeFormat.GetAnonymousTypeSignature(System.Type)">
+            <summary>
+            Creates a readable signature for the anonymous type for debugging purposes.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Formatters.AnyObjectFormat.HasBody(Prowl.Echo.EchoObject)">
+            <summary>
+            True when <paramref name="value"/> carries field data (a definition) rather than being a bare
+            reference stub of only <c>$id</c> (and an optional <c>$type</c> wrapper).
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Formatters.AnyObjectFormat.DeserializeBody(Prowl.Echo.EchoObject,System.Object,Prowl.Echo.SerializationContext)">
+            <summary>Deserialize a compound's fields into an already-created instance.</summary>
+        </member>
+        <member name="M:Prowl.Echo.Formatters.AnyObjectFormat.DeserializeInto(Prowl.Echo.EchoObject,System.Object,Prowl.Echo.SerializationContext)">
+            <summary>
+            Deserialize EchoObject data INTO an existing object instance, overwriting its
+            serializable fields without creating a new instance. Internal state (non-serialized
+            fields, caches, GPU resources, etc.) is preserved.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.Formatters.FixedStructureFormat">
+            <summary>
+            Provides efficient serialization for types marked with [FixedStructure]
+            by using ordinal-based serialization instead of name-based.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.IExternalReferenceResolver">
+            <summary>
+            Lets a caller mark object references that live outside the graph being serialized so Echo links
+            to them by a stable key instead of inlining (and, on deserialize, deep-copying) them.
+            The classic case is copy/paste of a scene object: references to other objects in the selection
+            should be duplicated, but references pointing out of the selection should resolve back to the
+            original live instances rather than spawning copies.
+            Set one on <see cref="P:Prowl.Echo.SerializationContext.ExternalReferences"/>.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.IExternalReferenceResolver.GetReferenceKey(System.Object)">
+            <summary>
+            Called during serialization for every reference-type value. Return a stable key when
+            <paramref name="value"/> is external and should be linked rather than serialized; return null
+            to serialize it normally. Keys should be simple, self-contained values (a Guid, string, int,
+            or small struct) so they round-trip on their own.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.IExternalReferenceResolver.ResolveReference(System.Object,System.Type)">
+            <summary>
+            Called during deserialization to turn a key produced by <see cref="M:Prowl.Echo.IExternalReferenceResolver.GetReferenceKey(System.Object)"/> back into
+            the live instance. <paramref name="targetType"/> is the reference's declared/serialized type.
+            Return null if the reference can no longer be resolved.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.IReferenceRule">
+            <summary>
+            A global rule that writes some objects as a key instead of their content, for objects that live in
+            a store of their own (an asset database). The value passed to the outermost Serialize call is always
+            written in full, so an object can still be saved as itself. Set one on <see cref="P:Prowl.Echo.Serializer.ReferenceRule"/>.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.IReferenceRule.Key">
+            <summary>The reserved compound key stubs are written under, for example "$asset".</summary>
+        </member>
+        <member name="M:Prowl.Echo.IReferenceRule.TryGetReference(System.Object,Prowl.Echo.SerializationContext,System.String@)">
+            <summary>Asked for every reference type value except the root of the write. Return true to write a stub.</summary>
+        </member>
+        <member name="M:Prowl.Echo.IReferenceRule.Resolve(System.String,System.Type,Prowl.Echo.SerializationContext)">
+            <summary>Turns a stub back into an object. declaredType is the stub's $type when present, else the field type.</summary>
+        </member>
+        <member name="T:Prowl.Echo.ISerializationCallbackReceiver">
+            <summary>
+            Sometimes you dont want a Constructor to be called when deserializing, but still need todo some work after the object has been created
+            This interface allows you to do that
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.ISerializationCallbackReceiver.OnBeforeSerialize">
+            <summary>
+            Called right before the Serializer serializes this object
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.ISerializationCallbackReceiver.OnAfterDeserialize">
+            <summary>
+            Called right after the Serializer deserializes this object
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.CachedFieldInfo">
+            <summary>
+            Cached metadata for a serialized field, or a [DataMember] property, that avoids per-call attribute reflection.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.FormerlySerializedAsAttribute">
+             <summary>
+             Preserves a member's or type's previous serialized name across a rename.
+            
+             On a <b>field</b>: old serialized data stored under <see cref="P:Prowl.Echo.FormerlySerializedAsAttribute.oldName"/> is read into the field.
+             On a <b>class/struct</b>: old serialized <c>$type</c> data referencing <see cref="P:Prowl.Echo.FormerlySerializedAsAttribute.oldName"/> (the
+             former type name) resolves to this type, so renaming a serialized type (e.g. a component script)
+             doesn't orphan existing data. The name may be the old namespace-qualified name or the old short name.
+             </summary>
+        </member>
+        <member name="T:Prowl.Echo.FixedEchoStructureAttribute">
+            <summary>
+            Indicates that a type's structure is fixed and will not change,
+            allowing for more efficient ordinal-based serialization.
+            This doesn't require that memory layout is fixed, only that the order of fields is fixed.
+            
+            This works great for types like Vector3, Quaternion, etc.
+            Since those types are always the same size and layout.
+            It also works great for network packets and other fixed-size structures, where you know the Writer and Reader will always be in sync.
+            
+            This is highly recommended to be used when possible.
+            </summary>
+        </member>
+        <member name="F:Prowl.Echo.TypeMode.Aggressive">
+            <summary> Always include type information. </summary>
+        </member>
+        <member name="F:Prowl.Echo.TypeMode.Auto">
+            <summary> Include type information only when necessary (When the type is not the expected type) </summary>
+        </member>
+        <member name="F:Prowl.Echo.TypeMode.None">
+            <summary> Never include type information. (This may cause deserialization to fail if the type is not the expected type) </summary>
+        </member>
+        <member name="T:Prowl.Echo.SerializeOverride">
+            <summary>
+            Called during serialization to optionally override how an object is serialized.
+            Return a non-null EchoObject to use that instead of normal serialization.
+            Return null to proceed with normal serialization.
+            </summary>
+        </member>
+        <member name="T:Prowl.Echo.DeserializeOverride">
+            <summary>
+            Called during deserialization to optionally override how an EchoObject is deserialized.
+            Return (true, result) to use the result instead of normal deserialization.
+            Return (false, null) to proceed with normal deserialization.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.SerializationContext.ReadInto(System.Int32,System.Object)">
+            <summary>
+            Reads the definition with this reference id into <paramref name="target"/> instead of a new object, and
+            resolves every reference to that id to it. Call before deserializing, with ids taken from the write's
+            <see cref="F:Prowl.Echo.SerializationContext.objectToId"/>, to copy a graph onto objects that already exist.
+            </summary>
+        </member>
+        <member name="F:Prowl.Echo.SerializationContext.fullyDefinedIds">
+            <summary>
+            Reference ids whose full definition has already been deserialized. Lets the deserializer tell a
+            forward-reference placeholder (still awaiting its definition) apart from an already-populated
+            instance, and detect a duplicate definition for the same id.
+            </summary>
+        </member>
+        <member name="F:Prowl.Echo.SerializationContext.unresolvedDefinitions">
+            <summary>
+            Definitions whose <c>$type</c> could not be resolved, by reference id. Lets a caller that can
+            stand in for a missing type recover the data when only a reference to it reached that caller.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.Root">
+            <summary>The value given to the outermost Serialize call, which the reference rule always writes in full.</summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.IgnoreReferenceRule">
+            <summary>Writes every reference by value, for exports that must not depend on the reference rule's store.</summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.RootByReference">
+            <summary>Asks the reference rule about the root too, for writing a single value that is a reference, not an object being saved.</summary>
+        </member>
+        <member name="M:Prowl.Echo.SerializationContext.Defer(System.Action)">
+            <summary>
+            Queues work to run after the whole object graph has finished deserializing (once every reference
+            placeholder exists with its correct type). Used to recover data whose definition was serialized
+            inline somewhere that couldn't be deserialized in the normal pass (e.g. inside a missing component).
+            Runs automatically before the root object's OnAfterDeserialize, or when the outermost
+            Deserialize/DeserializeInto call using this context returns.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.SerializationContext.RunDeferredActions">
+            <summary>Runs (and drains) all deferred actions, including any queued while running earlier ones.</summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.OnSerialize">
+            <summary>
+            Optional override for serialization. When set, this is called before normal serialization.
+            If it returns a non-null EchoObject, that is used as the serialized data (type wrapping still applies).
+            If it returns null, normal serialization proceeds.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.OnDeserialize">
+            <summary>
+            Optional override for deserialization. When set, this is called before normal deserialization.
+            If it returns (true, result), the result is used directly.
+            If it returns (false, null), normal deserialization proceeds.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.SerializationContext.ExternalReferences">
+            <summary>
+            Optional resolver for references that point outside the graph being serialized. When set, Echo
+            links to those objects by a stable key instead of inlining them. See <see cref="T:Prowl.Echo.IExternalReferenceResolver"/>.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.Serializer.ReferenceRule">
+            <summary>Consulted by every context. Null writes every object by value.</summary>
+        </member>
+        <member name="M:Prowl.Echo.Serializer.ClearCache">
+            <summary>
+            Clears all reflection caches. Call this when you need to reload assemblies or refresh type information.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Serializer.UnregisterFormat(Prowl.Echo.ISerializationFormat)">
+            <summary>
+            Removes a previously registered format. Has no effect if it was not registered.
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Serializer.DeserializeInto(Prowl.Echo.EchoObject,System.Object)">
+            <summary>
+            Deserialize EchoObject data into an existing object instance, overwriting serializable
+            fields without creating a new instance. Preserves non-serialized internal state
+            (history buffers, GPU resources, caches, etc.).
+            Only works for compound/object types (not primitives, arrays, etc.).
+            </summary>
+        </member>
+        <member name="M:Prowl.Echo.Serializer.DeserializeInto(Prowl.Echo.EchoObject,System.Object,Prowl.Echo.SerializationContext)">
+            <inheritdoc cref="M:Prowl.Echo.Serializer.DeserializeInto(Prowl.Echo.EchoObject,System.Object)"/>
+        </member>
+        <member name="T:Prowl.Echo.TypeNameRegistry">
+            <summary>
+            Manages compact and full type name resolution for serialization.
+            </summary>
+        </member>
+        <member name="P:Prowl.Echo.TypeNameRegistry.TypeResolver">
+            <summary>
+            Optional override consulted before the normal assembly scan when resolving a type name (both the
+            compact and full forms are passed through it). Return the resolved <see cref="T:System.Type"/>, or null to
+            fall through to the default resolution.
+            </summary>
+        </member>
+    </members>
+</doc>

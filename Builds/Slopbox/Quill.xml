@@ -1,0 +1,2288 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Quill</name>
+    </assembly>
+    <members>
+        <member name="T:Prowl.Quill.BrushType">
+            <summary>
+            Specifies the type of brush used for filling shapes.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.BrushType.None">
+            <summary>
+            No brush; uses solid color from vertex data.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.BrushType.Linear">
+            <summary>
+            Linear gradient brush that transitions between two colors along a line.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.BrushType.Radial">
+            <summary>
+            Radial gradient brush that transitions between two colors in a circular pattern.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.BrushType.Box">
+            <summary>
+            Box gradient brush that transitions between two colors with rounded corners.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.WindingMode">
+            <summary>
+            Specifies the winding rule used to determine the interior of complex paths.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.WindingMode.OddEven">
+            <summary>
+            A point is inside the shape if a ray from that point crosses an odd number of path segments.
+            Also known as the even-odd fill rule.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.WindingMode.NonZero">
+            <summary>
+            A point is inside the shape if the winding number is non-zero.
+            Also known as the non-zero fill rule.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.DrawCall">
+            <summary>
+            Represents a single draw call containing rendering state and the number of elements to draw.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawCall.ElementCount">
+            <summary>
+            The number of index elements (vertices * 3) in this draw call.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawCall.Brush">
+            <summary>
+            The brush state for this draw call, containing gradient and texture information.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.DrawCall.Texture">
+            <summary>
+            Gets the texture from the brush. Returns null if no texture is set.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.DrawCall.FontAtlas">
+            <summary>
+            The font atlas texture for text in this draw call, or null if it contains no text.
+            Backends bind this to a dedicated sampler unit; the default shader samples it for text
+            fragments (UV >= 2) while shapes sample <see cref="P:Prowl.Quill.DrawCall.Texture"/>.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.DrawCall.Shader">
+            <summary>
+            Gets the custom shader from the brush. Returns null if no custom shader is set (uses default).
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.DrawCall.ShaderUniforms">
+            <summary>
+            Gets the shader uniforms from the brush. Returns null if no custom uniforms are set.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCall.MatchesState(Prowl.Quill.ProwlCanvasState@,System.Object)">
+            <summary>
+            Whether this draw call was built from the given state, so more geometry can be folded into
+            it. Ordered cheapest-discriminating-first so the common mismatch exits on the first test.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCall.GetScissor(System.Single,Prowl.Vector.Float4@,Prowl.Vector.Float2@,Prowl.Vector.Float2@)">
+            <summary>
+            The scissor transform as a 2D affine with the framebuffer scale folded in, plus the extent
+            the shader compares against. The extent already carries the half-pixel feather, so the
+            shader is a subtract and two clamps.
+            </summary>
+            <remarks>
+            A negative extent means no scissor, which the shader early-outs on.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.DrawCall.GetBrushTransform(System.Single,Prowl.Vector.Float4@,Prowl.Vector.Float2@)">
+            <summary>The brush gradient transform as a 2D affine with the framebuffer scale folded in.</summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCall.GetTextureTransform(System.Single,Prowl.Vector.Float4@,Prowl.Vector.Float2@)">
+            <summary>The texture transform as a 2D affine with the framebuffer scale folded in.</summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCall.ToAffine(Prowl.Vector.Spatial.Transform2D@,System.Single,Prowl.Vector.Float4@,Prowl.Vector.Float2@)">
+            <summary>
+            Packs a Transform2D as (A, C, B, D) plus (E, F), so the shader evaluates it as two dot
+            products and an add. Dividing the linear part by the framebuffer scale folds in the
+            pixel-to-logical conversion the shader used to do per fragment.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.ShaderUniforms">
+            <summary>
+            Holds custom uniform values for a shader. Used for batching - shapes with the same
+            shader and uniform values will be batched together into a single draw call.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.ShaderUniforms.Values">
+            <summary>
+            Gets the uniform values as a read-only dictionary.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.ShaderUniforms.Set(System.String,System.Object)">
+            <summary>
+            Sets a uniform value. Supported types: float, int, Float2, Float3, Float4, Float4x4.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.ShaderUniforms.Remove(System.String)">
+            <summary>
+            Removes a uniform by name.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.ShaderUniforms.Clear">
+            <summary>
+            Clears all uniforms.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.ShaderUniforms.Clone">
+            <summary>
+            Creates a shallow clone of this ShaderUniforms instance.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.Vertex">
+            <summary>
+            Represents a vertex in the canvas rendering system with position, UV coordinates, and color.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Vertex.Position">
+            <summary>Gets the position of the vertex in screen space.</summary>
+        </member>
+        <member name="P:Prowl.Quill.Vertex.UV">
+            <summary>Gets the texture/UV coordinates of the vertex.</summary>
+        </member>
+        <member name="P:Prowl.Quill.Vertex.Color">
+            <summary>Gets the color of the vertex.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.x">
+            <summary>The X position in screen space.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.y">
+            <summary>The Y position in screen space.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.u">
+            <summary>The U texture coordinate.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.v">
+            <summary>The V texture coordinate.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.r">
+            <summary>The red color component.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.g">
+            <summary>The green color component.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.b">
+            <summary>The blue color component.</summary>
+        </member>
+        <member name="F:Prowl.Quill.Vertex.a">
+            <summary>The alpha (transparency) component.</summary>
+        </member>
+        <member name="M:Prowl.Quill.Vertex.#ctor(Prowl.Vector.Float2@,Prowl.Vector.Float2@,Prowl.Vector.Color32@)">
+            <summary>Creates a vertex.</summary>
+        </member>
+        <member name="T:Prowl.Quill.Brush">
+            <summary>
+            Represents a brush used for filling shapes with gradients, textures, or custom shaders.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Brush.BrushMatrix">
+            <summary>
+            Gets the inverse transformation matrix for the brush gradient.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Brush.TextureMatrix">
+            <summary>
+            Gets the inverse transformation matrix for texture mapping.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Transform">
+            <summary>
+            The transformation applied to the brush gradient coordinates.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.TextureTransform">
+            <summary>
+            The transformation applied to texture coordinates.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Type">
+            <summary>
+            The type of brush (None, Linear, Radial, or Box gradient).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Color1">
+            <summary>
+            The first color of the gradient (inner color for radial, start color for linear).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Color2">
+            <summary>
+            The second color of the gradient (outer color for radial, end color for linear).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Point1">
+            <summary>
+            The first point of the gradient (center for radial, start point for linear).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Point2">
+            <summary>
+            The second point of the gradient. For linear gradients this is the end point.
+            For radial gradients, X and Y contain inner and outer radius.
+            For box gradients, this contains the half-size.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.CornerRadii">
+            <summary>
+            The corner radius for box gradients.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Feather">
+            <summary>
+            The feather amount for box gradients, controlling the softness of edges.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.BackdropBlur">
+            <summary>
+            Backdrop blur radius in pixels. When greater than zero, any shape filled with this brush
+            is composited over a blurred copy of the framebuffer behind it (frosted glass). This is
+            orthogonal to <see cref="F:Prowl.Quill.Brush.Type"/>, so it combines with solid, gradient, or textured fills.
+            Backends without backdrop blur support ignore it and draw the fill normally.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Texture">
+            <summary>
+            The texture to apply to shapes, or null for no texture.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Shader">
+            <summary>
+            Custom shader object (backend-specific). When null, the default shader is used.
+            When set, the renderer will use this shader and only apply user-provided uniforms.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.Brush.Uniforms">
+            <summary>
+            Custom uniforms to pass to the shader. Only used when Shader is not null.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Brush.Matches(Prowl.Quill.Brush@)">
+            <summary>
+            Exact comparison of everything the shader binds, used to confirm a batch merge rather than
+            trusting <see cref="M:Prowl.Quill.Brush.ComputeHash"/> alone.
+            </summary>
+            <remarks>Fields the shader ignores for this brush type are skipped.</remarks>
+        </member>
+        <member name="T:Prowl.Quill.Canvas">
+            <summary>
+            A hardware-accelerated 2D vector graphics canvas for drawing shapes, text, and images.
+            Provides an API similar to HTML5 Canvas for creating paths, stroking, filling, and rendering.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.DrawCalls">
+            <summary>
+            Gets the list of draw calls accumulated during rendering.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.Indices">
+            <summary>
+            Gets the triangle indices for all accumulated geometry.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.Vertices">
+            <summary>
+            Gets the vertices for all accumulated geometry.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.VertexBuffer">
+            <summary>
+            The live vertex backing store. Only the first <see cref="P:Prowl.Quill.Canvas.VertexCount"/> entries are valid,
+            and the array is replaced when the canvas grows. Backends upload straight from this rather
+            than copying the geometry out every frame.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.VertexCount">
+            <summary>The number of valid entries in <see cref="P:Prowl.Quill.Canvas.VertexBuffer"/>.</summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.IndexBuffer">
+            <summary>
+            The live index backing store. Only the first <see cref="P:Prowl.Quill.Canvas.IndexCount"/> entries are valid,
+            and the array is replaced when the canvas grows.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.IndexCount">
+            <summary>The number of valid entries in <see cref="P:Prowl.Quill.Canvas.IndexBuffer"/>.</summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.CurrentPoint">
+            <summary>
+            Gets the current point of the active path, or Zero if no path is active.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.FramebufferScale">
+            <summary>
+            Gets the framebuffer scale (physical pixels per logical pixel). All coordinates passed
+            to the canvas are in logical units; the canvas emits pixel-space vertices by
+            multiplying them by this factor, and font atlases are rasterized at this density for
+            crisp HiDPI output.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.Width">
+            <summary>
+            Gets the canvas width in logical units (framebuffer width / FramebufferScale).
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.Height">
+            <summary>
+            Gets the canvas height in logical units (framebuffer height / FramebufferScale).
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.PixelFraction">
+            <summary>
+            Gets the size of one physical pixel in logical units (= 1 / FramebufferScale).
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.Text">
+            <summary>
+            Gets the text renderer for drawing text and accessing font functionality.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.#ctor(Prowl.Quill.ICanvasRenderer,Prowl.Quill.FontAtlasSettings)">
+            <summary>
+            Creates a new Canvas with the specified renderer backend and font settings.
+            </summary>
+            <param name="renderer">The renderer backend implementation for drawing.</param>
+            <param name="fontAtlasSettings">Settings for the font atlas used for text rendering.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when renderer is null.</exception>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.BeginFrame(System.Single,System.Single,System.Single)">
+            <summary>
+            Begins a new frame.
+            </summary>
+            <remarks>
+            All drawing coordinates are in logical units. The framebuffer scale tells the canvas
+            how many physical pixels correspond to one logical unit.
+            </remarks>
+            <param name="width">Window width in logical units.</param>
+            <param name="height">Window height in logical units.</param>
+            <param name="framebufferScale">Ratio of physical pixels to logical pixels (1.0 = standard, 2.0 = Retina/HiDPI).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.PixelToLogical(Prowl.Vector.Float2)">
+            <summary>
+            Converts a point from physical pixel coordinates to logical units.
+            Handy for converting mouse/touch positions supplied by the host.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.PixelToLogical(System.Single)">
+            <summary>
+            Converts a value from physical pixels to logical units.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.LogicalToPixel(Prowl.Vector.Float2)">
+            <summary>
+            Converts a point from logical units to physical pixel coordinates.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.LogicalToPixel(System.Single)">
+            <summary>
+            Converts a value from logical units to physical pixels.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.FringeHalfLogical">
+            <summary>
+            Approximate uniform scale (in logical units) of the current transform, taken from the
+            square root of the linear part's determinant. The hardcoded "Filled" primitives inset/
+            outset their anti-aliasing fringe in logical space before transforming, so dividing the
+            half-pixel fringe by this keeps it a constant ~1 physical pixel on screen at any zoom
+            (matching the polyline/stroke fringe, which is already built in pixel space).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Clear">
+            <summary>
+            Clears all accumulated geometry, draw calls, and resets the canvas state.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SaveState">
+            <summary>
+            Saves the current canvas state (transform, stroke, fill, scissor, brush) to a stack.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RestoreState">
+            <summary>
+            Restores the most recently saved canvas state from the stack.
+            Does nothing if no state has been saved.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ResetState">
+            <summary>
+            Resets the canvas state to default values without clearing the state stack.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeColor(Prowl.Vector.Color32)">
+            <summary>
+            Sets the color used for stroking paths.
+            </summary>
+            <param name="color">The stroke color.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeJoint(Prowl.Quill.JointStyle)">
+            <summary>
+            Sets the joint style used when stroking paths at corners.
+            </summary>
+            <param name="joint">The joint style (Bevel, Miter, or Round).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeCap(Prowl.Quill.EndCapStyle)">
+            <summary>
+            Sets the cap style for both start and end of open paths.
+            </summary>
+            <param name="cap">The cap style (Butt, Square, Round, or Bevel).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeStartCap(Prowl.Quill.EndCapStyle)">
+            <summary>
+            Sets the cap style for the start of open paths.
+            </summary>
+            <param name="cap">The cap style (Butt, Square, Round, or Bevel).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeEndCap(Prowl.Quill.EndCapStyle)">
+            <summary>
+            Sets the cap style for the end of open paths.
+            </summary>
+            <param name="cap">The cap style (Butt, Square, Round, or Bevel).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeWidth(System.Single)">
+            <summary>
+            Sets the width of stroked paths in logical units.
+            </summary>
+            <param name="width">The stroke width. Default is 2.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetStrokeScale(System.Single)">
+            <summary>
+            Sets a scale factor applied to stroke width.
+            </summary>
+            <param name="scale">The scale factor.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetMiterLimit(System.Single)">
+            <summary>
+            Sets the miter limit for mitered joints. When the miter length would exceed this ratio of stroke width, the joint falls back to bevel.
+            </summary>
+            <param name="limit">The miter limit ratio. Default is 4.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetTessellationTolerance(System.Single)">
+            <summary>
+            Sets the tessellation tolerance for curve approximation. Lower values produce smoother curves with more triangles.
+            </summary>
+            <param name="tolerance">The tessellation tolerance. Default is 0.5.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetRoundingMinDistance(System.Single)">
+            <summary>
+            Sets the minimum distance between points when approximating curves and arcs.
+            </summary>
+            <param name="distance">The minimum distance in logical units. Default is 3.</param>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.CurveSpacing">
+            <summary>Spacing between generated curve points in local units. The rounding distance is meant on screen, so it shrinks as the current transform scales up.</summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.CurveSegments(System.Single)">
+            <summary>Segments for a curve of <paramref name="length"/> local units, capped so a huge curve scaled far up cannot flood the vertex buffer.</summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetBrushTexture(System.Object)">
+            <summary>
+            Sets a texture on the current brush. The texture will be applied to all shapes drawn with this brush.
+            Use SetBrushTextureTransform to control how the texture maps to world coordinates.
+            </summary>
+            <param name="texture">The texture to apply, or null to clear the brush texture.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetBrushTextureTransform(Prowl.Vector.Spatial.Transform2D)">
+            <summary>
+            Sets the texture transform for the current brush. This controls how world coordinates map to texture coordinates.
+            The transform is applied to world-space coordinates before sampling the texture.
+            </summary>
+            <param name="transform">The transformation to apply. Use scale to control texture size, rotation to rotate texture, translation to offset it.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ClearBrushTexture">
+            <summary>
+            Clears the brush texture, reverting to solid color or gradient rendering.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetFontAtlas(System.Object)">
+            <summary>
+            Sets the font atlas texture used by text draws. This is kept as a dedicated canvas-level
+            state (bound to a separate sampler unit by the backend) rather than the brush texture, so
+            text and shapes share a draw call and batch together. Text vertices are flagged by their
+            UV (>= 2) and sample this atlas; shapes sample the brush texture. It only changes when the
+            atlas is (re)allocated, so it rarely breaks a batch.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetCustomShader(System.Object)">
+            <summary>
+            Sets a custom shader on the current brush. When a custom shader is set,
+            the default brush uniforms will NOT be set by the renderer - the user is responsible
+            for setting all required uniforms via SetShaderUniform() or SetShaderUniforms().
+            </summary>
+            <param name="shader">The backend-specific shader object, or null to use the default shader.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetShaderUniform(System.String,System.Object)">
+            <summary>
+            Sets a custom uniform value for the current shader.
+            Supported types: float, int, Float2, Float3, Float4, Float4x4.
+            </summary>
+            <param name="name">The uniform name in the shader.</param>
+            <param name="value">The uniform value.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetShaderUniforms(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Sets multiple shader uniforms at once.
+            </summary>
+            <param name="uniforms">Dictionary of uniform names to values.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ClearCustomShader">
+            <summary>
+            Clears the custom shader and uniforms, reverting to the default shader.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetLinearBrush(System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32,Prowl.Vector.Color32)">
+            <summary>
+            Sets a linear gradient brush for filling shapes.
+            </summary>
+            <param name="x1">The X coordinate of the gradient start point.</param>
+            <param name="y1">The Y coordinate of the gradient start point.</param>
+            <param name="x2">The X coordinate of the gradient end point.</param>
+            <param name="y2">The Y coordinate of the gradient end point.</param>
+            <param name="color1">The color at the start point.</param>
+            <param name="color2">The color at the end point.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetRadialBrush(System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32,Prowl.Vector.Color32)">
+            <summary>
+            Sets a radial gradient brush for filling shapes.
+            </summary>
+            <param name="centerX">The X coordinate of the gradient center.</param>
+            <param name="centerY">The Y coordinate of the gradient center.</param>
+            <param name="innerRadius">The radius at which the inner color ends.</param>
+            <param name="outerRadius">The radius at which the outer color begins.</param>
+            <param name="innerColor">The color at the center.</param>
+            <param name="outerColor">The color at the outer edge.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetBoxBrush(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32,Prowl.Vector.Color32)">
+            <summary>
+            Sets a box gradient brush for filling shapes with rounded corners and feathered edges.
+            </summary>
+            <param name="centerX">The X coordinate of the box center.</param>
+            <param name="centerY">The Y coordinate of the box center.</param>
+            <param name="width">The width of the box.</param>
+            <param name="height">The height of the box.</param>
+            <param name="radi">The corner radius of the box.</param>
+            <param name="feather">The feather amount for soft edges.</param>
+            <param name="innerColor">The color inside the box.</param>
+            <param name="outerColor">The color outside the box.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ClearBrush">
+            <summary>
+            Clears the current brush, reverting to solid color fills.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetBackdropBlur(System.Single)">
+            <summary>
+            Enables backdrop blur for subsequent fills. Any shape drawn while this is active is
+            composited over a blurred copy of the framebuffer behind it, turning the shape into
+            frosted glass. The shape's own fill (solid, gradient, or texture) is layered on top as a
+            tint, so use a translucent fill for glass. This is orthogonal to the brush, toggled like
+            any other draw state, and applies to any fillable shape. Call with 0 (or
+            <see cref="M:Prowl.Quill.Canvas.ClearBackdropBlur"/>) to disable. Backends without support draw fills normally.
+            </summary>
+            <param name="radius">The blur radius in pixels. Zero disables backdrop blur.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ClearBackdropBlur">
+            <summary>
+            Disables backdrop blur for subsequent fills.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetFillColor(Prowl.Vector.Color32)">
+            <summary>
+            Sets the color used for filling shapes.
+            </summary>
+            <param name="color">The fill color.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Scissor(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Sets the scissor rectangle for clipping
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.IntersectScissor(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Intersects the current scissor rectangle with another rectangle
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.IntersectionOfRects(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Calculates the intersection of two rectangles
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.GetCurrentClipRect(Prowl.Vector.Rect@)">
+            <summary>
+            Returns the current clip region as an axis-aligned rectangle in the active transform's
+            local space (the same space drawing coordinates are given in). When no scissor is set the
+            whole viewport is used. Returns false only when there is nothing to clip against (unset
+            viewport), meaning callers should not cull. Consumers such as Paper use this to skip
+            elements that fall entirely outside the clip.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ResetScissor">
+            <summary>
+            Resets the scissor rectangle
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetGlobalAlpha(System.Single)">
+            <summary>
+            Sets the global alpha (transparency) applied to all subsequent drawing operations.
+            </summary>
+            <param name="alpha">The alpha value from 0 (fully transparent) to 1 (fully opaque).</param>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.GlobalAlpha">
+            <summary>The alpha currently multiplied into everything drawn.</summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetAntiAlias(System.Boolean)">
+            <summary>
+            Enables or disables anti-aliasing for all vector geometry (fills, strokes, rounded rects,
+            circles and arcs). When disabled the one-pixel AA fringe is collapsed, giving hard,
+            pixel-crisp edges. Persists until changed; it is not reset per frame. Text uses an SDF
+            atlas and is unaffected by this setting.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.AntiAlias">
+            <summary>Whether vector anti-aliasing is currently enabled (default true).</summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.TransformBy(Prowl.Vector.Spatial.Transform2D)">
+            <summary>
+            Multiplies the current transformation matrix by the specified transform.
+            </summary>
+            <param name="t">The transformation to apply.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ResetTransform">
+            <summary>
+            Resets the current transformation to the identity matrix.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.CurrentTransform(Prowl.Vector.Spatial.Transform2D)">
+            <summary>
+            Sets the current transformation matrix directly.
+            </summary>
+            <param name="xform">The transformation matrix to set.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.TransformPoint(Prowl.Vector.Float2@)">
+            <summary>
+            Transforms a point from logical units to pixel coordinates, applying the current transformation.
+            </summary>
+            <param name="unitPoint">The point in logical units.</param>
+            <returns>The transformed point in pixel coordinates.</returns>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.GetTransform">
+            <summary>
+            Gets the current transformation matrix.
+            </summary>
+            <returns>The current transformation matrix.</returns>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RequestNewDrawCall">
+            <summary>
+            Ensure that future commands are not batched as part of any existing draw call.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddVertex(Prowl.Quill.Vertex)">
+            <summary>
+            Adds a vertex to the vertex buffer, applying global alpha and premultiplied alpha.
+            </summary>
+            <param name="vertex">The vertex to add.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddVertices(System.Collections.Generic.List{Prowl.Quill.Vertex})">
+            <summary>
+            Adds a batch of vertices at once, applying global alpha and premultiplied alpha to each.
+            Reserves the buffer once so large meshes (strokes, glyph runs) don't grow it repeatedly.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddTriangle">
+            <summary>
+            Adds a triangle using the last three vertices added to the vertex buffer.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddTriangle(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Adds a triangle with the specified vertex indices.
+            </summary>
+            <param name="v1">Index of the first vertex.</param>
+            <param name="v2">Index of the second vertex.</param>
+            <param name="v3">Index of the third vertex.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddTriangle(System.UInt32,System.UInt32,System.UInt32)">
+            <summary>
+            Adds a triangle with the specified vertex indices.
+            </summary>
+            <param name="v1">Index of the first vertex.</param>
+            <param name="v2">Index of the second vertex.</param>
+            <param name="v3">Index of the third vertex.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddTriangles(System.Collections.Generic.List{System.UInt32})">
+            <summary>
+            Appends a batch of triangle indices in one go, updating the draw call once for the whole
+            batch. Pair with <see cref="M:Prowl.Quill.Canvas.AddVertices(System.Collections.Generic.List{Prowl.Quill.Vertex})"/> so external mesh producers (glyph runs, custom
+            geometry) batch into a single draw-state check instead of one per triangle.
+            The index count must be a multiple of three.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Render">
+            <summary>
+            Renders all accumulated draw calls using the renderer backend.
+            Call this at the end of each frame after all drawing operations are complete.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.BeginPath">
+            <summary>
+            Begins a new path by emptying the list of sub-paths. Call this method when you want to create a new path.
+            </summary>
+            <remarks>
+            When you call <see cref="M:Prowl.Quill.Canvas.BeginPath"/>, all previous paths are cleared and a new path is started.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.MoveTo(System.Single,System.Single)">
+            <summary>
+            Moves the current position to the specified point without drawing a line.
+            </summary>
+            <param name="x">The x-coordinate of the point to move to.</param>
+            <param name="y">The y-coordinate of the point to move to.</param>
+            <remarks>
+            This method moves the "pen" to the specified point without drawing anything.
+            It begins a new sub-path if one doesn't already exist. Subsequent calls to
+            <see cref="M:Prowl.Quill.Canvas.LineTo(System.Single,System.Single)"/> will draw lines from this position.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.LineTo(System.Single,System.Single)">
+            <summary>
+            Draws a line from the current position to the specified point.
+            </summary>
+            <param name="x">The x-coordinate of the ending point.</param>
+            <param name="y">The y-coordinate of the ending point.</param>
+            <remarks>
+            This method draws a straight line from the current position to the specified position.
+            After the line is drawn, the current position is updated to the ending point.
+            If no position has been set previously, this method act as <see cref="M:Prowl.Quill.Canvas.MoveTo(System.Single,System.Single)"/> with the specified coordinates.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ClosePath">
+            <summary>
+            Closes the current path by drawing a straight line from the current position to the starting point.
+            </summary>
+            <remarks>
+            This method attempts to draw a line from the current position to the first point in the current path.
+            If the path contains fewer than two points, no action is taken.
+            After closing the path, the current position is updated to the starting point of the path.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.SetSolidity(Prowl.Quill.WindingMode)">
+            <summary>
+            Sets the solidity order for the currently active path.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Arc(System.Single,System.Single,System.Single,System.Single,System.Single,System.Boolean)">
+            <summary>
+            Adds an arc to the current path.
+            </summary>
+            <param name="x">The x-coordinate of the center of the arc.</param>
+            <param name="y">The y-coordinate of the center of the arc.</param>
+            <param name="radius">The radius of the arc.</param>
+            <param name="startAngle">The starting angle of the arc, in radians.</param>
+            <param name="endAngle">The ending angle of the arc, in radians.</param>
+            <param name="counterclockwise">If true, draws the arc counter-clockwise; otherwise, draws it clockwise.</param>
+            <remarks>
+            This method adds an arc to the current path, centered at the specified position with the given radius.
+            The arc starts at startAngle and ends at endAngle, measured in radians.
+            By default, the arc is drawn clockwise, but can be drawn counter-clockwise by setting the counterclockwise parameter to true.
+            If no path has been started, this method will first move to the starting point of the arc.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ArcTo(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Adds an arc to the path with the specified control points and radius.
+            </summary>
+            <param name="x1">The x-coordinate of the first control point.</param>
+            <param name="y1">The y-coordinate of the first control point.</param>
+            <param name="x2">The x-coordinate of the second control point.</param>
+            <param name="y2">The y-coordinate of the second control point.</param>
+            <param name="radius">The radius of the arc.</param>
+            <remarks>
+            This method creates an arc that is tangent to both the line from the current position to (x1,y1)
+            and the line from (x1,y1) to (x2,y2) with the specified radius.
+            If the path has not been started, this method will move to the position (x1,y1).
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.EllipticalArcTo(System.Single,System.Single,System.Single,System.Boolean,System.Boolean,System.Single,System.Single)">
+            <summary>
+            Adds an elliptical arc to the path with the specified control points and radius.
+            </summary>
+            <param name="rx">The x-axis radius of the ellipse.</param>
+            <param name="ry">The y-axis radius of the ellipse.</param>
+            <param name="xAxisRotationDegrees">The rotation of the ellipse around its x axis in degrees.</param>
+            <param name="largeArcFlag">If largeArcFlag is '1', then one of the two larger arc sweeps will be chosen; otherwise, if largeArcFlag is '0', one of the smaller arc sweeps will be chosen.</param>
+            <param name="sweepFlag">If sweepFlag is '1', then the arc will be drawn in a "positive-angle" direction. A value of 0 causes the arc to be drawn in a "negative-angle" direction</param>
+            <param name="x_end">The x-coordinate of the endpoint.</param>
+            <param name="y_end">The y-coordinate of the endpoint.</param>
+            <remarks>
+            This method creates an elliptical arc with radii (rx,ry) from current point to (x_end,y_end)
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.BezierCurveTo(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Adds a cubic Bézier curve to the path from the current position to the specified end point.
+            </summary>
+            <param name="cp1x">The x-coordinate of the first control point.</param>
+            <param name="cp1y">The y-coordinate of the first control point.</param>
+            <param name="cp2x">The x-coordinate of the second control point.</param>
+            <param name="cp2y">The y-coordinate of the second control point.</param>
+            <param name="x">The x-coordinate of the end point.</param>
+            <param name="y">The y-coordinate of the end point.</param>
+            <remarks>
+            This method adds a cubic Bézier curve to the current path, using the specified control points.
+            The curve starts at the current position and ends at (x,y).
+            If no current position exists, this method will move to the end point without drawing a curve.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.QuadraticCurveTo(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Adds a quadratic Bézier curve to the path from the current position to the specified end point.
+            </summary>
+            <param name="cpx">The x-coordinate of the control point.</param>
+            <param name="cpy">The y-coordinate of the control point.</param>
+            <param name="x">The x-coordinate of the end point.</param>
+            <param name="y">The y-coordinate of the end point.</param>
+            <remarks>
+            This method adds a quadratic Bézier curve to the current path, using the specified control point.
+            The curve starts at the current position and ends at (x,y).
+            If no current position exists, this method will move to the end point without drawing a curve.
+            Internally, this method converts the quadratic Bézier curve to a cubic Bézier curve.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Fill">
+            <summary>
+            Fills the current path using the current fill color.
+            Uses a simple fan-based fill algorithm suitable for convex shapes.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.FillComplexAA">
+            <summary>
+            Fills complex paths with anti-aliasing using tessellation.
+            Combines FillComplex with an outline stroke for smooth edges.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.FillComplex">
+            <summary>
+            Fills complex or self-intersecting paths using LibTess tessellation.
+            Supports both OddEven and NonZero winding rules.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.EmitConvexFillAA(System.Collections.Generic.List{Prowl.Vector.Float2},Prowl.Vector.Color32)">
+            <summary>
+            Emits an anti-aliased convex (star-convex) fill for a ring of points already in
+            physical-pixel space. The solid core is inset by half a pixel (coverage 1) and a
+            one-pixel fringe ribbon fades to coverage 0 at the outer edge. Coverage is carried in
+            uv.x and multiplied in by the shader after the brush, so gradient and textured fills
+            stay anti-aliased.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Stroke">
+            <summary>
+            Strokes the current path using the current stroke color, width, and style settings.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.FillAndStroke">
+            <summary>
+            Fills and then strokes the current path using the current fill and stroke settings.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Rect(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a Closed Rect Path
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rectangle.</param>
+            <param name="width">The width of the rectangle.</param>
+            <param name="height">The height of the rectangle.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRect(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a Closed Rounded Rect Path
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rectangle.</param>
+            <param name="width">The width of the rectangle.</param>
+            <param name="height">The height of the rectangle.</param>
+            <param name="radius">The radius of the corners.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRect(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a Closed Rounded Rect Path
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rectangle.</param>
+            <param name="width">The width of the rectangle.</param>
+            <param name="height">The height of the rectangle.</param>
+            <param name="tlRadii">The radius of the top-left corner.</param>
+            <param name="trRadii">The radius of the top-right corner.</param>
+            <param name="brRadii">The radius of the bottom-right corner.</param>
+            <param name="blRadii">The radius of the bottom-left corner.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Circle(System.Single,System.Single,System.Single,System.Int32)">
+            <summary>
+            Creates a Closed Circle Path
+            </summary>
+            <param name="x">The x-coordinate of the center of the circle.</param>
+            <param name="y">The y-coordinate of the center of the circle.</param>
+            <param name="radius">The radius of the circle.</param>
+            <param name="segments">The number of segments used to approximate the circle. Higher values create smoother circles.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Ellipse(System.Single,System.Single,System.Single,System.Single,System.Int32)">
+            <summary>
+            Creates a Closed Ellipse Path
+            </summary>
+            <param name="x">The x-coordinate of the center of the circle.</param>
+            <param name="y">The y-coordinate of the center of the circle.</param>
+            <param name="rx">The x-axis radius of the ellipse.</param>
+            <param name="ry">The y-axis radius of the ellipse.</param>
+            <param name="segments">The number of segments used to approximate the circle. Higher values create smoother circles.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Pie(System.Single,System.Single,System.Single,System.Single,System.Single,System.Int32)">
+            <summary>
+            Creates a Closed Pie Path
+            </summary>
+            <param name="x">The x-coordinate of the center of the pie.</param>
+            <param name="y">The y-coordinate of the center of the pie.</param>
+            <param name="radius">The radius of the pie.</param>
+            <param name="startAngle">The starting angle in radians.</param>
+            <param name="endAngle">The ending angle in radians.</param>
+            <param name="segments">The number of segments used to approximate the curved edge. Higher values create smoother curves.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RectFilled(System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a Hardware-accelerated rectangle on the canvas.
+            This does not modify or use the current path.
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rectangle.</param>
+            <param name="width">The width of the rectangle.</param>
+            <param name="height">The height of the rectangle.</param>
+            <param name="color">The color of the rectangle.</param>
+            <remarks>This is significantly faster than using the path API to draw a rectangle.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRectFilled(System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a Hardware-accelerated rounded rectangle on the canvas.
+            This does not modify or use the current path.
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rounded rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rounded rectangle.</param>
+            <param name="width">The width of the rounded rectangle.</param>
+            <param name="height">The height of the rounded rectangle.</param>
+            <param name="radius">The radius of the corners.</param>
+            <param name="color">The color of the rounded rectangle.</param>
+            <remarks>This is significantly faster than using the path API to draw a rounded rectangle.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRectFilled(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a Hardware-accelerated rounded rectangle on the canvas.
+            This does not modify or use the current path.
+            </summary>
+            <param name="x">The x-coordinate of the top-left corner of the rounded rectangle.</param>
+            <param name="y">The y-coordinate of the top-left corner of the rounded rectangle.</param>
+            <param name="width">The width of the rounded rectangle.</param>
+            <param name="height">The height of the rounded rectangle.</param>
+            <param name="tlRadii">The radius of the top-left corner.</param>
+            <param name="trRadii">The radius of the top-right corner.</param>
+            <param name="brRadii">The radius of the bottom-right corner.</param>
+            <param name="blRadii">The radius of the bottom-left corner.</param>
+            <param name="color">The color of the rounded rectangle.</param>
+            <remarks>This is significantly faster than using the path API to draw a rounded rectangle.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRectRingFilled(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Fills the band between two rounded rectangles sharing the same corner radii, straight from
+            vertices instead of tessellating a path. Meant for shadows and outlines, where the inner
+            rectangle is punched out of the outer one. The edges are not anti-aliased, matching
+            <see cref="M:Prowl.Quill.Canvas.FillComplex"/>.
+            This does not modify or use the current path.
+            </summary>
+            <returns>
+            False, drawing nothing, when the inner rectangle is not fully inside the outer one, since
+            the band is then not a ring. Callers fall back to an even-odd path fill for that case.
+            </returns>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.CircleFilled(System.Single,System.Single,System.Single,Prowl.Vector.Color32,System.Int32)">
+            <summary>
+            Paints a circle on the canvas.
+            This does not modify or use the current path.
+            </summary>
+            <param name="x">The x-coordinate of the center of the circle.</param>
+            <param name="y">The y-coordinate of the center of the circle.</param>
+            <param name="radius">The radius of the circle.</param>
+            <param name="color">The color of the circle.</param>
+            <param name="segments">The number of segments used to approximate the circle. Higher values create smoother circles.</param>
+            <remarks>This is significantly faster than using the path API to draw a circle.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.PieFilled(System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32,System.Int32)">
+            <summary>
+            Paints a Hardware-accelerated pie (circle sector) on the canvas.
+            This does not modify or use the current path.
+            </summary>
+            <param name="x">The x-coordinate of the center of the pie.</param>
+            <param name="y">The y-coordinate of the center of the pie.</param>
+            <param name="radius">The radius of the pie.</param>
+            <param name="startAngle">The starting angle in radians.</param>
+            <param name="endAngle">The ending angle in radians.</param>
+            <param name="color">The color of the pie.</param>
+            <param name="segments">The number of segments used to approximate the curved edge. Higher values create smoother curves.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawImage(System.Object,System.Single,System.Single,System.Single,System.Single,System.Nullable{Prowl.Vector.Color32})">
+            <summary>
+            Draws a textured rectangle on the canvas. Respects the current transform, scissor, and global alpha.
+            </summary>
+            <param name="texture">The texture to draw (backend-specific texture object).</param>
+            <param name="x">The x-coordinate of the top-left corner.</param>
+            <param name="y">The y-coordinate of the top-left corner.</param>
+            <param name="width">The width of the image rectangle.</param>
+            <param name="height">The height of the image rectangle.</param>
+            <param name="tint">Optional tint color. Defaults to white (no tint).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawImageRounded(System.Object,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{Prowl.Vector.Color32})">
+            <summary>
+            Draws a textured rectangle with rounded corners. Same brush setup as <see cref="M:Prowl.Quill.Canvas.DrawImage(System.Object,System.Single,System.Single,System.Single,System.Single,System.Nullable{Prowl.Vector.Color32})"/>
+            but filled with a rounded rect, so image thumbnails clip to the given corner radius.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawImage(System.Object,System.Single,System.Single,System.Nullable{Prowl.Vector.Color32})">
+            <summary>
+            Draws a textured rectangle on the canvas, using the texture's native size.
+            Respects the current transform, scissor, and global alpha.
+            </summary>
+            <param name="texture">The texture to draw (backend-specific texture object).</param>
+            <param name="x">The x-coordinate of the top-left corner.</param>
+            <param name="y">The y-coordinate of the top-left corner.</param>
+            <param name="tint">Optional tint color. Defaults to white (no tint).</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.AddFallbackFont(Prowl.Scribe.FontFile)">
+            <summary>
+            Adds a fallback font to use when glyphs are missing from the primary font.
+            </summary>
+            <param name="font">The fallback font to add.</param>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.EnumerateSystemFonts">
+            <summary>
+            Enumerates all fonts available on the system.
+            </summary>
+            <returns>An enumerable of system fonts.</returns>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.ScaleSettings(Prowl.Scribe.TextLayoutSettings)">
+            <summary>
+            Scales dimensional fields of TextLayoutSettings from logical units to physical pixels
+            so they can be fed to the font engine (which always works in physical pixels).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.MeasureText(System.String,System.Single,Prowl.Scribe.FontFile,System.Single)">
+            <summary>
+            Measures text. <paramref name="pixelSize"/> and <paramref name="letterSpacing"/> are in
+            logical units; the returned size is also in logical units.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.MeasureText(System.String,Prowl.Scribe.TextLayoutSettings)">
+            <summary>
+            Measures text using custom layout settings. All dimensional fields in
+            <paramref name="settings"/> are in logical units; the returned size is in logical units.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawText(System.String,System.Single,System.Single,Prowl.Vector.Color32,System.Single,Prowl.Scribe.FontFile,System.Single,System.Nullable{Prowl.Vector.Float2},Prowl.Scribe.FontQuality)">
+            <summary>
+            Draws text at the specified logical-space position. <paramref name="pixelSize"/> and
+            <paramref name="letterSpacing"/> are in logical units; internally the canvas rasterizes
+            glyphs at <c>size × FramebufferScale</c> for HiDPI crispness.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawText(System.String,System.Single,System.Single,Prowl.Vector.Color32,Prowl.Scribe.TextLayoutSettings,System.Nullable{Prowl.Vector.Float2})">
+            <summary>
+            Draws text using custom TextLayoutSettings. All coordinates and dimensional fields are
+            in logical units.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.CreateLayout(System.String,Prowl.Scribe.TextLayoutSettings)">
+            <summary>
+            Creates a text layout. Input settings are in logical units; the returned layout
+            is in pixel space (use <see cref="M:Prowl.Quill.Canvas.PixelToLogical(Prowl.Vector.Float2)"/> to convert cursor positions
+            back to logical units).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawLayout(Prowl.Scribe.TextLayout,System.Single,System.Single,Prowl.Vector.Color32,System.Nullable{Prowl.Vector.Float2})">
+            <summary>
+            Draws a pre-created text layout at the given logical-space position.
+            The layout must have been created via <see cref="M:Prowl.Quill.Canvas.CreateLayout(System.String,Prowl.Scribe.TextLayoutSettings)"/>.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.Dispose">
+            <summary>
+            Disposes the canvas and releases the underlying renderer resources.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RectBorder(System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a hardware-accelerated rectangle border (outline), centred on the rect's edge.
+            This does not modify or use the current path.
+            </summary>
+            <remarks>Significantly faster than building a path and calling <see cref="M:Prowl.Quill.Canvas.Stroke"/>.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRectBorder(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a hardware-accelerated rounded-rectangle border (outline), centred on the rect's edge.
+            This does not modify or use the current path.
+            </summary>
+            <remarks>Significantly faster than building a path and calling <see cref="M:Prowl.Quill.Canvas.Stroke"/>.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.RoundedRectBorder(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32)">
+            <summary>
+            Paints a hardware-accelerated rounded-rectangle border (outline) with per-corner radii, centred
+            on the rect's edge. This does not modify or use the current path.
+            </summary>
+            <param name="x">The x coordinate of the top left corner.</param>
+            <param name="y">The y coordinate of the top left corner.</param>
+            <param name="width">The width of the rectangle.</param>
+            <param name="height">The height of the rectangle.</param>
+            <param name="tlRadii">The corner radius for the top left corner.</param>
+            <param name="trRadii">The corner radius for the top right corner.</param>
+            <param name="brRadii">The corner radius for the bottom right corner.</param>
+            <param name="blRadii">The corner radius for the bottom left corner.</param>
+            <param name="thickness">Total border width; the stroke straddles the outline by half each side.</param>
+            <param name="color">The color of the border.</param>
+            <remarks>Significantly faster than building a path and calling <see cref="M:Prowl.Quill.Canvas.Stroke"/>.</remarks>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.CircleBorder(System.Single,System.Single,System.Single,System.Single,Prowl.Vector.Color32,System.Int32)">
+            <summary>
+            Paints a hardware-accelerated circle border (ring), centred on the circle's outline.
+            This does not modify or use the current path.
+            </summary>
+            <remarks>Significantly faster than building a path and calling <see cref="M:Prowl.Quill.Canvas.Stroke"/>.</remarks>
+        </member>
+        <member name="P:Prowl.Quill.Canvas.IsCapturing">
+            <summary>True between <see cref="M:Prowl.Quill.Canvas.BeginSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)"/> and <see cref="M:Prowl.Quill.Canvas.EndSnapshot"/>.</summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.BeginSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)">
+            <summary>
+            Starts recording everything drawn until <see cref="M:Prowl.Quill.Canvas.EndSnapshot"/> into <paramref name="snapshot"/>.
+            (<paramref name="x"/>, <paramref name="y"/>) is the anchor in the current local space, and
+            passing a different anchor to <see cref="M:Prowl.Quill.Canvas.DrawSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)"/> moves the geometry with it.
+            Snapshots do not nest, but a snapshot can be replayed while another is being recorded.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.EndSnapshot">
+            <summary>
+            Stops recording and stores the geometry. Returns false when the drawing cannot be replayed
+            faithfully, for example when it left canvas state changed or restored a state saved before
+            the capture began. The geometry is still drawn this frame either way.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.Canvas.DrawSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)">
+            <summary>
+            Appends a recorded snapshot anchored at (<paramref name="x"/>, <paramref name="y"/>) in the
+            current local space, merging into the current batch like any other draw. Returns false and
+            draws nothing when the snapshot does not fit the current state (different rotation, scale,
+            alpha, brush, or a rebuilt font atlas), in which case the caller should draw and capture again.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.CanvasSnapshot">
+            <summary>
+            Finished geometry recorded by <see cref="M:Prowl.Quill.Canvas.BeginSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)"/> and <see cref="M:Prowl.Quill.Canvas.EndSnapshot"/>,
+            which <see cref="M:Prowl.Quill.Canvas.DrawSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)"/> appends again without tessellating anything.
+            Keep one instance per cached item, its buffers are reused and only ever grow. A snapshot only
+            replays on the canvas that recorded it, since its text points into that canvas' font atlas.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.CanvasSnapshot.IsValid">
+            <summary>True when the last capture succeeded and can be replayed.</summary>
+        </member>
+        <member name="P:Prowl.Quill.CanvasSnapshot.VertexCount">
+            <summary>Number of vertices recorded.</summary>
+        </member>
+        <member name="P:Prowl.Quill.CanvasSnapshot.IndexCount">
+            <summary>Number of indices recorded.</summary>
+        </member>
+        <member name="M:Prowl.Quill.CanvasSnapshot.Invalidate">
+            <summary>Discards the recorded geometry so the next <see cref="M:Prowl.Quill.Canvas.DrawSnapshot(Prowl.Quill.CanvasSnapshot,System.Single,System.Single)"/> fails.</summary>
+        </member>
+        <member name="M:Prowl.Quill.CanvasSnapshot.Compare(Prowl.Quill.CanvasSnapshot,Prowl.Quill.CanvasSnapshot,System.Single)">
+            <summary>
+            Checks that two recordings of the same drawing match, allowing for them having been recorded
+            at different anchors. Returns null when they match, otherwise a description of the first
+            difference. Positions may differ by <paramref name="tolerance"/> pixels. Recordings holding
+            a tessellated fill are compared by the area they cover, since the triangulation depends on
+            where the fill was drawn.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.DrawCallBuffer">
+            <summary>
+            Draw calls kept in a plain array so the canvas can update them in place. DrawCall is large and
+            holds references, so copying it out of a List and back on every draw was a real cost.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.DrawCallBuffer.Item(System.Int32)">
+            <summary>No bounds check against <see cref="P:Prowl.Quill.DrawCallBuffer.Count"/>, callers index within it.</summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCallBuffer.Add">
+            <summary>Appends a cleared draw call and returns it.</summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCallBuffer.Truncate(System.Int32)">
+            <summary>Drops every draw call past <paramref name="count"/>.</summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Geom.EdgeEval(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            Given three vertices u,v,w such that VertLeq(u,v) &amp;&amp; VertLeq(v,w),
+            evaluates the t-coord of the edge uw at the s-coord of the vertex v.
+            Returns v->t - (uw)(v->s), ie. the signed distance from uw to v.
+            If uw is vertical (and thus passes thru v), the result is zero.
+            
+            The calculation is extremely accurate and stable, even when v
+            is very close to u or w.  In particular if we set v->t = 0 and
+            let r be the negated result (this evaluates (uw)(v->s)), then
+            r is guaranteed to satisfy MIN(u->t,w->t) &lt;= r &lt;= MAX(u->t,w->t).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Geom.EdgeSign(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            Returns a number whose sign matches EdgeEval(u,v,w) but which
+            is cheaper to evaluate. Returns > 0, == 0 , or &lt; 0
+            as v is above, on, or below the edge uw.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Geom.EdgeIntersect(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            Given edges (o1,d1) and (o2,d2), compute their point of intersection.
+            The computed point is guaranteed to lie in the intersection of the
+            bounding rectangles defined by each edge.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.MakeEdge">
+            <summary>
+            Creates one edge, two vertices and a loop (face).
+            The loop consists of the two new half-edges.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.Splice(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Splice is the basic operation for changing the
+            mesh connectivity and topology.  It changes the mesh so that
+                eOrg->Onext = OLD( eDst->Onext )
+                eDst->Onext = OLD( eOrg->Onext )
+            where OLD(...) means the value before the meshSplice operation.
+            
+            This can have two effects on the vertex structure:
+             - if eOrg->Org != eDst->Org, the two vertices are merged together
+             - if eOrg->Org == eDst->Org, the origin is split into two vertices
+            In both cases, eDst->Org is changed and eOrg->Org is untouched.
+            
+            Similarly (and independently) for the face structure,
+             - if eOrg->Lface == eDst->Lface, one loop is split into two
+             - if eOrg->Lface != eDst->Lface, two distinct loops are joined into one
+            In both cases, eDst->Lface is changed and eOrg->Lface is unaffected.
+            
+            Some special cases:
+            If eDst == eOrg, the operation has no effect.
+            If eDst == eOrg->Lnext, the new face will have a single edge.
+            If eDst == eOrg->Lprev, the old face will have a single edge.
+            If eDst == eOrg->Onext, the new vertex will have a single edge.
+            If eDst == eOrg->Oprev, the old vertex will have a single edge.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.Delete(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Removes the edge eDel. There are several cases:
+            if (eDel->Lface != eDel->Rface), we join two loops into one; the loop
+            eDel->Lface is deleted. Otherwise, we are splitting one loop into two;
+            the newly created loop will contain eDel->Dst. If the deletion of eDel
+            would create isolated vertices, those are deleted as well.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.AddEdgeVertex(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Creates a new edge such that eNew == eOrg.Lnext and eNew.Dst is a newly created vertex.
+            eOrg and eNew will have the same left face.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.SplitEdge(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Splits eOrg into two edges eOrg and eNew such that eNew == eOrg.Lnext.
+            The new vertex is eOrg.Dst == eNew.Org.
+            eOrg and eNew will have the same left face.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.Connect(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Creates a new edge from eOrg->Dst to eDst->Org, and returns the corresponding half-edge eNew.
+            If eOrg->Lface == eDst->Lface, this splits one loop into two,
+            and the newly created loop is eNew->Lface.  Otherwise, two disjoint
+            loops are merged into one, and the loop eDst->Lface is destroyed.
+            
+            If (eOrg == eDst), the new face will have only two edges.
+            If (eOrg->Lnext == eDst), the old face is reduced to a single edge.
+            If (eOrg->Lnext->Lnext == eDst), the old face is reduced to two edges.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Mesh.ZapFace(Prowl.Quill.External.LibTessDotNet.MeshUtils.Face)">
+            <summary>
+            Destroys a face and removes it from the global face list. All edges of
+            fZap will have a NULL pointer as their left face. Any edges which
+            also have a NULL pointer as their right face are deleted entirely
+            (along with any isolated vertices this produces).
+            An entire mesh can be deleted by zapping its faces, one at a time,
+            in any order. Zapped faces cannot be used in further mesh operations!
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.MakeEdge(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            MakeEdge creates a new pair of half-edges which form their own loop.
+            No vertex or face structures are allocated, but these must be assigned
+            before the current edge operation is completed.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.Splice(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Splice( a, b ) is best described by the Guibas/Stolfi paper or the
+            CS348a notes (see Mesh.cs). Basically it modifies the mesh so that
+            a->Onext and b->Onext are exchanged. This can have various effects
+            depending on whether a and b belong to different face or vertex rings.
+            For more explanation see Mesh.Splice().
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.MakeVertex(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            MakeVertex( eOrig, vNext ) attaches a new vertex and makes it the
+            origin of all edges in the vertex loop to which eOrig belongs. "vNext" gives
+            a place to insert the new vertex in the global vertex list. We insert
+            the new vertex *before* vNext so that algorithms which walk the vertex
+            list will not see the newly created vertices.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.MakeFace(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Face)">
+            <summary>
+            MakeFace( eOrig, fNext ) attaches a new face and makes it the left
+            face of all edges in the face loop to which eOrig belongs. "fNext" gives
+            a place to insert the new face in the global face list. We insert
+            the new face *before* fNext so that algorithms which walk the face
+            list will not see the newly created faces.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.KillEdge(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            KillEdge( eDel ) destroys an edge (the half-edges eDel and eDel->Sym),
+            and removes from the global edge list.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.KillVertex(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            KillVertex( vDel ) destroys a vertex and removes it from the global
+            vertex list. It updates the vertex loop to point to a given new vertex.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.KillFace(Prowl.Quill.External.LibTessDotNet.MeshUtils.Face,Prowl.Quill.External.LibTessDotNet.MeshUtils.Face)">
+            <summary>
+            KillFace( fDel ) destroys a face and removes it from the global face
+            list. It updates the face loop to point to a given new face.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.MeshUtils.FaceArea(Prowl.Quill.External.LibTessDotNet.MeshUtils.Face)">
+            <summary>
+            Return signed area of face.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.EdgeLeq(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            Both edges must be directed from right to left (this is the canonical
+            direction for the upper edge of each region).
+            
+            The strategy is to evaluate a "t" value for each edge at the
+            current sweep line position, given by tess->event. The calculations
+            are designed to be very stable, but of course they are not perfect.
+            
+            Special case: if both edge destinations are at the sweep event,
+            we sort the edges by slope (they would otherwise compare equally).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.FixUpperEdge(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Replace an upper edge which needs fixing (see ConnectRightVertex).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.AddRegionBelow(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Add a new active region to the sweep line, *somewhere* below "regAbove"
+            (according to where the new edge belongs in the sweep-line dictionary).
+            The upper edge of the new region will be "eNewUp".
+            Winding number and "inside" flag are not updated.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.FinishRegion(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            Delete a region from the sweep line. This happens when the upper
+            and lower chains of a region meet (at a vertex on the sweep line).
+            The "inside" flag is copied to the appropriate mesh face (we could
+            not do this before -- since the structure of the mesh is always
+            changing, this face may not have even existed until now).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.FinishLeftRegions(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            We are given a vertex with one or more left-going edges.  All affected
+            edges should be in the edge dictionary.  Starting at regFirst->eUp,
+            we walk down deleting all regions where both edges have the same
+            origin vOrg.  At the same time we copy the "inside" flag from the
+            active region to the face, since at this point each face will belong
+            to at most one region (this was not necessarily true until this point
+            in the sweep).  The walk stops at the region above regLast; if regLast
+            is null we walk as far as possible.  At the same time we relink the
+            mesh if necessary, so that the ordering of edges around vOrg is the
+            same as in the dictionary.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.AddRightEdges(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,System.Boolean)">
+            <summary>
+            Purpose: insert right-going edges into the edge dictionary, and update
+            winding numbers and mesh connectivity appropriately.  All right-going
+            edges share a common origin vOrg.  Edges are inserted CCW starting at
+            eFirst; the last edge inserted is eLast.Oprev.  If vOrg has any
+            left-going edges already processed, then eTopLeft must be the edge
+            such that an imaginary upward vertical segment from vOrg would be
+            contained between eTopLeft.Oprev and eTopLeft; otherwise eTopLeft
+            should be null.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.SpliceMergeVertices(Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Two vertices with idential coordinates are combined into one.
+            e1.Org is kept, while e2.Org is discarded.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.VertexWeights(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,System.Single@,System.Single@)">
+            <summary>
+            Find some weights which describe how the intersection vertex is
+            a linear combination of "org" and "dest".  Each of the two edges
+            which generated "isect" is allocated 50% of the weight; each edge
+            splits the weight between its org and dst according to the
+            relative distance to "isect".
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.GetIntersectData(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            We've computed a new intersection point, now we need a "data" pointer
+            from the user so that we can refer to this new vertex in the
+            rendering callbacks.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.CheckForRightSplice(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            Check the upper and lower edge of "regUp", to make sure that the
+            eUp->Org is above eLo, or eLo->Org is below eUp (depending on which
+            origin is leftmost).
+            
+            The main purpose is to splice right-going edges with the same
+            dest vertex and nearly identical slopes (ie. we can't distinguish
+            the slopes numerically).  However the splicing can also help us
+            to recover from numerical errors.  For example, suppose at one
+            point we checked eUp and eLo, and decided that eUp->Org is barely
+            above eLo.  Then later, we split eLo into two edges (eg. from
+            a splice operation like this one).  This can change the result of
+            our test so that now eUp->Org is incident to eLo, or barely below it.
+            We must correct this condition to maintain the dictionary invariants.
+            
+            One possibility is to check these edges for intersection again
+            (ie. CheckForIntersect).  This is what we do if possible.  However
+            CheckForIntersect requires that tess->event lies between eUp and eLo,
+            so that it has something to fall back on when the intersection
+            calculation gives us an unusable answer.  So, for those cases where
+            we can't check for intersection, this routine fixes the problem
+            by just splicing the offending vertex into the other edge.
+            This is a guaranteed solution, no matter how degenerate things get.
+            Basically this is a combinatorial solution to a numerical problem.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.CheckForLeftSplice(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            Check the upper and lower edge of "regUp", to make sure that the
+            eUp->Dst is above eLo, or eLo->Dst is below eUp (depending on which
+            destination is rightmost).
+            
+            Theoretically, this should always be true.  However, splitting an edge
+            into two pieces can change the results of previous tests.  For example,
+            suppose at one point we checked eUp and eLo, and decided that eUp->Dst
+            is barely above eLo.  Then later, we split eLo into two edges (eg. from
+            a splice operation like this one).  This can change the result of
+            the test so that now eUp->Dst is incident to eLo, or barely below it.
+            We must correct this condition to maintain the dictionary invariants
+            (otherwise new edges might get inserted in the wrong place in the
+            dictionary, and bad stuff will happen).
+            
+            We fix the problem by just splicing the offending vertex into the
+            other edge.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.CheckForIntersect(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            Check the upper and lower edges of the given region to see if
+            they intersect.  If so, create the intersection and add it
+            to the data structures.
+            
+            Returns TRUE if adding the new intersection resulted in a recursive
+            call to AddRightEdges(); in this case all "dirty" regions have been
+            checked for intersections, and possibly regUp has been deleted.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.WalkDirtyRegions(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion)">
+            <summary>
+            When the upper or lower edge of any region changes, the region is
+            marked "dirty".  This routine walks through all the dirty regions
+            and makes sure that the dictionary invariants are satisfied
+            (see the comments at the beginning of this file).  Of course
+            new dirty regions can be created as we make changes to restore
+            the invariants.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.ConnectRightVertex(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.MeshUtils.Edge)">
+            <summary>
+            Purpose: connect a "right" vertex vEvent (one where all edges go left)
+            to the unprocessed portion of the mesh.  Since there are no right-going
+            edges, two regions (one above vEvent and one below) are being merged
+            into one.  "regUp" is the upper of these two regions.
+            
+            There are two reasons for doing this (adding a right-going edge):
+             - if the two regions being merged are "inside", we must add an edge
+               to keep them separated (the combined region would not be monotone).
+             - in any case, we must leave some record of vEvent in the dictionary,
+               so that we can merge vEvent with features that we have not seen yet.
+               For example, maybe there is a vertical edge which passes just to
+               the right of vEvent; we would like to splice vEvent into this edge.
+            
+            However, we don't want to connect vEvent to just any vertex.  We don''t
+            want the new edge to cross any other edges; otherwise we will create
+            intersection vertices even when the input data had no self-intersections.
+            (This is a bad thing; if the user's input data has no intersections,
+            we don't want to generate any false intersections ourselves.)
+            
+            Our eventual goal is to connect vEvent to the leftmost unprocessed
+            vertex of the combined region (the union of regUp and regLo).
+            But because of unseen vertices with all right-going edges, and also
+            new vertices which may be created by edge intersections, we don''t
+            know where that leftmost unprocessed vertex is.  In the meantime, we
+            connect vEvent to the closest vertex of either chain, and mark the region
+            as "fixUpperEdge".  This flag says to delete and reconnect this edge
+            to the next processed vertex on the boundary of the combined region.
+            Quite possibly the vertex we connected to will turn out to be the
+            closest one, in which case we won''t need to make any changes.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.ConnectLeftDegenerate(Prowl.Quill.External.LibTessDotNet.Tess.ActiveRegion,Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            The event vertex lies exacty on an already-processed edge or vertex.
+            Adding the new vertex involves splicing it into the already-processed
+            part of the mesh.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.ConnectLeftVertex(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            Purpose: connect a "left" vertex (one where both edges go right)
+            to the processed portion of the mesh.  Let R be the active region
+            containing vEvent, and let U and L be the upper and lower edge
+            chains of R.  There are two possibilities:
+            
+            - the normal case: split R into two regions, by connecting vEvent to
+              the rightmost vertex of U or L lying to the left of the sweep line
+            
+            - the degenerate case: if vEvent is close enough to U or L, we
+              merge vEvent into that edge chain.  The subcases are:
+                - merging with the rightmost vertex of U or L
+                - merging with the active edge of U or L
+                - merging with an already-processed portion of U or L
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.SweepEvent(Prowl.Quill.External.LibTessDotNet.MeshUtils.Vertex)">
+            <summary>
+            Does everything necessary when the sweep line crosses a vertex.
+            Updates the mesh and the edge dictionary.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.AddSentinel(System.Single,System.Single,System.Single)">
+            <summary>
+            Make the sentinel coordinates big enough that they will never be
+            merged with real input features.
+            
+            We add two sentinel edges above and below all other edges,
+            to avoid special cases at the top and bottom.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.InitEdgeDict">
+            <summary>
+            We maintain an ordering of edge intersections with the sweep line.
+            This order is maintained in a dynamic dictionary.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.RemoveDegenerateEdges">
+            <summary>
+            Remove zero-length edges, and contours with fewer than 3 vertices.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.InitPriorityQ">
+            <summary>
+            Insert all vertices into the priority queue which determines the
+            order in which vertices cross the sweep line.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.RemoveDegenerateFaces">
+            <summary>
+            Delete any degenerate faces with only two edges.  WalkDirtyRegions()
+            will catch almost all of these, but it won't catch degenerate faces
+            produced by splice operations on already-processed edges.
+            The two places this can happen are in FinishLeftRegions(), when
+            we splice in a "temporary" edge produced by ConnectRightVertex(),
+            and in CheckForLeftSplice(), where we splice already-processed
+            edges to ensure that our dictionary invariants are not violated
+            by numerical errors.
+            
+            In both these cases it is *very* dangerous to delete the offending
+            edge at the time, since one of the routines further up the stack
+            will sometimes be keeping a pointer to that edge.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.ComputeInterior">
+            <summary>
+            ComputeInterior computes the planar arrangement specified
+            by the given contours, and further subdivides this arrangement
+            into regions.  Each region is marked "inside" if it belongs
+            to the polygon, according to the rule given by windingRule.
+            Each interior region is guaranteed to be monotone.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.External.LibTessDotNet.Tess.NoEmptyPolygons">
+            <summary>
+            If true, will remove empty (zero area) polygons.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.External.LibTessDotNet.Tess.UsePooling">
+            <summary>
+            If true, will use pooling to reduce GC (compare performance with/without, can vary wildly).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.TessellateMonoRegion(Prowl.Quill.External.LibTessDotNet.MeshUtils.Face)">
+            <summary>
+            TessellateMonoRegion( face ) tessellates a monotone region
+            (what else would it do??)  The region must consist of a single
+            loop of half-edges (see mesh.h) oriented CCW.  "Monotone" in this
+            case means that any vertical line intersects the interior of the
+            region in a single interval.  
+            
+            Tessellation consists of adding interior edges (actually pairs of
+            half-edges), to split the region into non-overlapping triangles.
+            
+            The basic idea is explained in Preparata and Shamos (which I don't
+            have handy right now), although their implementation is more
+            complicated than this one.  The are two edge chains, an upper chain
+            and a lower chain.  We process all vertices from both chains in order,
+            from right to left.
+            
+            The algorithm ensures that the following invariant holds after each
+            vertex is processed: the untessellated region consists of two
+            chains, where one chain (say the upper) is a single edge, and
+            the other chain is concave.  The left vertex of the single edge
+            is always to the left of all vertices in the concave chain.
+            
+            Each step consists of adding the rightmost unprocessed vertex to one
+            of the two chains, and forming a fan of triangles from the rightmost
+            of two chain endpoints.  Determining whether we can add each triangle
+            to the fan is a simple orientation test.  By making the fan as large
+            as possible, we restore the invariant (check it yourself).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.TessellateInterior">
+            <summary>
+            TessellateInterior( mesh ) tessellates each region of
+            the mesh which is marked "inside" the polygon. Each such region
+            must be monotone.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.DiscardExterior">
+            <summary>
+            DiscardExterior zaps (ie. sets to null) all faces
+            which are not marked "inside" the polygon.  Since further mesh operations
+            on NULL faces are not allowed, the main purpose is to clean up the
+            mesh so that exterior loops are not represented in the data structure.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.External.LibTessDotNet.Tess.SetWindingNumber(System.Int32,System.Boolean)">
+            <summary>
+            SetWindingNumber( value, keepOnlyBoundary ) resets the
+            winding numbers on all edges so that regions marked "inside" the
+            polygon have a winding number of "value", and regions outside
+            have a winding number of 0.
+            
+            If keepOnlyBoundary is TRUE, it also deletes all edges which do not
+            separate an interior region from an exterior one.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.GeometryBuffer`1">
+            <summary>
+            A growable array that hands out its backing store directly, so renderer backends can upload
+            canvas geometry without copying it out first. <see cref="T:System.Collections.Generic.List`1"/> cannot do this on netstandard2.1,
+            which has no CollectionsMarshal.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.GeometryBuffer`1.Reserve(System.Int32)">
+            <summary>Ensures room for <paramref name="additional"/> more items without reallocating.</summary>
+        </member>
+        <member name="T:Prowl.Quill.ICanvasRenderer">
+            <summary>
+            Interface for implementing a canvas renderer backend.
+            Implement this interface to provide rendering support for different graphics APIs (OpenGL, DirectX, Vulkan, etc.).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.ICanvasRenderer.CreateTexture(System.UInt32,System.UInt32)">
+            <summary>
+            Creates a new texture with the specified dimensions.
+            </summary>
+            <param name="width">The width of the texture in pixels.</param>
+            <param name="height">The height of the texture in pixels.</param>
+            <returns>A backend-specific texture object.</returns>
+        </member>
+        <member name="M:Prowl.Quill.ICanvasRenderer.GetTextureSize(System.Object)">
+            <summary>
+            Gets the dimensions of a texture.
+            </summary>
+            <param name="texture">The texture object to query.</param>
+            <returns>The size of the texture in pixels.</returns>
+        </member>
+        <member name="M:Prowl.Quill.ICanvasRenderer.SetTextureData(System.Object,Prowl.Vector.IntRect,System.Byte[])">
+            <summary>
+            Updates a region of a texture with new pixel data.
+            </summary>
+            <param name="texture">The texture to update.</param>
+            <param name="bounds">The rectangular region to update.</param>
+            <param name="data">The pixel data in RGBA format (4 bytes per pixel).</param>
+        </member>
+        <member name="M:Prowl.Quill.ICanvasRenderer.RenderCalls(Prowl.Quill.Canvas,System.Collections.Generic.IReadOnlyList{Prowl.Quill.DrawCall})">
+            <summary>
+            Renders the accumulated draw calls to the screen or render target.
+            </summary>
+            <param name="canvas">The canvas containing vertices and indices.</param>
+            <param name="drawCalls">The list of draw calls to render.</param>
+        </member>
+        <member name="P:Prowl.Quill.ICanvasRenderer.SupportsBackdropBlur">
+            <summary>
+            Whether this backend implements backdrop blur (capturing and blurring the framebuffer
+            behind a shape). When false, backdrop-blur draw calls degrade to flat tinted fills.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.JointStyle">
+            <summary>
+            Specifies the style used to join line segments at corners.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.JointStyle.Bevel">
+            <summary>
+            Creates a beveled corner with a flat edge connecting the outer corners of the line segments.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.JointStyle.Miter">
+            <summary>
+            Creates a sharp corner by extending the outer edges of the line segments until they meet.
+            Subject to the miter limit; beyond it the joint falls back to a bevel.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.JointStyle.Round">
+            <summary>
+            Creates a rounded corner with a circular arc connecting the outer edges of the line segments.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.JointStyle.MiterClip">
+            <summary>
+            Like <see cref="F:Prowl.Quill.JointStyle.Miter"/>, but instead of falling back to a bevel past the miter limit the
+            sharp tip is clipped flat at the limit distance, which reduces visual artifacts at very
+            sharp junctions.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.EndCapStyle">
+            <summary>
+            Specifies the style used for the end caps of open paths.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.EndCapStyle.Butt">
+            <summary>
+            No cap is added; the stroke ends at the endpoint (with an anti-aliasing fringe).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.EndCapStyle.Square">
+            <summary>
+            A square cap is added, extending the stroke by half the stroke width.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.EndCapStyle.Round">
+            <summary>
+            A semicircular cap is added with a radius equal to half the stroke width.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.EndCapStyle.Bevel">
+            <summary>
+            A beveled cap.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.PolylineMesher">
+            <summary>
+            Builds anti-aliased triangle meshes for stroked polylines.
+            </summary>
+            <remarks>
+            Anti-aliasing is baked into the geometry: a one-pixel fringe ribbon surrounds the solid core,
+            with the core vertices fully covered and the outer fringe vertices at zero coverage. Coverage
+            is written into <see cref="T:Prowl.Quill.Vertex"/>.u (uv.x) and multiplied in by the shader after the brush,
+            so it composes with gradients and textures. The vertex colour is the stroke colour throughout.
+            </remarks>
+        </member>
+        <member name="M:Prowl.Quill.PolylineMesher.Create(System.Collections.Generic.List{Prowl.Vector.Float2},System.Single,System.Single,Prowl.Vector.Color32,Prowl.Quill.JointStyle,System.Single,Prowl.Quill.EndCapStyle,Prowl.Quill.EndCapStyle,System.Single,System.Collections.Generic.List{Prowl.Quill.Vertex}@,System.Collections.Generic.List{System.UInt32}@)">
+            <summary>
+            Meshes a stroked polyline into anti-aliased, indexed geometry.
+            </summary>
+            <param name="points">Path points, already in physical-pixel space.</param>
+            <param name="thickness">Stroke width in physical pixels.</param>
+            <param name="fringeWidth">Anti-aliasing fringe width in physical pixels (typically 1).</param>
+            <param name="color">Stroke colour (not premultiplied; the canvas premultiplies on add).</param>
+            <param name="joint">Corner join style.</param>
+            <param name="miterLimit">Miter limit ratio for <see cref="F:Prowl.Quill.JointStyle.Miter"/>/<see cref="F:Prowl.Quill.JointStyle.MiterClip"/>.</param>
+            <param name="startCap">Cap style for the start of an open path.</param>
+            <param name="endCap">Cap style for the end of an open path.</param>
+            <param name="roundingMinDistance">Minimum spacing between generated arc points, in pixels.</param>
+            <param name="vertices">Receives the generated vertices (0-based; coverage in uv.x).</param>
+            <param name="indices">Receives the generated triangle indices, relative to the first vertex.</param>
+        </member>
+        <member name="T:Prowl.Quill.SvgPaintContext">
+            <summary>
+            The resolved paint state inherited from a parent element (fill, stroke, stroke-width and
+            accumulated opacity). Passed down the element tree so groups propagate their style to children.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.SvgPaintContext.Root">
+            <summary>The default paint at the root of a document: no fill, no stroke, unit stroke width.</summary>
+        </member>
+        <member name="T:Prowl.Quill.SvgElement">
+            <summary>
+            Represents an SVG element parsed from an SVG document.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.tag">
+            <summary>
+            The type of SVG element (path, circle, rect, etc.).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.depth">
+            <summary>
+            The nesting depth of this element in the SVG document hierarchy.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.SvgElement.Attributes">
+            <summary>
+            Gets the attributes defined on this element.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.SvgElement.Children">
+            <summary>
+            Gets the child elements of this element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.drawCommands">
+            <summary>
+            The draw commands for path elements.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.stroke">
+            <summary>
+            The stroke color of this element, with opacity already applied.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.fill">
+            <summary>
+            The fill color of this element, with opacity already applied.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.strokeType">
+            <summary>
+            The type of stroke color (none, currentColor, or specific).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.fillType">
+            <summary>
+            The type of fill color (none, currentColor, or specific).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.strokeWidth">
+            <summary>
+            The stroke width of this element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.opacity">
+            <summary>
+            The accumulated opacity of this element (its own opacity times all ancestor opacities).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.#ctor">
+            <summary>
+            Creates a new SVG element.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.ToString">
+            <summary>
+            Returns a string representation of this element.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.Flatten">
+            <summary>
+            Flattens the element hierarchy into a single list.
+            </summary>
+            <returns>A list containing this element and all its descendants.</returns>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <summary>
+            Resolves this element's paint (fill, stroke, stroke-width, opacity), inheriting any value
+            not specified on the element itself from the supplied parent context.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.GetPaintContext">
+            <summary>
+            The paint context handed to this element's children (raw colors plus accumulated opacity).
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.GetProperty(System.String)">
+            <summary>Gets a presentation property, preferring an inline style declaration over an attribute.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.HasProperty(System.String)">
+            <summary>Whether a presentation property is present as either an inline style or an attribute.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgElement.ParseFloat(System.String)">
+            <summary>Reads a numeric property, tolerating unit suffixes (e.g. "2px"), returning 0 if absent.</summary>
+        </member>
+        <member name="T:Prowl.Quill.SvgElement.TagType">
+            <summary>
+            Specifies the type of SVG element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.svg">
+            <summary>Root SVG container element.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.path">
+            <summary>Path element with draw commands.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.circle">
+            <summary>Circle element.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.rect">
+            <summary>Rectangle element.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.line">
+            <summary>Line element.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.polyline">
+            <summary>Polyline element (open path through points).</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.polygon">
+            <summary>Polygon element (closed path through points).</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.ellipse">
+            <summary>Ellipse element.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.TagType.g">
+            <summary>Group element for organizing other elements.</summary>
+        </member>
+        <member name="T:Prowl.Quill.SvgElement.ColorType">
+            <summary>
+            Specifies how a color value is determined.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.ColorType.none">
+            <summary>No color (transparent).</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.ColorType.currentColor">
+            <summary>Uses the current inherited color.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgElement.ColorType.specific">
+            <summary>A specific color value is defined.</summary>
+        </member>
+        <member name="T:Prowl.Quill.SvgRectElement">
+            <summary>
+            Represents an SVG rectangle element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgRectElement.pos">
+            <summary>The position of the rectangle's top-left corner.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgRectElement.size">
+            <summary>The size of the rectangle.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgRectElement.radius">
+            <summary>The corner radius for rounded rectangles.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgRectElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgCircleElement">
+            <summary>
+            Represents an SVG circle element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgCircleElement.cx">
+            <summary>The X coordinate of the center.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgCircleElement.cy">
+            <summary>The Y coordinate of the center.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgCircleElement.r">
+            <summary>The radius of the circle.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgCircleElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgEllipseElement">
+            <summary>
+            Represents an SVG ellipse element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgEllipseElement.cx">
+            <summary>The X coordinate of the center.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgEllipseElement.cy">
+            <summary>The Y coordinate of the center.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgEllipseElement.rx">
+            <summary>The X-axis radius.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgEllipseElement.ry">
+            <summary>The Y-axis radius.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgEllipseElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgLineElement">
+            <summary>
+            Represents an SVG line element.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgLineElement.x1">
+            <summary>The X coordinate of the start point.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgLineElement.y1">
+            <summary>The Y coordinate of the start point.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgLineElement.x2">
+            <summary>The X coordinate of the end point.</summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgLineElement.y2">
+            <summary>The Y coordinate of the end point.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgLineElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgPolylineElement">
+            <summary>
+            Represents an SVG polyline element (an open series of connected line segments).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgPolylineElement.points">
+            <summary>The points defining the polyline.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgPolylineElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgPolygonElement">
+            <summary>
+            Represents an SVG polygon element (a closed series of connected line segments).
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SvgPolygonElement.points">
+            <summary>The points defining the polygon.</summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgPolygonElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Prowl.Quill.SvgPathElement">
+            <summary>
+            Represents an SVG path element with draw commands.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SvgPathElement.Parse(Prowl.Quill.SvgPaintContext)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Prowl.Quill.SvgPathElement.ParsePathData(System.String)">
+            <summary>
+            Parses an SVG path "d" string into draw commands in a single pass. Handles scientific
+            notation, sign-delimited and comma/space-delimited numbers, packed arc flags, and implicit
+            command repetition (e.g. "M0 0 1 1 2 2" becomes a move followed by two line-tos).
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.DrawCommand">
+            <summary>
+            Represents a single draw command in an SVG path.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawCommand.type">
+            <summary>The type of draw command.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawCommand.relative">
+            <summary>Whether coordinates are relative to the current position.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawCommand.param">
+            <summary>The parameters for this command.</summary>
+        </member>
+        <member name="M:Prowl.Quill.DrawCommand.ToString">
+            <summary>
+            Returns a string representation of this draw command.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.DrawType">
+            <summary>
+            Specifies the type of SVG path draw command.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.MoveTo">
+            <summary>Move to a new position without drawing.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.LineTo">
+            <summary>Draw a line to the specified position.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.VerticalLineTo">
+            <summary>Draw a vertical line to the specified Y coordinate.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.HorizontalLineTo">
+            <summary>Draw a horizontal line to the specified X coordinate.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.CubicCurveTo">
+            <summary>Draw a cubic Bezier curve.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.SmoothCubicCurveTo">
+            <summary>Draw a smooth cubic Bezier curve (control point reflected from previous).</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.QuadraticCurveTo">
+            <summary>Draw a quadratic Bezier curve.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.SmoothQuadraticCurveTo">
+            <summary>Draw a smooth quadratic Bezier curve (control point reflected from previous).</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.ArcTo">
+            <summary>Draw an elliptical arc.</summary>
+        </member>
+        <member name="F:Prowl.Quill.DrawType.ClosePath">
+            <summary>Close the current path by drawing a line to the start.</summary>
+        </member>
+        <member name="T:Prowl.Quill.PathScanner">
+            <summary>
+            A forward-only scanner over SVG numeric data (path "d" strings and point lists). Reads numbers
+            per the SVG grammar without allocating, so it correctly handles exponents, sign-delimited values
+            and packed arc flags.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.SVGParser">
+            <summary>
+            Provides methods for parsing SVG documents into SvgElement trees.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SVGParser.ParseSVGDocument(System.String)">
+            <summary>
+            Parses an SVG document from a file path.
+            </summary>
+            <param name="filePath">The path to the SVG file.</param>
+            <returns>The root SvgElement representing the parsed document.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown when the file does not exist.</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown when the document is not a valid SVG.</exception>
+        </member>
+        <member name="T:Prowl.Quill.SVGRenderer">
+            <summary>
+            Provides methods for rendering parsed SVG elements to a Canvas.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SVGRenderer.currentColor">
+            <summary>
+            The current color used when SVG elements specify "currentColor".
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.SVGRenderer.debug">
+            <summary>
+            When true, outputs debug information during rendering.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.SVGRenderer.DrawToCanvas(Prowl.Quill.Canvas,Prowl.Vector.Float2,Prowl.Quill.SvgElement)">
+            <summary>
+            Draws an SVG element and all its children to a canvas at the specified position.
+            </summary>
+            <param name="canvas">The canvas to draw to.</param>
+            <param name="position">The position offset for rendering.</param>
+            <param name="svgElement">The root SVG element to render.</param>
+        </member>
+        <member name="T:Prowl.Quill.FontAtlasSettings">
+            <summary>
+            Configuration settings for the font atlas used in text rendering.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.AllowExpansion">
+            <summary>
+            Whether to allow the atlas to expand when it runs out of space. Default is true.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.ExpansionFactor">
+            <summary>
+            The factor by which to expand the atlas when more space is needed. Default is 2.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.AtlasSize">
+            <summary>
+            The initial size of the font atlas in pixels. Default is 1024.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.MaxAtlasSize">
+            <summary>
+            The maximum size the atlas can expand to. Default is 4096.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.UseLayoutCache">
+            <summary>
+            Whether to cache text layouts for improved performance. Default is true.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.MaxLayoutCacheSize">
+            <summary>
+            The maximum number of layouts to cache. Default is 256.
+            </summary>
+        </member>
+        <member name="F:Prowl.Quill.FontAtlasSettings.AtlasPadding">
+            <summary>
+            The padding between glyphs in the atlas. Default is 1.
+            </summary>
+        </member>
+        <member name="T:Prowl.Quill.TextRenderer">
+            <summary>
+            Handles text rendering by integrating with the Scribe font system.
+            </summary>
+        </member>
+        <member name="P:Prowl.Quill.TextRenderer.FontEngine">
+            <summary>
+            Gets the underlying font system for advanced text operations.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.TextRenderer.CreateTexture(System.Int32,System.Int32)">
+            <summary>
+            Creates a new texture with the specified dimensions.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.TextRenderer.UpdateTextureRegion(System.Object,Prowl.Scribe.AtlasRect,System.Byte[])">
+            <summary>
+            Updates texture data in the specified region. Scribe now produces multi-channel signed
+            distance fields, so the data is already RGBA (4 bytes per pixel) and is uploaded directly.
+            </summary>
+        </member>
+        <member name="M:Prowl.Quill.TextRenderer.DrawQuads(System.Object,System.ReadOnlySpan{Prowl.Scribe.IFontRenderer.Vertex},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Draws a quad with the given texture and coordinates.
+            Called by Quill when rendering glyphs.
+            </summary>
+        </member>
+    </members>
+</doc>

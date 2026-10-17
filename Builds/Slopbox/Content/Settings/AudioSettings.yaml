@@ -1,0 +1,5 @@
+GlobalVolume: 1
+SampleRate: 44100
+Channels: 2
+BufferSize: 2048
+$id: 1
