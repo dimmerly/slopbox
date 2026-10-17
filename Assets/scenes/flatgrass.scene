@@ -44,6 +44,194 @@
               "Z": 0F
             },
             "KillHeight": -100F,
+            "PlayerModel": {
+              "$asset": "a7edd4ad-ee9d-4800-827c-5ba1767e85df"
+            },
+            "PlayerAnimation": {
+              "$asset": "da382ae0-b73b-40d3-a8e7-984e277a8ff6"
+            },
+            "Sounds": {
+              "$id": 6,
+              "$values": [
+                {
+                  "$asset": "b8fb557f-4483-41c9-97b7-b8bcfa72cec1"
+                },
+                {
+                  "$asset": "bc0c7a8d-6844-404a-ad09-a488039a3a2b"
+                },
+                {
+                  "$asset": "a2774c6b-23fe-4d7e-9fa0-36cc310d6345"
+                },
+                {
+                  "$asset": "16b6ddb4-58ad-49cd-aa9f-6c5ef80e458c"
+                },
+                {
+                  "$asset": "9ecc4fa7-62d4-4995-a41a-01538b18a9ca"
+                },
+                {
+                  "$asset": "d02b0b1e-c60c-4f1f-a925-b94e366ff8e3"
+                },
+                {
+                  "$asset": "359f858e-e31f-4b89-a6cc-452527f43159"
+                },
+                {
+                  "$asset": "ae0a718f-fc38-4041-b2b9-e6e4b46d2108"
+                },
+                {
+                  "$asset": "ad86b2ee-b96c-4473-973e-29b15aba8efa"
+                },
+                {
+                  "$asset": "71ed3437-37c1-4bc7-b2df-c24f331a3651"
+                },
+                {
+                  "$asset": "9f1e8f47-2aeb-4ad2-b568-4c4c0bf3843a"
+                },
+                {
+                  "$asset": "0e8e1196-32bf-4ae7-b795-622bdb078c11"
+                },
+                {
+                  "$asset": "9ef9889a-8b00-43d7-8537-37d819af78e9"
+                },
+                {
+                  "$asset": "71d771b8-f26c-4fba-a045-2cf0336231dd"
+                },
+                {
+                  "$asset": "b9ddcf2f-ab06-41c8-8a02-5985b03d67d2"
+                },
+                {
+                  "$asset": "cca9cd37-8234-4bd8-995d-836e15c18796"
+                },
+                {
+                  "$asset": "91edde64-a12c-49ea-a8fd-6423ffd116ac"
+                },
+                {
+                  "$asset": "a6b16964-00e4-46b9-9397-48c1cad9ddde"
+                },
+                {
+                  "$asset": "9004a39d-083f-4a0e-9b11-e6e45dcd661d"
+                },
+                {
+                  "$asset": "aaf91fd5-9f6c-429f-8729-0ec94b664626"
+                },
+                {
+                  "$asset": "33519d34-40ab-4273-835d-66ddff12f0e6"
+                },
+                {
+                  "$asset": "e972760c-5842-446a-b2fa-c8aa3978bdf3"
+                },
+                {
+                  "$asset": "2b870376-400d-4ef2-9f50-c5628bb560ae"
+                },
+                {
+                  "$asset": "77963fbd-b244-41bc-be09-a397f3f5c0e8"
+                },
+                {
+                  "$asset": "16634d01-78b6-40bc-a0ab-60e66e7537b6"
+                },
+                {
+                  "$asset": "2f92ab98-add8-4338-bd59-b04a776fe5c7"
+                },
+                {
+                  "$asset": "e5b86910-9c74-4c3d-8f72-8103a56f0ff6"
+                },
+                {
+                  "$asset": "d335bea1-069f-4927-b87c-40f9d1a9a5f3"
+                },
+                {
+                  "$asset": "b2a98f4a-7a8d-44af-95bb-bcae0430db12"
+                },
+                {
+                  "$asset": "28087204-8cda-4ad8-ae91-a7d6131e45a4"
+                },
+                {
+                  "$asset": "afc092dd-c285-40a5-9632-2895e880ee98"
+                },
+                {
+                  "$asset": "68b902be-3e6a-4eb4-aa24-b0e4e9a8a0d8"
+                },
+                {
+                  "$asset": "73310823-4321-484f-ad0a-b0f0aac66d14"
+                },
+                {
+                  "$asset": "ae41a5a5-902b-4dc2-8af5-92d669100519"
+                },
+                {
+                  "$asset": "e7f5694f-4437-4ba7-ba69-89fdcda7fd11"
+                },
+                {
+                  "$asset": "c8b9bb24-619e-4a6c-aa82-cd105e62ffe8"
+                },
+                {
+                  "$asset": "7e1bdab9-9faf-464f-908e-f3e31e0b75d6"
+                },
+                {
+                  "$asset": "89c10e29-1275-4768-a628-c3fc5f2d5a95"
+                },
+                {
+                  "$asset": "43f0762e-6ef8-4c6c-a44d-36d741ac360a"
+                },
+                {
+                  "$asset": "fdaa13b9-1c70-4594-bd37-467e2ed4ba47"
+                },
+                {
+                  "$asset": "c9fa8b27-3d33-4b39-bec7-0a447f558de6"
+                },
+                {
+                  "$asset": "008618f3-6042-4f3b-9ded-47914a2dce76"
+                },
+                {
+                  "$asset": "50e34765-f22e-4219-a397-3a329d936471"
+                },
+                {
+                  "$asset": "cee861ce-7988-47e6-a460-94bfab978fbc"
+                },
+                {
+                  "$asset": "14cd9869-798d-4a2d-aed4-c55072f7b0c4"
+                },
+                {
+                  "$asset": "9da09083-7f66-482f-9d10-ecb1487965a4"
+                },
+                {
+                  "$asset": "8eb8bca1-6be3-4327-8920-18e6391d57e3"
+                },
+                {
+                  "$asset": "6e7fcebd-6abe-47da-a53f-c39610a1b34c"
+                },
+                {
+                  "$asset": "46127bc8-fb5f-4170-afd1-005f7d704f32"
+                },
+                {
+                  "$asset": "0fa93700-3336-4fdd-ba25-75654d910e94"
+                },
+                {
+                  "$asset": "aaf60dac-e29f-44b1-9fdc-34ff6f2570c2"
+                },
+                {
+                  "$asset": "9d967825-2c9c-4ad2-ab43-ef36af80ba24"
+                },
+                {
+                  "$asset": "5fd31900-7105-486c-9343-3bd8a1b19695"
+                },
+                {
+                  "$asset": "14771bae-8587-49c3-beb5-4d505a42f514"
+                },
+                {
+                  "$asset": "e7ce928e-a983-44dd-b666-5714cda8729b"
+                },
+                {
+                  "$asset": "60e76a86-99c5-405e-bda6-61c4435319a4"
+                },
+                {
+                  "$asset": "171b74a7-78ca-428d-9d5a-b7f373579182"
+                },
+                {
+                  "$asset": "1b93e192-5104-40d4-a53e-b15b1aeeff64"
+                }
+              ]
+            },
+            "TitleFont": {
+              "$asset": "0871cec1-8b3e-4776-8e3d-2ff6a5797b34"
+            },
             "Gravity": 15.2F,
             "PropsFolder": "props",
             "DefaultCameraEffects": true,
@@ -59,7 +247,7 @@
         ]
       },
       {
-        "$id": 6,
+        "$id": 7,
         "Name": "Spawn",
         "Identifier": "d6bc2eb4-5c41-4f59-827d-6704117885f4",
         "Static": 0B,
@@ -69,7 +257,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 7,
+          "$id": 8,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -90,7 +278,7 @@
         },
         "Components": [
           {
-            "$id": 8,
+            "$id": 9,
             "$type": "Slopbox.SpawnPoint, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
             "_identifier": "2daf06a1-bf96-4fd6-9792-31addf2e2cc8",
             "_enabled": true,
@@ -104,7 +292,7 @@
         ]
       },
       {
-        "$id": 9,
+        "$id": 10,
         "Name": "Main Camera",
         "Identifier": "e3a794eb-fc50-4309-b2ea-cac7b513d826",
         "Static": 0B,
@@ -114,7 +302,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 10,
+          "$id": 11,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -135,7 +323,7 @@
         },
         "Components": [
           {
-            "$id": 11,
+            "$id": 12,
             "$type": "Prowl.Runtime.Camera, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "PostProcessing": true,
             "Profile": NULL,
@@ -145,17 +333,17 @@
             "VolumeTrigger": NULL,
             "AntiAliasing": 0L,
             "Fxaa": {
-              "$id": 12,
+              "$id": 13,
               "EdgeThresholdMax": 0.0625F,
               "EdgeThresholdMin": 0.0312F,
               "SubpixelQuality": 0.75F
             },
             "Smaa": {
-              "$id": 13,
+              "$id": 14,
               "EdgeThreshold": 0.1F
             },
             "Taa": {
-              "$id": 14,
+              "$id": 15,
               "BlendFactor": 0.95F,
               "MotionBlendFactor": 0.85F,
               "MotionScale": 2F,
@@ -199,7 +387,7 @@
         ]
       },
       {
-        "$id": 15,
+        "$id": 16,
         "Name": "Directional Light",
         "Identifier": "ed9f8ece-5cba-4c9b-b61d-61958adee992",
         "Static": 0B,
@@ -209,7 +397,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 16,
+          "$id": 17,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -230,7 +418,7 @@
         },
         "Components": [
           {
-            "$id": 17,
+            "$id": 18,
             "$type": "Prowl.Runtime.Light, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "Type": 0L,
             "Color": {
@@ -275,7 +463,7 @@
         ]
       },
       {
-        "$id": 18,
+        "$id": 19,
         "Name": "Floor",
         "Identifier": "59664926-be8a-4758-928e-0bdb3046d3e2",
         "Static": 0B,
@@ -285,7 +473,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 19,
+          "$id": 20,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -293,9 +481,9 @@
             "Z": 0F
           },
           "_localScale": {
-            "X": 6F,
+            "X": 50F,
             "Y": 0F,
-            "Z": 6F
+            "Z": 50F
           },
           "_localRotation": {
             "X": 0F,
@@ -306,16 +494,16 @@
         },
         "Components": [
           {
-            "$id": 20,
+            "$id": 21,
             "$type": "Prowl.Runtime.MeshRenderer, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "Mesh": {
               "$asset": "38151a92-9ae6-525d-b9cd-13fbcd700c8a"
             },
             "Materials": {
-              "$id": 21,
+              "$id": 22,
               "$values": [
                 {
-                  "$asset": "0858c848-9450-4e38-a310-140b4c9c7fa8"
+                  "$asset": "d7009b28-9353-6559-8847-62e877cec576"
                 }
               ]
             },
@@ -328,7 +516,7 @@
             "Name": "NewMeshRenderer"
           },
           {
-            "$id": 22,
+            "$id": 23,
             "$type": "Prowl.Runtime.BoxCollider, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "size": {
               "X": 10F,
@@ -359,84 +547,84 @@
     ]
   },
   "Environment": {
-    "$id": 23,
+    "$id": 24,
     "SkyMaterial": {
-      "$id": 24,
+      "$id": 25,
       "_shader": {
         "$asset": "73295c5c-0e55-4550-ae74-f13cd62796d2"
       },
       "_parent": NULL,
       "_properties": {
-        "$id": 25,
+        "$id": 26,
         "_colors": {
-          "$id": 26,
-          "entries": [
-
-          ]
-        },
-        "_vectors2": {
           "$id": 27,
           "entries": [
 
           ]
         },
-        "_vectors3": {
+        "_vectors2": {
           "$id": 28,
           "entries": [
 
           ]
         },
-        "_vectors4": {
+        "_vectors3": {
           "$id": 29,
           "entries": [
 
           ]
         },
-        "_floats": {
+        "_vectors4": {
           "$id": 30,
           "entries": [
 
           ]
         },
-        "_ints": {
+        "_floats": {
           "$id": 31,
           "entries": [
 
           ]
         },
-        "_matrices": {
+        "_ints": {
           "$id": 32,
           "entries": [
 
           ]
         },
-        "_textures": {
+        "_matrices": {
           "$id": 33,
           "entries": [
 
           ]
         },
-        "_textures3D": {
+        "_textures": {
           "$id": 34,
           "entries": [
 
           ]
         },
-        "_texturesCube": {
+        "_textures3D": {
           "$id": 35,
+          "entries": [
+
+          ]
+        },
+        "_texturesCube": {
+          "$id": 36,
           "entries": [
 
           ]
         }
       },
       "_overrides": {
-        "$id": 36,
+        "$id": 37,
         "$values": [
 
         ]
       },
       "_keywords": {
-        "$id": 37,
+        "$id": 38,
         "entries": [
 
         ]
@@ -475,7 +663,7 @@
       }
     },
     "Fog": {
-      "Mode": 3L,
+      "Mode": 0L,
       "Color": {
         "R": 0.5F,
         "G": 0.5F,
@@ -494,43 +682,43 @@
     }
   },
   "BakedLighting": {
-    "$id": 38,
+    "$id": 39,
     "Lightmaps": {
-      "$id": 39,
+      "$id": 40,
       "$values": [
 
       ]
     },
     "Placements": {
-      "$id": 40,
+      "$id": 41,
       "entries": [
 
       ]
     },
     "ProbePositions": {
-      "$id": 41,
-      "array": [
-
-      ]
-    },
-    "ProbeSH": {
       "$id": 42,
       "array": [
 
       ]
     },
-    "ProbeTetrahedra": {
+    "ProbeSH": {
       "$id": 43,
       "array": [
 
       ]
     },
+    "ProbeTetrahedra": {
+      "$id": 44,
+      "array": [
+
+      ]
+    },
     "ProbeTetNeighbours": {
-      "$id": 43
+      "$id": 44
     }
   },
   "LightmapBake": {
-    "$id": 44,
+    "$id": 45,
     "AtlasSize": 1024,
     "TexelsPerUnit": 20F,
     "DilatePixels": 2,

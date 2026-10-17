@@ -4,18 +4,22 @@ using System.Linq;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
+using Slopbox.Mounting;
 
 namespace Slopbox;
 
 /// <summary>
 /// Everything the spawn menu lists, by category. Model props are found, without loading them, in the
 /// Resources folder named by <see cref="GameManager.PropsFolder"/>: drop a model into
-/// <c>Assets/Resources/props/</c> (sub folders become groups) and it appears in the menu.
+/// <c>Assets/Resources/props/</c> (sub folders become groups) and it appears in the menu. Models from
+/// installed games, such as Half-Life, are listed under "Mounts".
 /// </summary>
 public sealed class SpawnCatalog
 {
     private readonly List<Spawnable> _all = new();
     private readonly Dictionary<string, Spawnable> _byId = new();
+
+    public const string MountsCategory = "Mounts";
 
     public IReadOnlyList<Spawnable> All => _all;
     public IReadOnlyList<string> Categories { get; private set; } = [];
@@ -24,7 +28,10 @@ public sealed class SpawnCatalog
     {
         AddModels(propsFolder);
         AddShapes();
-        Categories = _all.Select(s => s.Category).Distinct().ToList();
+        AddMounts();
+
+        // Mounts always has its tab, so it can say when no game is installed.
+        Categories = _all.Select(s => s.Category).Append(MountsCategory).Distinct().ToList();
     }
 
     public void Add(Spawnable spawnable)
@@ -61,6 +68,51 @@ public sealed class SpawnCatalog
 
         if (found.Count == 0)
             Debug.LogWarning($"No props found. Put models in a folder named Resources/{folder} to list them in the spawn menu.");
+    }
+
+    /// <summary>True while installed games are being mounted in the background.</summary>
+    public bool IsMounting { get; private set; }
+
+    /// <summary>
+    /// Mounts every installed game on a worker thread, since listing a game's files takes seconds, then lists
+    /// its models, one group per game and kind. Games mounted earlier in the session are listed straight away.
+    /// </summary>
+    private async void AddMounts()
+    {
+        IsMounting = true;
+        try
+        {
+            await GameTask.WorkerThread();
+            MountDirectory.MountInstalled();
+            await GameTask.MainThread();
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        finally
+        {
+            IsMounting = false;
+        }
+
+        foreach (BaseGameMount mount in MountDirectory.All.Where(m => m.IsMounted).OrderBy(m => m.Title))
+        {
+            var models = mount.GetAll(ResourceType.Model)
+                .Where(m => (m.Flags & ResourceFlags.DeveloperOnly) == 0)
+                .Select(m => new MountSpawnable(m))
+                .OrderBy(s => s.Group.Contains("/HD "))
+                .ThenBy(s => s.Group, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase);
+            foreach (MountSpawnable spawnable in models)
+                Add(spawnable);
+
+            foreach (ResourceLoader map in mount.GetAll(ResourceType.Scene).OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
+                Add(new MapSpawnable(map));
+        }
     }
 
     private static bool IsPrefab(ResourceEntry entry)

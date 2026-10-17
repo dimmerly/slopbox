@@ -60,6 +60,7 @@ public sealed class Physgun : Equipment
             vm.AddPart(Shapes.Cube, _darkMat, at, new Float3(0.015f, 0.015f, 0.09f));
         }
         vm.SetMuzzle(new Float3(0f, 0.01f, 0.25f));
+        vm.SetGrip(new Float3(0f, -0.09f, -0.08f), new Float3(0f, -0.05f, 0.09f));
     }
 
     public override void Update()
@@ -119,7 +120,7 @@ public sealed class Physgun : Equipment
         if (_beam == null || !_beam.IsValid) _beam = new Beam("Physgun Beam", BeamColor, 0.025f);
 
         // Bends from the muzzle along the aim toward the held point, the gmod look.
-        Float3 muzzle = Owner.ViewModel.MuzzlePosition;
+        Float3 muzzle = Owner.MuzzlePosition;
         Float3 end = _hold.WorldAnchor;
         Float3 control = muzzle + Owner.Forward * (Float3.Distance(muzzle, end) * 0.6f);
         _beam.SetWidth(0.02f, 0.006f);
@@ -144,7 +145,6 @@ public sealed class Physgun : Equipment
         Rigidbody3D body = hit.Rigidbody;
 
         _hold.Grab(body, hit.Point);
-        GameAudio.Play("confirm", 0.3f, 0.85f);
         _distance = MathF.Max(hit.Distance, MinDistance);
         _relativeRotation = Quaternion.Inverse(YawRotation) * body.Rotation;
     }
@@ -167,7 +167,7 @@ public sealed class Physgun : Equipment
         GameAudio.SetLoop(this, "hum", false);
         _rotating = false;
         if (body.IsValid()) Prop.Of(body).SetFrozen(true);
-        Owner.ViewModel.Kick(0.4f);
+        Owner.Kick(0.4f);
     }
 
     private void Unfreeze()

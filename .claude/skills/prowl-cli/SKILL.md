@@ -41,7 +41,7 @@ Scene, component, field, material, prefab and graph edits are one undo step each
 
 ## Scenes and objects
 
-- `scene --action new` makes a scene with a Main Camera (HDR on, no effects), a Directional Light, and Floor, Cube and Cube (1), none of which have colliders. Delete what you do not need.
+- `scene --action new` makes a scene with a Main Camera (no post processing profile), a Directional Light, and Floor, Cube and Cube (1), none of which have colliders. Delete what you do not need.
 - `go create --name Gun --parent /Player --position '[0,1,0]' --components Rigidbody3D,BoxCollider`. Quote JSON arrays, unquoted brackets are a shell glob.
 - `go create --prefab Models/Gun.fbx --parent /Player/Hand` instantiates a prefab or model
 - `go rename|delete|duplicate|active|transform|parent --target <ref> ...`. Rotation is euler degrees. Positions are local unless `--world`. `go active --target /X --active false` deactivates.
@@ -115,4 +115,4 @@ return Prowl.Editor.Navigation.NavMeshBakeService.Instance.Start(surface);
 - A new script type exists only after `compile` succeeds. Add the component after that.
 - Shell quoting: in bash wrap JSON in single quotes. Windows PowerShell 5.1 strips double quotes from arguments, so escape each one as \" inside single quotes, for example `--values '{\"Height\": 1.8}'`, or pipe a here string into `eval -`. PowerShell 7.3 and later pass single quoted JSON unchanged.
 
-<!-- prowl:generated 015fb156751528a4 Remove this line to stop the Prowl editor updating this file. -->
+<!-- prowl:generated 08c81e954bcec9d0 Remove this line to stop the Prowl editor updating this file. -->

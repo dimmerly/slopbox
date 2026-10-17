@@ -50,6 +50,12 @@ public sealed class SpawnMenu : Component
 
     public bool IsOpen => _open;
 
+    /// <summary>What the spawn side listed when the menu was last open: the tab, narrowed by group and search.</summary>
+    public IReadOnlyList<Spawnable> Listed { get; private set; } = [];
+
+    /// <summary>Where <see cref="Listed"/> came from, such as "Half-Life · Models" or "Props matching \"crate\"".</summary>
+    public string ListedSource { get; private set; } = "";
+
     /// <summary>True while a key setting is waiting for a press, so that press does not also act in the game.</summary>
     public static bool IsBindingKey => s_listening;
 
@@ -69,7 +75,9 @@ public sealed class SpawnMenu : Component
         if (_binding != null) ListenForKey();
 
         // Hold to open, like gmod and DXRP. Stays open while typing in a search box or binding a key.
-        bool want = !game.IsPaused && (Controls.Down(Controls.SpawnMenu) || (_open && (typing || _binding != null)));
+        // Another menu, such as the pause menu, keeps it shut.
+        bool otherMenu = game.IsMenuOpen && !_open;
+        bool want = !otherMenu && (Controls.Down(Controls.SpawnMenu) || (_open && (typing || _binding != null)));
         if (want != _open) SetOpen(want);
     }
 
@@ -144,6 +152,7 @@ public sealed class SpawnMenu : Component
     private static Icon CategoryIcon(string category) => category switch
     {
         "Shapes" => Icon.Shapes,
+        SpawnCatalog.MountsCategory => Icon.Disc,
         _ => Icon.Cube,
     };
 
@@ -180,6 +189,10 @@ public sealed class SpawnMenu : Component
                 .Where(s => !searching || s.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
+            Listed = items;
+            ListedSource = (_group.Length > 0 ? _group.Replace("/", " · ") : _category)
+                + (searching ? $" matching \"{query}\"" : "");
+
             using (paper.Row("body").AsMenuBody().Padding(S2).Gap(S2).Enter())
             {
                 using (paper.Column("nav").Width(Px(210f))
@@ -188,11 +201,33 @@ public sealed class SpawnMenu : Component
                 using (Ui.Scroll(paper, "nav scroll", _navScroll, Px(2f)))
                 {
                     Ui.CategoryRow(paper, "All", inCategory.Count, _group.Length == 0, () => SelectGroup(""), -1);
+
+                    // "Half-Life/Weapons" lists as "Weapons" under a "Half-Life" heading, which folds its groups
+                    // away. Every heading starts folded; the one holding the chosen group stays open.
+                    string section = "";
+                    bool sectionOpen = true;
                     for (int i = 0; i < groups.Count; i++)
                     {
                         string group = groups[i];
+                        int slash = group.IndexOf('/');
+                        if (slash > 0 && group[..slash] != section)
+                        {
+                            section = group[..slash];
+                            string heading = section;
+                            sectionOpen = _openSections.Contains(heading) || _group.StartsWith(heading + "/", StringComparison.Ordinal);
+                            int total = inCategory.Count(s => s.Group.StartsWith(heading + "/", StringComparison.Ordinal));
+                            paper.Box("section gap", i).Height(S1).IsNotInteractable();
+                            Ui.SectionHeader(paper, heading, total, sectionOpen, () => ToggleSection(heading), i);
+                        }
+                        else if (slash <= 0)
+                        {
+                            section = "";
+                            sectionOpen = true;
+                        }
+
+                        if (!sectionOpen) continue;
                         int count = inCategory.Count(s => s.Group == group);
-                        Ui.CategoryRow(paper, group, count, group == _group, () => SelectGroup(group), i);
+                        Ui.CategoryRow(paper, group[(slash + 1)..], count, group == _group, () => SelectGroup(group), i);
                     }
                 }
 
@@ -204,14 +239,15 @@ public sealed class SpawnMenu : Component
                     {
                         if (items.Count == 0)
                         {
-                            EmptyState(paper, font, searching ? $"Nothing matches \"{query}\"" : "Nothing here yet");
+                            EmptyState(paper, font,
+                                searching ? $"Nothing matches \"{query}\"" :
+                                _category == SpawnCatalog.MountsCategory && catalog.IsMounting ? "Mounting installed games..." :
+                                _category == SpawnCatalog.MountsCategory ? "No supported games installed, such as Half-Life on Steam" :
+                                "Nothing here yet");
                         }
                         else
                         {
-                            Thumbnails thumbnails = game.Thumbnails;
-                            using (paper.Row("grid").Height(UnitValue.Auto).WrapContent().Gap(Px(6f)).LineGap(Px(6f)).Padding(S1).Enter())
-                                for (int i = 0; i < items.Count; i++)
-                                    SpawnCell(paper, font, game, thumbnails, items[i], i);
+                            SpawnGrid(paper, font, game, items, searchBand);
                         }
                     }
 
@@ -230,6 +266,52 @@ public sealed class SpawnMenu : Component
         }
     }
 
+    /// <summary>
+    /// The grid, virtualised: only the rows in or next to the scroll view are built. Spacers stand in for
+    /// the rest so the scroll height stays right. "All" holds hundreds of props, which would otherwise all be laid out and drawn.
+    /// </summary>
+    private void SpawnGrid(Paper paper, FontFile font, GameManager game, List<Spawnable> items, float topInset)
+    {
+        float pad = S1, gap = Px(6f), cell = Cell, rowHeight = cell + gap;
+
+        // From the last layout. The scrollbar takes a strip down the right while it shows.
+        float width = _gridScroll.View.Size.X - (_gridScroll.Max > 0f ? Px(10f) : 0f) - pad * 2f;
+        int columns = Math.Max(1, (int)((width + gap) / (cell + gap)));
+        int rows = (items.Count + columns - 1) / columns;
+
+        // The content's y range under the view, less the grid padding, with a row of slack either side.
+        float viewTop = _gridScroll.Offset - topInset - pad;
+        int first = Math.Clamp((int)MathF.Floor(viewTop / rowHeight) - 1, 0, rows);
+        int last = Math.Clamp((int)MathF.Ceiling((viewTop + _gridScroll.ViewHeight + topInset) / rowHeight) + 1, first, rows);
+
+        Thumbnails thumbnails = game.Thumbnails;
+        using (paper.Column("grid").Height(UnitValue.Auto).Padding(pad).Enter())
+        {
+            paper.Box("above").Height(first * rowHeight);
+            for (int r = first; r < last; r++)
+            {
+                using (paper.Row("grid row", r).Height(rowHeight).Gap(gap).Enter())
+                    for (int i = r * columns; i < Math.Min(items.Count, (r + 1) * columns); i++)
+                        SpawnCell(paper, font, game, thumbnails, _gridScroll, items[i], i);
+            }
+            paper.Box("below").Height((rows - last) * rowHeight);
+        }
+    }
+
+    /// <summary>The nav headings unfolded this session; all start folded.</summary>
+    private readonly HashSet<string> _openSections = new();
+
+    /// <summary>Folds or unfolds a heading. Folding the one holding the chosen group goes back to "All".</summary>
+    private void ToggleSection(string section)
+    {
+        if (_openSections.Remove(section) || _group.StartsWith(section + "/", StringComparison.Ordinal))
+        {
+            if (_group.StartsWith(section + "/", StringComparison.Ordinal)) SelectGroup("");
+            return;
+        }
+        _openSections.Add(section);
+    }
+
     private void SelectGroup(string group)
     {
         _group = group;
@@ -237,9 +319,9 @@ public sealed class SpawnMenu : Component
     }
 
     /// <summary>A thumbnail cell with its name on a dark bar along the bottom, like DXRP's package icons.</summary>
-    private static void SpawnCell(Paper paper, FontFile font, GameManager game, Thumbnails thumbnails, Spawnable item, int index)
+    /// <remarks>Only cells inside the scroll view ask for their thumbnail, so a long list renders just what is seen.</remarks>
+    private static void SpawnCell(Paper paper, FontFile font, GameManager game, Thumbnails thumbnails, ScrollState scroll, Spawnable item, int index)
     {
-        Texture2D thumb = thumbnails.IsValid() ? thumbnails.Get(item) : null;
         float cell = Cell;
 
         using (paper.Box("cell", index).Width(cell).Height(cell)
@@ -251,13 +333,18 @@ public sealed class SpawnMenu : Component
             .Transition(GuiProp.ScaleX, 0.08f).Transition(GuiProp.ScaleY, 0.08f)
             .Cursor(PaperCursor.Pointer)
             .OnEnter(_ => GameAudio.Hover())
-            .OnClick(_ => Spawner.SpawnAtCrosshair(game.LocalPlayer, item))
+            .OnClick(_ => item.Activate(game.LocalPlayer))
+            .OnPostLayout((_, rect) =>
+            {
+                if (item.IsProp && thumbnails.IsValid() && scroll.IsVisible(rect)) thumbnails.Get(item);
+            })
             .Enter())
         {
             paper.Draw((canvas, rect) =>
             {
+                Texture2D thumb = thumbnails.IsValid() ? thumbnails.Peek(item) : null;
                 if (thumb.IsValid()) Ui.DrawTexture(canvas, rect, thumb);
-                else Icons.Draw(canvas, CategoryIcon(item.Category), rect.Min.X + rect.Size.X * 0.5f, rect.Min.Y + rect.Size.Y * 0.42f, Px(28f), Theme.White(0.2f));
+                else Icons.Draw(canvas, item.IsProp ? CategoryIcon(item.Category) : Icon.Map, rect.Min.X + rect.Size.X * 0.5f, rect.Min.Y + rect.Size.Y * 0.42f, Px(28f), Theme.White(item.IsProp ? 0.2f : 0.5f));
             });
 
             paper.Box("title").PositionType(PositionType.SelfDirected)

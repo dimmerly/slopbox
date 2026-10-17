@@ -1,0 +1,6715 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.AnimationGraph, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Nodes": {
+    "$id": 2,
+    "$values": [
+      {
+        "$id": 3,
+        "Id": "f8dfa156",
+        "Type": "motion.stateMachine",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 4,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 5,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 6,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 7,
+          "$values": [
+            {
+              "$id": 8,
+              "Id": "b3b73550a76a42f78884bc7d907cb34f",
+              "Name": "Ground",
+              "Graph": NULL,
+              "IsDefault": true,
+              "IsAny": false,
+              "Transitions": {
+                "$id": 9,
+                "$values": [
+                  {
+                    "$id": 10,
+                    "To": "Jump",
+                    "Duration": 0.12F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 11,
+                    "To": "Fall",
+                    "Duration": 0.3F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "X": 0F,
+                "Y": 0F
+              }
+            },
+            {
+              "$id": 12,
+              "Id": "6e55ce48936e401ab8ddf7e8d108d0b1",
+              "Name": "Jump",
+              "Graph": NULL,
+              "IsDefault": false,
+              "IsAny": false,
+              "Transitions": {
+                "$id": 13,
+                "$values": [
+                  {
+                    "$id": 14,
+                    "To": "Land",
+                    "Duration": 0.1F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 15,
+                    "To": "Ground",
+                    "Duration": 0.2F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 16,
+                    "To": "Fall",
+                    "Duration": 0.35F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "X": 320F,
+                "Y": -200F
+              }
+            },
+            {
+              "$id": 17,
+              "Id": "6a52810b47d2428e868398e833195de9",
+              "Name": "Fall",
+              "Graph": NULL,
+              "IsDefault": false,
+              "IsAny": false,
+              "Transitions": {
+                "$id": 18,
+                "$values": [
+                  {
+                    "$id": 19,
+                    "To": "Land",
+                    "Duration": 0.08F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 20,
+                    "To": "Ground",
+                    "Duration": 0.18F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "X": 640F,
+                "Y": 0F
+              }
+            },
+            {
+              "$id": 21,
+              "Id": "9de42665a8e446898e30d4910a6ea774",
+              "Name": "Land",
+              "Graph": NULL,
+              "IsDefault": false,
+              "IsAny": false,
+              "Transitions": {
+                "$id": 22,
+                "$values": [
+                  {
+                    "$id": 23,
+                    "To": "Jump",
+                    "Duration": 0.12F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 24,
+                    "To": "Fall",
+                    "Duration": 0.25F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  },
+                  {
+                    "$id": 25,
+                    "To": "Ground",
+                    "Duration": 0.35F,
+                    "Easing": 3L,
+                    "Sync": 0L,
+                    "ClampToSource": false,
+                    "CanInterrupt": false
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "X": 320F,
+                "Y": 200F
+              }
+            }
+          ]
+        },
+        "EditorPosition": {
+          "X": -1806F,
+          "Y": -556F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 26,
+        "Id": "118ee148",
+        "Type": "motion.stateOutput",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 27,
+          "$values": [
+            {
+              "$id": 28,
+              "Node": "e46702ec",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 29,
+              "Node": "e2ae1d27",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 30,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": true,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 31,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 32,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 33,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": 0F,
+          "Y": -67F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 34,
+        "Id": "b267c7c8",
+        "Type": "motion.stateOutput",
+        "Name": "",
+        "Owner": "6e55ce48936e401ab8ddf7e8d108d0b1",
+        "Inputs": {
+          "$id": 35,
+          "$values": [
+            {
+              "$id": 36,
+              "Node": "f73ae4e3",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 37,
+              "Node": "0bc647e9",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 38,
+              "Node": "a3b717e1",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": true,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 39,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 40,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 41,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": 0F,
+          "Y": -67F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 42,
+        "Id": "05f88396",
+        "Type": "motion.stateOutput",
+        "Name": "",
+        "Owner": "6a52810b47d2428e868398e833195de9",
+        "Inputs": {
+          "$id": 43,
+          "$values": [
+            {
+              "$id": 44,
+              "Node": "e21e3f57",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 45,
+              "Node": "c2b3c744",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 46,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": true,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 47,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 48,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 49,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": 0F,
+          "Y": -67F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 50,
+        "Id": "27e9ec47",
+        "Type": "motion.stateOutput",
+        "Name": "",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 51,
+          "$values": [
+            {
+              "$id": 52,
+              "Node": "8008ff48",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 53,
+              "Node": "f9c1f45e",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 54,
+              "Node": "5fc19042",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": true,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 55,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 56,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 57,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": 0F,
+          "Y": -67F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 58,
+        "Id": "b747a393",
+        "Type": "motion.parameter",
+        "Name": "MoveX",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 59,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 60,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 61,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "MoveX",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 62,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 63,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 165F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 64,
+        "Id": "f962953a",
+        "Type": "motion.parameter",
+        "Name": "MoveY",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 65,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 66,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 67,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "MoveY",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 68,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 69,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 281F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 70,
+        "Id": "332d899c",
+        "Type": "motion.parameter",
+        "Name": "MoveWeight",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 71,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 72,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 73,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "MoveWeight",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 74,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 75,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1272F,
+          "Y": -576F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 76,
+        "Id": "3e8bd5ae",
+        "Type": "motion.parameter",
+        "Name": "Rate",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 77,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 78,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 79,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Rate",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 80,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 81,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 11F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 82,
+        "Id": "40ac46c6",
+        "Type": "motion.parameter",
+        "Name": "Crouch",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 83,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 84,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 85,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Crouch",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 86,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 87,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": 40F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 88,
+        "Id": "e2ae1d27",
+        "Type": "motion.parameter",
+        "Name": "Grounded",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 89,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 90,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 91,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Grounded",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 92,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 93,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": 32F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 94,
+        "Id": "5aa4f11b",
+        "Type": "motion.blend2d",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 95,
+          "$values": [
+            {
+              "$id": 96,
+              "Node": "b747a393",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 97,
+              "Node": "f962953a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 98,
+              "Node": "acf9c37a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 2F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 99,
+              "Node": "9e492cde",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": -2F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 100,
+              "Node": "a02e9808",
+              "Value": 1F,
+              "Position": {
+                "X": -2F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 101,
+              "Node": "b4b08e6a",
+              "Value": 1F,
+              "Position": {
+                "X": 2F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 102,
+              "Node": "070f2e13",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 4.5F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 103,
+              "Node": "7793a1a2",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": -4.5F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 104,
+              "Node": "c7eade2a",
+              "Value": 1F,
+              "Position": {
+                "X": -4.5F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 105,
+              "Node": "8d8f7ece",
+              "Value": 1F,
+              "Position": {
+                "X": 4.5F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 106,
+              "Node": "81162353",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 7.5F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 107,
+          "entries": [
+            {
+              "key": "Loop",
+              "value": {
+                "$id": 108,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": true,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 109,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 110,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1356F,
+          "Y": -696F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 111,
+        "Id": "acf9c37a",
+        "Type": "motion.clip",
+        "Name": "walk_fwd",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 112,
+          "$values": [
+            {
+              "$id": 113,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 114,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 115,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 116,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "bb5f1227-a8a9-df3d-e5d8-5783c737c77c"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 117,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 118,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 119,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 120,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 121,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 122,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 123,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -1347F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 124,
+        "Id": "9e492cde",
+        "Type": "motion.clip",
+        "Name": "walk_back",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 125,
+          "$values": [
+            {
+              "$id": 126,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 127,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 128,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 129,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "f7039ba4-67f9-42cb-e410-8970c686849c"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 130,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 131,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 132,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 133,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 134,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 135,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 136,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -1179F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 137,
+        "Id": "a02e9808",
+        "Type": "motion.clip",
+        "Name": "walk_left",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 138,
+          "$values": [
+            {
+              "$id": 139,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 140,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 141,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 142,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "19cf2df1-575d-3747-3c22-d74bf9122eaf"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 143,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 144,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 145,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 146,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 147,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 148,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 149,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -1011F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 150,
+        "Id": "b4b08e6a",
+        "Type": "motion.clip",
+        "Name": "walk_right",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 151,
+          "$values": [
+            {
+              "$id": 152,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 153,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 154,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 155,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "853fb093-cdcc-aae0-c1ef-cd573b9fcb9a"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 156,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 157,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 158,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 159,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 160,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 161,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 162,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -843F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 163,
+        "Id": "070f2e13",
+        "Type": "motion.clip",
+        "Name": "run_fwd",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 164,
+          "$values": [
+            {
+              "$id": 165,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 166,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 167,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 168,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "52477b0f-9d62-ae8c-092a-2f016312b6f6"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 169,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 170,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 171,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 172,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 173,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 174,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 175,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -675F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 176,
+        "Id": "7793a1a2",
+        "Type": "motion.clip",
+        "Name": "run_back",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 177,
+          "$values": [
+            {
+              "$id": 178,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 179,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 180,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 181,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "18f3fa8c-b77c-fca8-1c94-0fd4003f5ec7"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 182,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 183,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 184,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 185,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 186,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 187,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 188,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -507F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 189,
+        "Id": "c7eade2a",
+        "Type": "motion.clip",
+        "Name": "run_left",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 190,
+          "$values": [
+            {
+              "$id": 191,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 192,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 193,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 194,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "cae566ef-8a63-410d-26dc-1ce008f0f49f"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 195,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 196,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 197,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 198,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 199,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 200,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 201,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -339F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 202,
+        "Id": "8d8f7ece",
+        "Type": "motion.clip",
+        "Name": "run_right",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 203,
+          "$values": [
+            {
+              "$id": 204,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 205,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 206,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 207,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "74fc963f-8e41-cc71-e8c1-22fa186eb59a"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 208,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 209,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 210,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 211,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 212,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 213,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 214,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -171F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 215,
+        "Id": "81162353",
+        "Type": "motion.clip",
+        "Name": "sprint",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 216,
+          "$values": [
+            {
+              "$id": 217,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 218,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 219,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 220,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "14eb2699-0d84-8927-2412-f1a59772ad90"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 221,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 222,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 223,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 224,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 225,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 226,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 227,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": -3F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 228,
+        "Id": "9871727d",
+        "Type": "motion.blend2d",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 229,
+          "$values": [
+            {
+              "$id": 230,
+              "Node": "b747a393",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 231,
+              "Node": "f962953a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 232,
+              "Node": "11cae3da",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 1.6F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 233,
+              "Node": "ef4b9c2e",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": -1.6F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 234,
+              "Node": "53f0ff17",
+              "Value": 1F,
+              "Position": {
+                "X": -1.6F,
+                "Y": 0.01F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 235,
+              "Node": "1971119d",
+              "Value": 1F,
+              "Position": {
+                "X": 1.6F,
+                "Y": 0.01F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 236,
+          "entries": [
+            {
+              "key": "Loop",
+              "value": {
+                "$id": 237,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": true,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 238,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 239,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1360F,
+          "Y": 135F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 240,
+        "Id": "11cae3da",
+        "Type": "motion.clip",
+        "Name": "crouch_fwd",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 241,
+          "$values": [
+            {
+              "$id": 242,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 243,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 244,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 245,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "7ddc3f59-da0f-1262-efb5-3875b86c791f"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 246,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 247,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 248,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 249,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 250,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 251,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 252,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 397F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 253,
+        "Id": "ef4b9c2e",
+        "Type": "motion.clip",
+        "Name": "crouch_back",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 254,
+          "$values": [
+            {
+              "$id": 255,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 256,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 257,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 258,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "707e9669-7529-f8d2-e8d4-b03f2400cd5c"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 259,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 260,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 261,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 262,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 263,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 264,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 265,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 565F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 266,
+        "Id": "53f0ff17",
+        "Type": "motion.clip",
+        "Name": "crouch_fwd",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 267,
+          "$values": [
+            {
+              "$id": 268,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 269,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 270,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 271,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "7ddc3f59-da0f-1262-efb5-3875b86c791f"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 272,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 273,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 274,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 275,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 276,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 277,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 278,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 733F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 279,
+        "Id": "1971119d",
+        "Type": "motion.clip",
+        "Name": "crouch_fwd",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 280,
+          "$values": [
+            {
+              "$id": 281,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 282,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 283,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 284,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "7ddc3f59-da0f-1262-efb5-3875b86c791f"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 285,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 286,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 287,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 288,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 289,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 290,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 291,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1700F,
+          "Y": 901F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 292,
+        "Id": "9336c51a",
+        "Type": "motion.clip",
+        "Name": "idle",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 293,
+          "$values": [
+            {
+              "$id": 294,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 295,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 296,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 297,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "120265b1-7c62-6452-3a53-231604eda746"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 298,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 299,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 300,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 301,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 302,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 303,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 304,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1332F,
+          "Y": -828F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 305,
+        "Id": "bf2bc00a",
+        "Type": "motion.layer",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 306,
+          "$values": [
+            {
+              "$id": 307,
+              "Node": "9336c51a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 308,
+              "Node": "5aa4f11b",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 309,
+              "Node": "332d899c",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 310,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 311,
+          "entries": [
+            {
+              "key": "Default",
+              "value": {
+                "$id": 312,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Additive",
+              "value": {
+                "$id": 313,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 314,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 315,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": -352F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 316,
+        "Id": "a7f601a0",
+        "Type": "motion.clip",
+        "Name": "crouch_idle",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 317,
+          "$values": [
+            {
+              "$id": 318,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 319,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 320,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 321,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "8baaf709-2710-5255-ac73-48da4bd44156"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 322,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "FromClip",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 323,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 324,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 325,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 326,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 327,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 328,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -996F,
+          "Y": 132F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 329,
+        "Id": "1d62eb39",
+        "Type": "motion.layer",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 330,
+          "$values": [
+            {
+              "$id": 331,
+              "Node": "a7f601a0",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 332,
+              "Node": "9871727d",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 333,
+              "Node": "332d899c",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 334,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 335,
+          "entries": [
+            {
+              "key": "Default",
+              "value": {
+                "$id": 336,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Additive",
+              "value": {
+                "$id": 337,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 338,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 339,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": -156F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 340,
+        "Id": "44045398",
+        "Type": "motion.crossfade",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 341,
+          "$values": [
+            {
+              "$id": 342,
+              "Node": "bf2bc00a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 343,
+              "Node": "1d62eb39",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 344,
+              "Node": "40ac46c6",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 345,
+          "entries": [
+            {
+              "key": "Seconds",
+              "value": {
+                "$id": 346,
+                "Kind": 0L,
+                "Number": 0.3F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Easing",
+              "value": {
+                "$id": 347,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "EaseInOut",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 348,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 349,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": -207F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 350,
+        "Id": "e46702ec",
+        "Type": "motion.speedScale",
+        "Name": "",
+        "Owner": "b3b73550a76a42f78884bc7d907cb34f",
+        "Inputs": {
+          "$id": 351,
+          "$values": [
+            {
+              "$id": 352,
+              "Node": "44045398",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 353,
+              "Node": "3e8bd5ae",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 354,
+          "entries": [
+            {
+              "key": "Default",
+              "value": {
+                "$id": 355,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 356,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 357,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -112F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 358,
+        "Id": "f73ae4e3",
+        "Type": "motion.clip",
+        "Name": "jump",
+        "Owner": "6e55ce48936e401ab8ddf7e8d108d0b1",
+        "Inputs": {
+          "$id": 359,
+          "$values": [
+            {
+              "$id": 360,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 361,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 362,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 363,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "d3bb4ff2-ef9c-fb21-f19d-7a6292f1c492"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 364,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Once",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 365,
+                "Kind": 0L,
+                "Number": 0.9F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 366,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 367,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -219F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 368,
+        "Id": "0bc647e9",
+        "Type": "motion.parameter",
+        "Name": "Jump",
+        "Owner": "6e55ce48936e401ab8ddf7e8d108d0b1",
+        "Inputs": {
+          "$id": 369,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 370,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 371,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Jump",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 372,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 373,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -3F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 374,
+        "Id": "a3b717e1",
+        "Type": "motion.stateFinished",
+        "Name": "Finished",
+        "Owner": "6e55ce48936e401ab8ddf7e8d108d0b1",
+        "Inputs": {
+          "$id": 375,
+          "$values": [
+            {
+              "$id": 376,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 377,
+          "entries": [
+            {
+              "key": "Threshold",
+              "value": {
+                "$id": 378,
+                "Kind": 0L,
+                "Number": 0.9F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 379,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 380,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": 113F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 381,
+        "Id": "e21e3f57",
+        "Type": "motion.clip",
+        "Name": "fall",
+        "Owner": "6a52810b47d2428e868398e833195de9",
+        "Inputs": {
+          "$id": 382,
+          "$values": [
+            {
+              "$id": 383,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 384,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 385,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 386,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "72281c8c-1b33-57d6-fdbb-646e3e77e911"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 387,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Once",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 388,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Start",
+              "value": {
+                "$id": 389,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Seed",
+              "value": {
+                "$id": 390,
+                "Kind": 2L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Random Start",
+              "value": {
+                "$id": 391,
+                "Kind": 1L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 392,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 393,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -162F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 394,
+        "Id": "ac9eec20",
+        "Type": "motion.parameter",
+        "Name": "Grounded",
+        "Owner": "6a52810b47d2428e868398e833195de9",
+        "Inputs": {
+          "$id": 395,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 396,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 397,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Grounded",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 398,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 399,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 56F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 400,
+        "Id": "c2b3c744",
+        "Type": "motion.logic",
+        "Name": "",
+        "Owner": "6a52810b47d2428e868398e833195de9",
+        "Inputs": {
+          "$id": 401,
+          "$values": [
+            {
+              "$id": 402,
+              "Node": "ac9eec20",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 403,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 404,
+          "entries": [
+            {
+              "key": "Op",
+              "value": {
+                "$id": 405,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Not",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 406,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 407,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -348F,
+          "Y": 120F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 408,
+        "Id": "8008ff48",
+        "Type": "motion.clip",
+        "Name": "land",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 409,
+          "$values": [
+            {
+              "$id": 410,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 411,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 412,
+          "entries": [
+            {
+              "key": "Clip",
+              "value": {
+                "$id": 413,
+                "Kind": 5L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": {
+                  "$asset": "281b19c8-3c3d-7284-ce1a-5178b095584b"
+                },
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Looping",
+              "value": {
+                "$id": 414,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Once",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Speed",
+              "value": {
+                "$id": 415,
+                "Kind": 0L,
+                "Number": 1.3F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 416,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 417,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -232F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 418,
+        "Id": "f9c1f45e",
+        "Type": "motion.parameter",
+        "Name": "HardLand",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 419,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 420,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 421,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "HardLand",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 422,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 423,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -16F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 424,
+        "Id": "08a392c5",
+        "Type": "motion.stateFinished",
+        "Name": "Finished",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 425,
+          "$values": [
+            {
+              "$id": 426,
+              "Node": "",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 427,
+          "entries": [
+            {
+              "key": "Threshold",
+              "value": {
+                "$id": 428,
+                "Kind": 0L,
+                "Number": 0.8F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 429,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 430,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 41F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 431,
+        "Id": "7966ac5a",
+        "Type": "motion.parameter",
+        "Name": "MoveWeight",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 432,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 433,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 434,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "MoveWeight",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 435,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 436,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": 139F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 437,
+        "Id": "b700dce3",
+        "Type": "motion.constFloat",
+        "Name": "",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 438,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 439,
+          "entries": [
+            {
+              "key": "Value",
+              "value": {
+                "$id": 440,
+                "Kind": 0L,
+                "Number": 0.5F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 441,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 442,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": 255F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 443,
+        "Id": "4ae90c94",
+        "Type": "motion.floatCompare",
+        "Name": "Moving?",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 444,
+          "$values": [
+            {
+              "$id": 445,
+              "Node": "7966ac5a",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 446,
+              "Node": "b700dce3",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 447,
+          "entries": [
+
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 448,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 449,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 183F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 450,
+        "Id": "5fc19042",
+        "Type": "motion.logic",
+        "Name": "Or",
+        "Owner": "9de42665a8e446898e30d4910a6ea774",
+        "Inputs": {
+          "$id": 451,
+          "$values": [
+            {
+              "$id": 452,
+              "Node": "08a392c5",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 453,
+              "Node": "4ae90c94",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 454,
+          "entries": [
+            {
+              "key": "Op",
+              "value": {
+                "$id": 455,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Or",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 456,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 457,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": 100F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 458,
+        "Id": "f1532fe4",
+        "Type": "motion.parameter",
+        "Name": "AimTarget",
+        "Owner": "",
+        "Inputs": {
+          "$id": 459,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 460,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 461,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "AimTarget",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 462,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 463,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1548F,
+          "Y": -672F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 464,
+        "Id": "8f872706",
+        "Type": "motion.parameter",
+        "Name": "AimWeight",
+        "Owner": "",
+        "Inputs": {
+          "$id": 465,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 466,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 467,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "AimWeight",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 468,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 469,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1806F,
+          "Y": -672F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 470,
+        "Id": "50d02c94",
+        "Type": "motion.parameter",
+        "Name": "RightHandTarget",
+        "Owner": "",
+        "Inputs": {
+          "$id": 471,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 472,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 473,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightHandTarget",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 474,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 475,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1188F,
+          "Y": 192F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 476,
+        "Id": "9b9dc4da",
+        "Type": "motion.parameter",
+        "Name": "RightHandWeight",
+        "Owner": "",
+        "Inputs": {
+          "$id": 477,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 478,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 479,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightHandWeight",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 480,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 481,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1360F,
+          "Y": 35F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 482,
+        "Id": "76c9f733",
+        "Type": "motion.parameter",
+        "Name": "LeftHandTarget",
+        "Owner": "",
+        "Inputs": {
+          "$id": 483,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 484,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 485,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftHandTarget",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 486,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 487,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 10F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 488,
+        "Id": "aeac5c38",
+        "Type": "motion.parameter",
+        "Name": "LeftHandWeight",
+        "Owner": "",
+        "Inputs": {
+          "$id": 489,
+          "$values": [
+
+          ]
+        },
+        "Properties": {
+          "$id": 490,
+          "entries": [
+            {
+              "key": "Name",
+              "value": {
+                "$id": 491,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftHandWeight",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 492,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 493,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": 126F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 494,
+        "Id": "1654cf81",
+        "Type": "motion.lookAt",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 495,
+          "$values": [
+            {
+              "$id": 496,
+              "Node": "f8dfa156",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 497,
+              "Node": "f1532fe4",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 498,
+          "entries": [
+            {
+              "key": "Clamp",
+              "value": {
+                "$id": 499,
+                "Kind": 0L,
+                "Number": 0.55F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Body",
+              "value": {
+                "$id": 500,
+                "Kind": 0L,
+                "Number": 0.45F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Head",
+              "value": {
+                "$id": 501,
+                "Kind": 0L,
+                "Number": 0.9F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Eyes",
+              "value": {
+                "$id": 502,
+                "Kind": 0L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 503,
+          "entries": [
+            {
+              "key": "Weight",
+              "value": "8f872706"
+            }
+          ]
+        },
+        "States": {
+          "$id": 504,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1344F,
+          "Y": -636F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 505,
+        "Id": "f9a1cc65",
+        "Type": "motion.twoBoneIK",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 506,
+          "$values": [
+            {
+              "$id": 507,
+              "Node": "1654cf81",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 508,
+              "Node": "50d02c94",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 509,
+              "Node": "9b9dc4da",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 510,
+          "entries": [
+            {
+              "key": "Upper",
+              "value": {
+                "$id": 511,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightUpperArm",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Mid",
+              "value": {
+                "$id": 512,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightLowerArm",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "End",
+              "value": {
+                "$id": 513,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightHand",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Default",
+              "value": {
+                "$id": 514,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 515,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 516,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -1020F,
+          "Y": -231F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 517,
+        "Id": "2aacdb75",
+        "Type": "motion.twoBoneIK",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 518,
+          "$values": [
+            {
+              "$id": 519,
+              "Node": "6472abb6",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 520,
+              "Node": "76c9f733",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 521,
+              "Node": "aeac5c38",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 522,
+          "entries": [
+            {
+              "key": "Upper",
+              "value": {
+                "$id": 523,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftUpperArm",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Mid",
+              "value": {
+                "$id": 524,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftLowerArm",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "End",
+              "value": {
+                "$id": 525,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftHand",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Default",
+              "value": {
+                "$id": 526,
+                "Kind": 0L,
+                "Number": 1F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 527,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 528,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -340F,
+          "Y": -115F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 529,
+        "Id": "6472abb6",
+        "Type": "motion.copyConstraint",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 530,
+          "$values": [
+            {
+              "$id": 531,
+              "Node": "f9a1cc65",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 532,
+              "Node": "50d02c94",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 533,
+          "entries": [
+            {
+              "key": "Bone",
+              "value": {
+                "$id": 534,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "RightHand",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "From",
+              "value": {
+                "$id": 535,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Target",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Channels",
+              "value": {
+                "$id": 536,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Rotation",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 537,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 538,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": -680F,
+          "Y": -206F
+        },
+        "Collapsed": false
+      },
+      {
+        "$id": 539,
+        "Id": "3c0dd812",
+        "Type": "motion.copyConstraint",
+        "Name": "",
+        "Owner": "",
+        "Inputs": {
+          "$id": 540,
+          "$values": [
+            {
+              "$id": 541,
+              "Node": "2aacdb75",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            },
+            {
+              "$id": 542,
+              "Node": "76c9f733",
+              "Value": 1F,
+              "Position": {
+                "X": 0F,
+                "Y": 0F
+              },
+              "Flag": false,
+              "Name": "",
+              "Text": ""
+            }
+          ]
+        },
+        "Properties": {
+          "$id": 543,
+          "entries": [
+            {
+              "key": "Bone",
+              "value": {
+                "$id": 544,
+                "Kind": 10L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "LeftHand",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "From",
+              "value": {
+                "$id": 545,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Target",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            },
+            {
+              "key": "Channels",
+              "value": {
+                "$id": 546,
+                "Kind": 3L,
+                "Number": 0F,
+                "Flag": false,
+                "Integer": 0,
+                "Text": "Rotation",
+                "Vector": {
+                  "X": 0F,
+                  "Y": 0F,
+                  "Z": 0F
+                },
+                "Clip": NULL,
+                "Mask": NULL,
+                "Avatar": NULL,
+                "Graph": NULL,
+                "Curve": NULL
+              }
+            }
+          ]
+        },
+        "PropertyInputs": {
+          "$id": 547,
+          "entries": [
+
+          ]
+        },
+        "States": {
+          "$id": 548,
+          "$values": [
+
+          ]
+        },
+        "EditorPosition": {
+          "X": 0F,
+          "Y": -90F
+        },
+        "Collapsed": false
+      }
+    ]
+  },
+  "Parameters": {
+    "$id": 549,
+    "$values": [
+      {
+        "$id": 550,
+        "Name": "MoveX",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 551,
+        "Name": "MoveY",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 552,
+        "Name": "MoveWeight",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 553,
+        "Name": "Rate",
+        "Kind": 0L,
+        "Number": 1F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 554,
+        "Name": "Grounded",
+        "Kind": 1L,
+        "Number": 0F,
+        "Flag": true,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 555,
+        "Name": "Crouch",
+        "Kind": 1L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 556,
+        "Name": "Jump",
+        "Kind": 1L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 557,
+        "Name": "HardLand",
+        "Kind": 1L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 558,
+        "Name": "AimTarget",
+        "Kind": 11L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 559,
+        "Name": "RightHandTarget",
+        "Kind": 11L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 560,
+        "Name": "LeftHandTarget",
+        "Kind": 11L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 561,
+        "Name": "AimWeight",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 562,
+        "Name": "RightHandWeight",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      },
+      {
+        "$id": 563,
+        "Name": "LeftHandWeight",
+        "Kind": 0L,
+        "Number": 0F,
+        "Flag": false,
+        "Trigger": false,
+        "Integer": 0,
+        "Vector": {
+          "X": 0F,
+          "Y": 0F,
+          "Z": 0F
+        },
+        "Text": ""
+      }
+    ]
+  },
+  "RootNode": "3c0dd812",
+  "Groups": {
+    "$id": 564,
+    "$values": [
+      {
+        "$id": 565,
+        "Id": "c6ec9671",
+        "Owner": "",
+        "Title": "Aim: chest and head look at the aim point",
+        "Position": {
+          "X": -1836F,
+          "Y": -732F
+        },
+        "Size": {
+          "X": 797.58734F,
+          "Y": 380.30054F
+        }
+      },
+      {
+        "$id": 566,
+        "Id": "8552e78f",
+        "Owner": "",
+        "Title": "Hands: IK onto the held tool's grips, then grip rotation",
+        "Position": {
+          "X": -1390F,
+          "Y": -291F
+        },
+        "Size": {
+          "X": 1660F,
+          "Y": 527F
+        }
+      }
+    ]
+  },
+  "Notes": {
+    "$id": 567,
+    "$values": [
+
+    ]
+  },
+  "Name": "Player"
+}

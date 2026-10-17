@@ -1,0 +1,102 @@
+{
+ "src": "C:/Users/Dimme/Downloads/Motifect_locomotion_complete_v1_0/Animations",
+ "out": "OUT_DIR",
+ "jobs": [
+  {
+   "name": "Citizen",
+   "model": true,
+   "src": "idle_neutral"
+  },
+  {
+   "name": "idle",
+   "src": "idle_neutral",
+   "range": [
+    40,
+    280
+   ],
+   "blend": 30
+  },
+  {
+   "name": "walk_fwd",
+   "src": "walk_forward"
+  },
+  {
+   "name": "walk_back",
+   "src": "walk_backward"
+  },
+  {
+   "name": "walk_left",
+   "src": "walk_strafe_left"
+  },
+  {
+   "name": "walk_right",
+   "src": "walk_strafe_right"
+  },
+  {
+   "name": "run_fwd",
+   "src": "run_jog"
+  },
+  {
+   "name": "run_back",
+   "src": "run_backward"
+  },
+  {
+   "name": "run_left",
+   "src": "run_strafe_left"
+  },
+  {
+   "name": "run_right",
+   "src": "run_strafe_right"
+  },
+  {
+   "name": "sprint",
+   "src": "run_sprint"
+  },
+  {
+   "name": "crouch_idle",
+   "src": "crouch_rise_up",
+   "range": [
+    1,
+    6
+   ],
+   "loop": false
+  },
+  {
+   "name": "crouch_fwd",
+   "src": "crouch_walk_forward"
+  },
+  {
+   "name": "crouch_back",
+   "src": "crouch_walk_backward"
+  },
+  {
+   "name": "jump",
+   "src": "jump_standing",
+   "range": [
+    46,
+    58
+   ],
+   "loop": false,
+   "hipsZ": 1.0
+  },
+  {
+   "name": "fall",
+   "src": "land_soft",
+   "range": [
+    1,
+    24
+   ],
+   "loop": false,
+   "hipsZ": 1.0
+  },
+  {
+   "name": "land",
+   "src": "land_soft",
+   "range": [
+    39,
+    72
+   ],
+   "loop": false
+  }
+ ]
+}

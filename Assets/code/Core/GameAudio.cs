@@ -43,8 +43,10 @@ public sealed class GameAudio : Component
 
     public override void OnEnable()
     {
-        foreach (AudioClip clip in AssetDatabase.FindAllResources<AudioClip>("audio"))
-            _clips[clip.Name] = clip;
+        GameManager game = GameManager.Instance;
+        if (game.IsValid())
+            foreach (AudioClip clip in game.Sounds)
+                if (clip.IsValid()) _clips[clip.Name] = clip;
         for (int i = 0; i < 24; i++)
             _voices.Add(new Voice { Source = MakeSource("Sound Voice " + i), Ui = i < 8 });
 
@@ -72,13 +74,8 @@ public sealed class GameAudio : Component
 
     public override void Update()
     {
-        bool paused = GameManager.Instance.IsPaused;
         foreach (Voice voice in _voices)
-        {
             voice.Source.Volume = voice.Gain * Level(voice.Ui);
-            if (!voice.Ui && paused && voice.Source.IsPlaying) voice.Source.Pause();
-            else if (!paused && voice.Source.IsPaused) voice.Source.Resume();
-        }
         for (int i = _loops.Count - 1; i >= 0; i--)
         {
             LoopVoice loop = _loops[i];
@@ -88,7 +85,7 @@ public sealed class GameAudio : Component
                 _loops.RemoveAt(i);
                 continue;
             }
-            float target = loop.Active && !paused ? 1f : 0f;
+            float target = loop.Active ? 1f : 0f;
             loop.Fade += (target - loop.Fade) * MathF.Min(1f, Time.UnscaledDeltaTime * 14f);
             loop.Source.Volume = loop.Gain * loop.Fade * Level(false, loop.Ambient);
             if (loop.Fade < 0.005f && loop.Source.IsPlaying) loop.Source.Stop();
@@ -112,7 +109,6 @@ public sealed class GameAudio : Component
     {
         GameAudio audio = Current;
         if (audio.IsNotValid()) return;
-        if (!ui && GameManager.Instance.IsPaused) return;
         double now = Time.TimeSinceStartup;
         if (audio._cooldowns.TryGetValue(sound, out double next) && now < next) return;
         if (!audio._clips.TryGetValue(sound, out AudioClip clip) || clip.IsNotValid()) return;
@@ -130,6 +126,25 @@ public sealed class GameAudio : Component
         voice.Source.Play();
     }
 
+    /// <summary>Plays a clip that is not one of the game's own sounds, such as a mounted game's footstep.</summary>
+    public static void PlayClip(AudioClip clip, float gain, float pitch = 1f, Float3? position = null,
+        float maxDistance = 30f, float minDistance = 2f)
+    {
+        GameAudio audio = Current;
+        if (audio.IsNotValid() || clip.IsNotValid()) return;
+        Voice voice = audio._voices.FirstOrDefault(v => !v.Ui && !v.Source.IsPlaying && !v.Source.IsPaused);
+        if (voice == null) return;
+        voice.Gain = gain;
+        voice.Source.Clip = clip;
+        voice.Source.Spatial = position.HasValue;
+        voice.Source.MinDistance = minDistance;
+        voice.Source.MaxDistance = maxDistance;
+        if (position.HasValue) voice.Source.Transform.Position = position.Value;
+        voice.Source.Pitch = pitch;
+        voice.Source.Volume = gain * audio.Level(false);
+        voice.Source.Play();
+    }
+
     public static void Click() => Play("click", 0.3f, ui: true);
     public static void Hover() => Play("hover", 0.08f, 1.2f, true, cooldown: 0.09f);
     public static void Error() => Play("error", 0.32f, ui: true, cooldown: 0.15f);
@@ -143,6 +158,26 @@ public sealed class GameAudio : Component
             index = (index + 1) % count;
         audio._lastVariant[prefix] = index;
         Play(prefix + "_" + (index + 1), gain, 0.94f + Random.Shared.NextSingle() * 0.12f, position: position);
+    }
+
+    /// <summary>
+    /// The game's own sound family for a surface, from a Source $surfaceprop such as "metal_box" or a material's
+    /// name such as "concrete/concretefloor001a". Null if the text says nothing about it.
+    /// </summary>
+    public static string SurfaceOf(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        string t = text.ToLowerInvariant();
+        if (t.Contains("glass") || t.Contains("window")) return "glass";
+        if (t.Contains("wood") || t.Contains("crate") || t.Contains("cardboard") || t.Contains("paper")) return "wood";
+        if (t.Contains("grass") || t.Contains("foliage") || t.Contains("carpet") || t.Contains("flesh")) return "grass";
+        if (t.Contains("gravel") || t.Contains("sand") || t.Contains("rock")) return "gravel";
+        if (t.Contains("dirt") || t.Contains("mud") || t.Contains("nature") || t.Contains("slosh") || t.Contains("water")) return "dirt";
+        if (t.Contains("metal") || t.Contains("grate") || t.Contains("vent") || t.Contains("chain") || t.Contains("pipe")
+            || t.Contains("ladder") || t.Contains("computer") || t.Contains("canister") || t.Contains("barrel")) return "metal";
+        if (t.Contains("concrete") || t.Contains("brick") || t.Contains("stone") || t.Contains("tile") || t.Contains("plaster")
+            || t.Contains("asphalt") || t.Contains("pavement") || t.Contains("road") || t.Contains("cement")) return "concrete";
+        return null;
     }
 
     /// <summary>Names of models/materials provide a fallback surface classification without changing assets.</summary>
@@ -166,7 +201,7 @@ public sealed class GameAudio : Component
     public static bool Impact(Prop prop, Collision collision)
     {
         GameAudio audio = Current;
-        if (audio.IsNotValid() || prop.Body.IsNotValid() || prop.IsFrozen || GameManager.Instance.IsPaused) return false;
+        if (audio.IsNotValid() || prop.Body.IsNotValid() || prop.IsFrozen) return false;
         // A prop pair reports the contact twice. Pick one side, and cap all impacts to 20 per second.
         if (collision.Rigidbody.IsValid() && collision.Rigidbody.GameObject.GetComponent<Prop>().IsValid()
             && prop.GameObject.Identifier.CompareTo(collision.Rigidbody.GameObject.Identifier) > 0) return false;
@@ -185,11 +220,21 @@ public sealed class GameAudio : Component
     {
         GameAudio audio = Current;
         if (audio.IsNotValid()) return;
+        audio._clips.TryGetValue(sound, out AudioClip clip);
+        SetLoop(owner, clip, active, position, spatial, gain, ambient, maxDistance);
+    }
+
+    /// <summary>A loop of a clip that is not one of the game's own sounds, such as one made in code.</summary>
+    public static void SetLoop(object owner, AudioClip clip, bool active, Float3 position = default,
+        bool spatial = false, float gain = 0.12f, bool ambient = false, float maxDistance = 45f)
+    {
+        GameAudio audio = Current;
+        if (audio.IsNotValid()) return;
         LoopVoice loop = audio._loops.FirstOrDefault(v => ReferenceEquals(v.Owner, owner));
         if (loop == null)
         {
-            if (!active || !audio._clips.TryGetValue(sound, out AudioClip clip) || clip.IsNotValid()) return;
-            loop = new LoopVoice { Owner = owner, Source = audio.MakeSource(sound + " Loop"), Ambient = ambient };
+            if (!active || clip.IsNotValid()) return;
+            loop = new LoopVoice { Owner = owner, Source = audio.MakeSource(clip.Name + " Loop"), Ambient = ambient };
             loop.Source.Clip = clip;
             loop.Source.Loop = true;
             loop.Source.Spatial = spatial;

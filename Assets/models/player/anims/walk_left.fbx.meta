@@ -1,0 +1,32 @@
+{
+  "guid": "14385b8f-2d32-458b-a4cd-b2d3680ec49d",
+  "importer": "EditorModelImporter",
+  "importerVersion": 1,
+  "settings": {
+    "generateNormals": true,
+    "generateSmoothNormals": true,
+    "smoothNormalsAngle": 80F,
+    "recalculateNormals": false,
+    "calculateTangents": true,
+    "flipUVs": true,
+    "unitScale": 1F,
+    "importCameras": true,
+    "importLights": true,
+    "loopAnimations": true,
+    "rigType": 2,
+    "animationSampleRate": 30F,
+    "clips": {
+      "Scene": {
+        "name": "walk_left",
+        "loop": true,
+        "rootTravel": false,
+        "rootTurn": false,
+        "rootHeight": false
+      }
+    },
+    "materialRemap": {
+
+    },
+    "generateLightmapUVs": false
+  }
+}

@@ -33,6 +33,9 @@ public sealed class RocketLauncher : Equipment
         vm.AddPart(Shapes.Cube, _darkMat, new Float3(0f, -0.13f, -0.08f), new Float3(0.065f, 0.18f, 0.075f), new Float3(-12f, 0f, 0f));
         vm.AddPart(Shapes.Cube, _darkMat, new Float3(0f, 0.12f, 0.19f), new Float3(0.025f, 0.08f, 0.025f));
         vm.SetMuzzle(new Float3(0f, 0f, 0.41f));
+        // Shouldered: the tube rests on the shoulder, the grip under it.
+        vm.SetGrip(new Float3(0f, -0.17f, -0.08f), new Float3(0f, -0.09f, 0.22f));
+        vm.SetHold(new Float3(0.02f, 0.02f, 0.12f));
     }
 
     public override void Update()
@@ -40,12 +43,12 @@ public sealed class RocketLauncher : Equipment
         if (!Attack1Down || Time.TimeSinceStartup < _nextShot) return;
         _nextShot = Time.TimeSinceStartup + FireInterval;
 
-        Float3 muzzle = Owner.ViewModel.MuzzlePosition;
+        Float3 muzzle = Owner.MuzzlePosition;
         Float3 target = Owner.Trace(500f, out RaycastHit aim) ? aim.Point : Owner.EyePosition + Owner.Forward * 500f;
         Float3 direction = Float3.Normalize(target - muzzle);
         RocketProjectile.Launch(Owner.EyePosition, muzzle, direction, RocketSpeed, BlastRadius, BlastSpeed);
         GameAudio.Play("rocket_launch", 0.8f, position: muzzle, maxDistance: 70f);
-        Owner.ViewModel.Kick(1.5f);
+        Owner.Kick(1.5f);
         Owner.ViewPunch(new Float3(-4f, 0f, 0f));
     }
 }

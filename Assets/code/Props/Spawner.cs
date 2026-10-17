@@ -79,21 +79,24 @@ public static class Spawner
         Float3 min = new(float.MaxValue), max = new(float.MinValue);
         bool any = false;
 
-        foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true, true))
+        void Add(Mesh mesh, Transform transform)
         {
-            Mesh mesh = renderer.Mesh;
-            if (mesh.IsNotValid()) continue;
-
-            AABB b = mesh.bounds;
-            foreach (Float3 corner in b.GetCorners())
+            if (mesh.IsNotValid()) return;
+            foreach (Float3 corner in mesh.bounds.GetCorners())
             {
-                Float3 world = renderer.Transform.TransformPoint(corner);
-                Float3 local = root.Transform.InverseTransformPoint(world);
+                Float3 local = root.Transform.InverseTransformPoint(transform.TransformPoint(corner));
                 min = Maths.Min(min, local);
                 max = Maths.Max(max, local);
                 any = true;
             }
         }
+
+        foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true, true))
+            Add(renderer.Mesh, renderer.Transform);
+
+        // Skinned meshes are measured in their rest pose.
+        foreach (SkinnedMeshRenderer renderer in root.GetComponentsInChildren<SkinnedMeshRenderer>(true, true))
+            Add(renderer.SharedMesh, renderer.Transform);
 
         return any ? new AABB(min, max) : new AABB(new Float3(-0.5f), new Float3(0.5f));
     }

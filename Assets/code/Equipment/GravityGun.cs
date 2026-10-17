@@ -59,6 +59,7 @@ public sealed class GravityGun : Equipment
             vm.AddPart(Shapes.Cube, _clawMat, at, new Float3(0.02f, 0.02f, 0.12f), new Float3(-MathF.Sin(a) * 15f, MathF.Cos(a) * 15f, 0f));
         }
         vm.SetMuzzle(new Float3(0f, 0f, 0.25f));
+        vm.SetGrip(new Float3(0f, -0.06f, -0.09f), new Float3(0.03f, -0.05f, 0.08f));
     }
 
     public override void Update()
@@ -148,7 +149,7 @@ public sealed class GravityGun : Equipment
         _sincePunt = 0f;
         GameAudio.Play("launch", 0.65f, 1.1f);
         GameAudio.Play("confirm", 0.35f, 0.6f);
-        Owner.ViewModel.Kick(1f);
+        Owner.Kick(1f);
         Owner.ViewPunch(new Float3(-2f, 0f, 0f));
     }
 }

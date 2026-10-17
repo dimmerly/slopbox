@@ -11,7 +11,9 @@ namespace Slopbox;
 /// <summary>
 /// Renders UI icons from the real objects: spawn menu thumbnails and equipment icons. Each one is built
 /// far out of sight, shot by a camera into a transparent render texture, and torn down a couple of frames
-/// later. Requests are queued and handled one at a time, so opening a menu never hitches.
+/// later. Requests are queued and handled one at a time, so opening a menu never hitches. A request that is
+/// not repeated within a few frames is dropped before it renders, so callers ask every frame for what they
+/// are showing and scrolling past an icon never costs a render.
 /// </summary>
 public sealed class Thumbnails : Component
 {
@@ -32,29 +34,40 @@ public sealed class Thumbnails : Component
     private const int FramesToRender = 2;
     // A layer nothing else uses, so the studio lights reach only the subject. 31 is the gizmo layer.
     private const int StudioLayer = 30;
+    // A queued shot nobody has asked for in this many frames is dropped.
+    private const int StaleFrames = 3;
 
     private readonly Dictionary<string, RenderTexture> _done = new();
     private readonly Queue<Shot> _queue = new();
     private readonly HashSet<string> _queued = new();
+    private readonly Dictionary<string, int> _wantedAt = new();
 
     private Shot? _current;
     private GameObject _subject, _rig;
     private RenderTexture _target;
-    private int _frames, _shots;
+    private int _frames, _shots, _frame;
 
     /// <summary>The icon for <paramref name="shot"/>, or null while it is still being rendered.</summary>
     public Texture2D Get(in Shot shot)
     {
         if (_done.TryGetValue(shot.Id, out RenderTexture rt)) return rt.MainTexture;
+        _wantedAt[shot.Id] = _frame;
         if (_queued.Add(shot.Id)) _queue.Enqueue(shot);
         return null;
     }
 
+    /// <summary>The icon for <paramref name="id"/> if it is already rendered. Never queues a render.</summary>
+    public Texture2D Peek(string id) => _done.TryGetValue(id, out RenderTexture rt) ? rt.MainTexture : null;
+
     /// <summary>A spawn menu thumbnail: three quarter view from above, square and transparent.</summary>
     public Texture2D Get(Spawnable spawnable) => Get(new Shot(
-        "spawn:" + spawnable.Id, spawnable.Create,
+        SpawnId(spawnable), spawnable.Create,
         new Float3(0f, 0.55f, -1f), Quaternion.FromEuler(0f, 210f, 0f),
         SpawnIconSize, SpawnIconSize, Lighting: spawnable.ThumbnailLighting));
+
+    public Texture2D Peek(Spawnable spawnable) => Peek(SpawnId(spawnable));
+
+    private static string SpawnId(Spawnable spawnable) => "spawn:" + spawnable.Id;
 
     /// <summary>An equipment icon: its view model from the side, muzzle pointing right, wide and transparent.</summary>
     public Texture2D Get(Equipment equipment) => Get(new Shot(
@@ -74,13 +87,26 @@ public sealed class Thumbnails : Component
 
     public override void Update()
     {
+        _frame++;
         if (_current != null)
         {
             if (++_frames < FramesToRender) return;
             Finish();
         }
 
-        if (_queue.Count > 0) Begin(_queue.Dequeue());
+        // Skip whatever went out of view while it waited. Dropped ids can be queued again.
+        while (_queue.Count > 0)
+        {
+            Shot shot = _queue.Dequeue();
+            if (_frame - _wantedAt.GetValueOrDefault(shot.Id) > StaleFrames)
+            {
+                _queued.Remove(shot.Id);
+                continue;
+            }
+            _wantedAt.Remove(shot.Id);
+            Begin(shot);
+            break;
+        }
     }
 
     protected override void OnDispose()
@@ -140,9 +166,9 @@ public sealed class Thumbnails : Component
         camera.FieldOfView = Fov;
         camera.NearClipPlane = MathF.Max(0.01f, distance - radius * 2f);
         camera.FarClipPlane = distance + radius * 2f;
-        camera.Background = CameraBackground.Color;
-        // Without post processing the background colour's alpha survives, so the icon is transparent.
-        camera.BackgroundColor = new Color(0f, 0f, 0f, 0f);
+        // A colour background is cleared opaque, so draw as an overlay: it clears to transparent black and
+        // the icon keeps its alpha.
+        camera.Background = CameraBackground.None;
         camera.PostProcessing = false;
 
         // Studio lighting: directional lights that reach only the studio layer, so the world is never lit by them

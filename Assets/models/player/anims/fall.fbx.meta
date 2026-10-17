@@ -1,0 +1,32 @@
+{
+  "guid": "1e11b816-5294-44cf-a965-c9714610bd88",
+  "importer": "EditorModelImporter",
+  "importerVersion": 1,
+  "settings": {
+    "generateNormals": true,
+    "generateSmoothNormals": true,
+    "smoothNormalsAngle": 80F,
+    "recalculateNormals": false,
+    "calculateTangents": true,
+    "flipUVs": true,
+    "unitScale": 1F,
+    "importCameras": true,
+    "importLights": true,
+    "loopAnimations": true,
+    "rigType": 2,
+    "animationSampleRate": 30F,
+    "clips": {
+      "Scene": {
+        "name": "fall",
+        "loop": false,
+        "rootTravel": false,
+        "rootTurn": false,
+        "rootHeight": false
+      }
+    },
+    "materialRemap": {
+
+    },
+    "generateLightmapUVs": false
+  }
+}

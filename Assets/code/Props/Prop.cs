@@ -25,7 +25,8 @@ public sealed class Prop : Component
     /// <summary>What each renderer had before any override, and the copies made for tinting.</summary>
     private sealed class RendererState
     {
-        public MeshRenderer Renderer;
+        /// <summary>A mesh or skinned mesh renderer.</summary>
+        public IMaterialRenderer Renderer;
         public List<Material> Original;
         public readonly List<Material> Clones = new();
     }
@@ -134,8 +135,13 @@ public sealed class Prop : Component
 
         if (_renderers.Count == 0 && (overridden || tinted))
         {
-            foreach (MeshRenderer renderer in GetComponentsInChildren<MeshRenderer>())
-                _renderers.Add(new RendererState { Renderer = renderer, Original = new List<Material>(renderer.Materials) });
+            foreach (Component component in GetComponentsInChildren<Component>())
+            {
+                if (component is not (MeshRenderer or SkinnedMeshRenderer) || component is not IMaterialRenderer renderer) continue;
+                var original = new List<Material>(renderer.MaterialSlotCount);
+                for (int i = 0; i < renderer.MaterialSlotCount; i++) original.Add(renderer.GetMaterial(i));
+                _renderers.Add(new RendererState { Renderer = renderer, Original = original });
+            }
         }
 
         foreach (RendererState state in _renderers)
@@ -144,7 +150,7 @@ public sealed class Prop : Component
                 if (clone.IsValid()) clone.Dispose();
             state.Clones.Clear();
 
-            if (state.Renderer.IsNotValid()) continue;
+            if (state.Renderer is not Component component || component.IsNotValid()) continue;
 
             var shown = new List<Material>(state.Original.Count);
             foreach (Material original in state.Original)
@@ -162,7 +168,7 @@ public sealed class Prop : Component
                 state.Clones.Add(clone);
                 shown.Add(clone);
             }
-            state.Renderer.Materials = shown;
+            for (int i = 0; i < shown.Count; i++) state.Renderer.SetMaterial(i, shown[i]);
         }
 
         // Back to the model's own look: forget the snapshot so a later change takes a fresh one.

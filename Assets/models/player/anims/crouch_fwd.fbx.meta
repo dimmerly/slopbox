@@ -1,0 +1,32 @@
+{
+  "guid": "52115bbb-4a2a-4f6b-9a7f-1c3ae3e58a82",
+  "importer": "EditorModelImporter",
+  "importerVersion": 1,
+  "settings": {
+    "generateNormals": true,
+    "generateSmoothNormals": true,
+    "smoothNormalsAngle": 80F,
+    "recalculateNormals": false,
+    "calculateTangents": true,
+    "flipUVs": true,
+    "unitScale": 1F,
+    "importCameras": true,
+    "importLights": true,
+    "loopAnimations": true,
+    "rigType": 2,
+    "animationSampleRate": 30F,
+    "clips": {
+      "Scene": {
+        "name": "crouch_fwd",
+        "loop": true,
+        "rootTravel": false,
+        "rootTurn": false,
+        "rootHeight": false
+      }
+    },
+    "materialRemap": {
+
+    },
+    "generateLightmapUVs": false
+  }
+}

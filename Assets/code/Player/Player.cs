@@ -36,8 +36,22 @@ public sealed partial class Player : Component
 
     public Float3 EyePosition => Controller.EyePosition;
     public Quaternion EyeRotation => Quaternion.FromEuler(Pitch, Yaw, 0f);
-    public Float3 Forward => EyeRotation * Float3.UnitZ;
+    /// <summary>
+    /// Where the player aims from the eyes. In third person it bends toward what the crosshair is over, since the
+    /// camera sits off to one side, so traces still land under the crosshair.
+    /// </summary>
+    public Float3 Forward => ThirdPerson && _aimConverged ? _aimDirection : EyeRotation * Float3.UnitZ;
     public Ray AimRay => new(EyePosition, Forward);
+
+    /// <summary>The muzzle of whichever model of the held equipment is being seen, where beams and shots start.</summary>
+    public Float3 MuzzlePosition => _orbitShown && WorldModel.IsValid() && WorldModel.HasModel ? WorldModel.MuzzlePosition : ViewModel.MuzzlePosition;
+
+    /// <summary>Recoil on both models of the held equipment.</summary>
+    public void Kick(float amount = 1f)
+    {
+        ViewModel.Kick(amount);
+        if (WorldModel.IsValid()) WorldModel.Kick(amount);
+    }
 
     public override void OnEnable()
     {
@@ -46,12 +60,16 @@ public sealed partial class Player : Component
         Yaw = Transform.EulerAngles.Y;
         Controller.Landed += OnLanded;
         Controller.Jumped += OnJumped;
+        Controller.Landed += OnLandedBody;
+        Controller.Jumped += OnJumpedBody;
     }
 
     public override void OnDisable()
     {
         Controller.Landed -= OnLanded;
         Controller.Jumped -= OnJumped;
+        Controller.Landed -= OnLandedBody;
+        Controller.Jumped -= OnJumpedBody;
         if (Local == this) Local = null;
     }
 
@@ -60,6 +78,7 @@ public sealed partial class Player : Component
         SetupCamera();
         SetupInventory();
         SetupFlashlight();
+        SetupBody();
         _ready = true;
     }
 
@@ -70,14 +89,17 @@ public sealed partial class Player : Component
         GameManager game = GameManager.Instance;
 
         // The frame a menu closes the cursor jumps back to the centre, which reads as one huge mouse move.
+        _freeHeld = !game.IsMenuOpen && Input.GetMouseButton(Controls.FreeLook);
         if (!game.IsMenuOpen && !_menuWasOpen && !LookLocked) UpdateLook();
         _menuWasOpen = game.IsMenuOpen;
         LookLocked = false;
 
         if (!game.IsMenuOpen && Controls.Pressed(Controls.Noclip)) Controller.ToggleNoclip();
+        if (!game.IsMenuOpen && Controls.Pressed(Controls.ThirdPerson)) ToggleThirdPerson();
         UpdateFlashlight();
 
         Controller.Simulate(ReadMoveInput(), dt);
+        UpdateBody(dt);
         UpdateMovementAudio(dt);
         UpdateInventory();
     }
@@ -90,6 +112,7 @@ public sealed partial class Player : Component
     public override void LateUpdate()
     {
         if (!_ready) return;
+        LateUpdateBody();
         UpdateCamera(Time.DeltaTime);
         LateUpdateInventory();
     }
@@ -100,6 +123,13 @@ public sealed partial class Player : Component
         float scale = 0.022f * settings.Sensitivity;
         Float2 delta = Input.MouseDelta;
 
+        // Free look takes the mouse for the camera alone; the aim stays where it was.
+        if (FreeLooking)
+        {
+            FreeLook(delta.X * scale, delta.Y * scale * (settings.InvertY ? -1f : 1f));
+            return;
+        }
+
         Yaw = (Yaw + delta.X * scale) % 360f;
         Pitch = Maths.Clamp(Pitch + delta.Y * scale * (settings.InvertY ? -1f : 1f), -89f, 89f);
     }
@@ -108,11 +138,10 @@ public sealed partial class Player : Component
     {
         var input = new MoveInput { Yaw = Yaw, Pitch = Pitch };
 
-        // Walking keeps working while the spawn menu is open, like gmod. Nothing else reaches the game.
+        // Walking keeps working while a menu is open, like gmod. Nothing else reaches the game.
         GameManager game = GameManager.Instance;
-        bool paused = game.IsMenuOpen && Time.TimeScale <= 0f;
         bool typing = game.Paper != null && game.Paper.WantsCaptureKeyboard;
-        if (paused || typing) return input;
+        if (typing) return input;
 
         if (Controls.Down(Controls.Forward)) input.Move.Y += 1f;
         if (Controls.Down(Controls.Back)) input.Move.Y -= 1f;

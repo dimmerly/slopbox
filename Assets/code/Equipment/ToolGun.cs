@@ -68,6 +68,9 @@ public sealed class ToolGun : Equipment
         vm.AddPart(Shapes.Cylinder, _darkMat, new Float3(0f, 0.015f, 0.17f), new Float3(0.025f, 0.12f, 0.025f), new Float3(90f, 0f, 0f));
         vm.AddPart(Shapes.Cube, _screenMat, new Float3(-0.037f, 0.01f, -0.02f), new Float3(0.005f, 0.05f, 0.09f));
         vm.SetMuzzle(new Float3(0f, 0.015f, 0.23f));
+        // A pistol: one hand, held further out.
+        vm.SetGrip(new Float3(0f, -0.09f, -0.07f), null);
+        vm.SetHold(new Float3(0.0f, -0.1f, 0.5f));
     }
 
     public override void Update()
@@ -108,7 +111,7 @@ public sealed class ToolGun : Equipment
         }
         GameAudio.Play("confirm", 0.4f, 1.2f);
         GameAudio.Play("flashlight", 0.35f, 1.4f);
-        Owner.ViewModel.Kick(0.6f);
+        Owner.Kick(0.6f);
         _tracerEnd = tr.Hit ? tr.Point : Owner.EyePosition + Owner.Forward * Range;
         _tracerFade = 1f;
     }
@@ -126,6 +129,6 @@ public sealed class ToolGun : Equipment
         float a = _tracerFade;
         _tracer.SetColors(new Color(1.5f * a, 3f * a, 0.4f * a, a), new Color(1f * a, 1f * a, 1f * a, a));
         _tracer.SetWidth(0.012f * a, 0.004f * a);
-        _tracer.Line(Owner.ViewModel.MuzzlePosition, _tracerEnd);
+        _tracer.Line(Owner.MuzzlePosition, _tracerEnd);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using Prowl.PaperUI;
+using Prowl.Runtime;
 using Prowl.Runtime.Resources;
 using Prowl.Scribe;
 using Prowl.Vector;
@@ -8,7 +9,7 @@ namespace Slopbox;
 
 /// <summary>
 /// Design tokens. The structure follows DXRP's <c>styles.scss</c> (near black #191919 / #111111 surfaces,
-/// small radii, the 4px spacing scale and its type scale) with Slopbox's slime green as the accent.
+/// small radii, the 4px spacing scale and its type scale) with Claude orange as the accent.
 /// <para>Every size is in "design pixels" at 1080p and goes through <see cref="Px"/>, which scales with the
 /// screen height like s&amp;box UI does, times the player's UI scale setting.</para>
 /// <para>Prowl ships one font, Geist Regular, so emphasis comes from size and colour rather than weight.</para>
@@ -20,8 +21,8 @@ public static class Theme
     public static readonly Color Primary = Hex(0x191919);
     public static readonly Color Secondary = Hex(0x111111);
     public static readonly Color Tertiary = Hex(0xF6F9FF);
-    public static readonly Color Accent = Hex(0x7CCB2B);       // Slopbox slime green
-    public static readonly Color AccentSoft = Hex(0xB4E37F);
+    public static readonly Color Accent = Hex(0xD97757);       // Claude orange
+    public static readonly Color AccentSoft = Hex(0xEBA68A);
     public static readonly Color OnAccent = Hex(0x111111);
     public static readonly Color Good = Hex(0x199C3B);
     public static readonly Color Error = Hex(0xF05252);
@@ -69,6 +70,16 @@ public static class Theme
     public static float BodyRadius => Px(5f);
 
     public static FontFile Font => FontAsset.LoadDefault().FontFile;
+
+    /// <summary>Geist Black, for wordmarks and big titles. Falls back to <see cref="Font"/> if it is missing.</summary>
+    public static FontFile TitleFont
+    {
+        get
+        {
+            GameManager game = GameManager.Instance;
+            return game.IsValid() && game.TitleFont.IsValid() ? game.TitleFont.FontFile : Font;
+        }
+    }
 
     /// <summary>A build menu body: the panel under a row of tabs, square where the first tab joins it.</summary>
     public static ElementBuilder AsMenuBody(this ElementBuilder b)

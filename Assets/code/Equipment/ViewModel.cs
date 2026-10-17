@@ -6,8 +6,9 @@ using Prowl.Vector;
 namespace Slopbox;
 
 /// <summary>
-/// The first person model of the held equipment, parented to the camera. Equipment builds it from
-/// primitive parts in <see cref="Equipment.BuildViewModel"/>; this adds sway, bob and recoil kick.
+/// A model of the held equipment. Equipment builds it from primitive parts in <see cref="Equipment.BuildViewModel"/>.
+/// The first person one is parented to the camera and adds sway, bob and recoil kick. The player also keeps a
+/// <see cref="World"/> one, which it places in the body's hands for third person and for shadows.
 /// Swap <see cref="Equipment.BuildViewModel"/> for an imported model and animator when art exists.
 /// </summary>
 public sealed class ViewModel : Component
@@ -20,14 +21,57 @@ public sealed class ViewModel : Component
     /// <summary>Uniform scale of the whole model. The parts are authored a little large.</summary>
     public float Scale = 0.65f;
 
+    /// <summary>Held by the body rather than drawn in front of the camera: no sway or bob, and it casts shadows.</summary>
+    public bool World;
+
     private GameObject _model;
-    private Float3 _muzzle;
+    private Float3 _muzzle, _grip, _hold;
+    private Float3? _support;
+    private bool _visible = true;
+    private ShadowCasting _shadows = ShadowCasting.On;
     private float _lastYaw, _lastPitch;
     private Float2 _sway;
     private float _kick;
 
     /// <summary>The muzzle in world space, where beams start.</summary>
     public Float3 MuzzlePosition => _model.IsValid() ? _model.Transform.TransformPoint(_muzzle) : Owner.EyePosition;
+
+    /// <summary>Where the right hand holds it, in model space before <see cref="Scale"/>.</summary>
+    public Float3 Grip => _grip;
+
+    /// <summary>Where the left hand steadies it, or null for a one handed hold.</summary>
+    public Float3? Support => _support;
+
+    /// <summary>Where it sits relative to the right shoulder, in aim space (x right, y up, z forward), in metres.</summary>
+    public Float3 Hold => _hold;
+
+    public bool HasModel => _model.IsValid() && _model.Transform.ChildCount > 0;
+
+    /// <summary>Whether it draws. A hidden model still places its muzzle.</summary>
+    public bool Visible
+    {
+        get => _visible;
+        set
+        {
+            _visible = value;
+            if (_model.IsValid()) _model.Enabled = value;
+        }
+    }
+
+    /// <summary>How its parts cast shadows. First person models never do, so no gun shadow floats by the camera.</summary>
+    public ShadowCasting Shadows
+    {
+        get => _shadows;
+        set
+        {
+            _shadows = value;
+            if (_model.IsNotValid()) return;
+            foreach (MeshRenderer renderer in _model.GetComponentsInChildren<MeshRenderer>())
+                renderer.ShadowCasting = PartShadows;
+        }
+    }
+
+    private ShadowCasting PartShadows => World ? _shadows : ShadowCasting.Off;
 
     public void Rebuild(Equipment equipment)
     {
@@ -36,7 +80,11 @@ public sealed class ViewModel : Component
         _model.SetParent(GameObject, false);
         _model.Transform.LocalScale = new Float3(Scale);
         _muzzle = new Float3(0f, 0f, 0.4f);
+        _grip = new Float3(0f, -0.08f, -0.08f);
+        _support = new Float3(0f, -0.05f, 0.1f);
+        _hold = new Float3(0.02f, -0.14f, 0.42f);
         equipment?.BuildViewModel(this);
+        _model.Enabled = _visible;
     }
 
     /// <summary>Adds a primitive part. Meshes are unit sized, so <paramref name="scale"/> is the size in metres.</summary>
@@ -50,10 +98,21 @@ public sealed class ViewModel : Component
         var renderer = part.AddComponent<MeshRenderer>();
         renderer.Mesh = mesh;
         renderer.Material = material;
+        renderer.ShadowCasting = PartShadows;
         return part;
     }
 
     public void SetMuzzle(Float3 local) => _muzzle = local;
+
+    /// <summary>Where the hands go, in model space. Leave <paramref name="support"/> null for a one handed hold.</summary>
+    public void SetGrip(Float3 hand, Float3? support)
+    {
+        _grip = hand;
+        _support = support;
+    }
+
+    /// <summary>Where the body holds it relative to the right shoulder, in aim space. See <see cref="Hold"/>.</summary>
+    public void SetHold(Float3 offset) => _hold = offset;
 
     /// <summary>Knocks the model back, for firing.</summary>
     public void Kick(float amount = 1f) => _kick = MathF.Min(_kick + amount, 1.5f);
@@ -62,6 +121,15 @@ public sealed class ViewModel : Component
     public void Animate(float dt)
     {
         if (_model.IsNotValid() || dt <= 0f) return;
+
+        if (World)
+        {
+            // The player places the model itself. Only the recoil is added on top.
+            _kick = MathF.Max(0f, _kick - dt * 6f);
+            _model.Transform.LocalPosition = new Float3(0f, 0f, -_kick * _kick * 0.08f);
+            _model.Transform.LocalEulerAngles = new Float3(-_kick * _kick * 10f, 0f, 0f);
+            return;
+        }
 
         // Lag behind fast turns, then catch up.
         float dYaw = Maths.DeltaAngle(_lastYaw, Owner.Yaw);

@@ -1,0 +1,113 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.Resources.Material, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "_shader": NULL,
+  "_parent": NULL,
+  "_properties": {
+    "$id": 2,
+    "_colors": {
+      "$id": 3,
+      "entries": [
+        {
+          "key": "_MainColor",
+          "value": {
+            "R": 1F,
+            "G": 1F,
+            "B": 1F,
+            "A": 1F
+          }
+        }
+      ]
+    },
+    "_vectors2": {
+      "$id": 4,
+      "entries": [
+
+      ]
+    },
+    "_vectors3": {
+      "$id": 5,
+      "entries": [
+
+      ]
+    },
+    "_vectors4": {
+      "$id": 6,
+      "entries": [
+
+      ]
+    },
+    "_floats": {
+      "$id": 7,
+      "entries": [
+        {
+          "key": "_Roughness",
+          "value": 0.75F
+        },
+        {
+          "key": "_Metallic",
+          "value": 0F
+        },
+        {
+          "key": "_TranslucencyStrength",
+          "value": 0F
+        }
+      ]
+    },
+    "_ints": {
+      "$id": 8,
+      "entries": [
+
+      ]
+    },
+    "_matrices": {
+      "$id": 9,
+      "entries": [
+
+      ]
+    },
+    "_textures": {
+      "$id": 10,
+      "entries": [
+        {
+          "key": "_MainTex",
+          "value": {
+            "$asset": "81426954-0ad7-4db0-91ea-db13c6a7918e"
+          }
+        }
+      ]
+    },
+    "_textures3D": {
+      "$id": 11,
+      "entries": [
+
+      ]
+    },
+    "_texturesCube": {
+      "$id": 12,
+      "entries": [
+
+      ]
+    }
+  },
+  "_overrides": {
+    "$id": 13,
+    "$values": [
+      "_MainColor",
+      "_Roughness",
+      "_Metallic",
+      "_TranslucencyStrength",
+      "_MainTex"
+    ]
+  },
+  "_keywords": {
+    "$id": 14,
+    "entries": [
+
+    ]
+  },
+  "_renderQueue": -1,
+  "_castShadows": true,
+  "_surface": NULL,
+  "Name": "Citizen"
+}

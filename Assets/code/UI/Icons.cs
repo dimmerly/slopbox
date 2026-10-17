@@ -8,7 +8,7 @@ namespace Slopbox;
 /// <summary>The icons DXRP takes from Material Icons, redrawn as vectors since Prowl has no icon font.</summary>
 public enum Icon
 {
-    Play, Settings, Logout, Delete, Refresh, Cube, Shapes, Light, Construction, Bolt, Undo, Close, Check, Info, Search, Speed,
+    Play, Settings, Logout, Delete, Refresh, Cube, Shapes, Light, Construction, Bolt, Undo, Close, Check, Info, Search, Speed, Disc, Map,
 }
 
 public static class Icons
@@ -167,11 +167,65 @@ public static class Icons
                 Line(2.5f, 2.5f, 8f, 8f);
                 break;
 
+            case Icon.Disc:
+                // A game disc: rim, label ring and hole.
+                Arc(9f, 0f, MathF.PI * 2f);
+                Arc(4f, 0f, MathF.PI * 2f);
+                c.CircleFilled(cx, cy, 1.5f * s, color);
+                break;
+
+            case Icon.Map:
+                // A folded map: three panels.
+                Polyline(false, -9f, -6f, -3f, -9f, 3f, -6f, 9f, -9f, 9f, 6f, 3f, 9f, -3f, 6f, -9f, 9f, -9f, -6f);
+                Line(-3f, -9f, -3f, 6f);
+                Line(3f, -6f, 3f, 9f);
+                break;
+
             case Icon.Speed:
                 Arc(9f, MathF.PI * 0.85f, MathF.PI * 2.15f);
                 Line(0f, 2f, 5f, -4f);
                 c.CircleFilled(cx, cy + 2f * s, 2f * s, color);
                 break;
         }
+    }
+
+    /// <summary>
+    /// A wireframe cube spinning about its vertical axis, tipped toward the viewer so it reads as 3D, for
+    /// the pause menu wordmark. Edges on the far side are drawn fainter.
+    /// </summary>
+    public static void SpinningCube(Canvas c, float cx, float cy, float size, Color color, float time)
+    {
+        Span<Float2> points = stackalloc Float2[8];
+        Span<float> depth = stackalloc float[8];
+        float yaw = time * 1.2f;
+        const float Tilt = 0.5f;    // radians the top is tipped toward the viewer
+        const float Roll = 0.18f;   // a slight lean, so no edge sits flat
+        float scale = size * 0.3f;
+
+        for (int i = 0; i < 8; i++)
+        {
+            float x = (i & 1) != 0 ? 1f : -1f, y = (i & 2) != 0 ? 1f : -1f, z = (i & 4) != 0 ? 1f : -1f;
+            (x, z) = (x * MathF.Cos(yaw) - z * MathF.Sin(yaw), x * MathF.Sin(yaw) + z * MathF.Cos(yaw));
+            (y, z) = (y * MathF.Cos(Tilt) - z * MathF.Sin(Tilt), y * MathF.Sin(Tilt) + z * MathF.Cos(Tilt));
+            (x, y) = (x * MathF.Cos(Roll) - y * MathF.Sin(Roll), x * MathF.Sin(Roll) + y * MathF.Cos(Roll));
+
+            float p = 4f / (5f + z);
+            points[i] = new Float2(cx + x * p * scale, cy + y * p * scale);
+            depth[i] = z;
+        }
+
+        c.SetStrokeWidth(MathF.Max(1.5f, size / 16f));
+        for (int i = 0; i < 8; i++)
+            for (int bit = 1; bit < 8; bit <<= 1)
+            {
+                int j = i | bit;
+                if (j == i) continue;
+                float near = Math.Clamp(0.5f - (depth[i] + depth[j]) * 0.25f, 0f, 1f);
+                c.BeginPath();
+                c.MoveTo(points[i].X, points[i].Y);
+                c.LineTo(points[j].X, points[j].Y);
+                c.SetStrokeColor(new Color(color.R, color.G, color.B, color.A * (0.3f + 0.7f * near)));
+                c.Stroke();
+            }
     }
 }

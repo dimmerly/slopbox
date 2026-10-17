@@ -36,6 +36,19 @@ public sealed class GameManager : Component
     [Tooltip("Players below this height are respawned.")]
     public float KillHeight = -100f;
 
+    [Tooltip("The player's humanoid body, seen in third person and as a shadow in first.")]
+    public PrefabAsset PlayerModel;
+
+    [Tooltip("Animation graph that drives the player's body from its movement and aim.")]
+    public AnimationGraph PlayerAnimation;
+
+    [Header("Content")]
+    [Tooltip("The game's own sounds, played by clip name, e.g. \"click\" or \"step_grass_2\". From Assets/sounds.")]
+    public List<AudioClip> Sounds = new();
+
+    [Tooltip("Font for wordmarks and big titles.")]
+    public FontAsset TitleFont;
+
     [Header("Physics")]
     [Tooltip("Downward acceleration in m/s², for props and the player alike. Real gravity (9.81) looks floaty at human scale; 15.2 matches gmod's 600 units/s² relative to player height.")]
     public float Gravity = 15.2f;
@@ -62,9 +75,6 @@ public sealed class GameManager : Component
 
     /// <summary>True while a menu owns the mouse, so gameplay should ignore clicks and look input.</summary>
     public bool IsMenuOpen => _menus.Count > 0;
-
-    /// <summary>True while the pause menu is up.</summary>
-    public bool IsPaused { get; internal set; }
 
     private readonly HashSet<object> _menus = new();
 

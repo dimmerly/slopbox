@@ -28,6 +28,7 @@ public sealed class ThrusterProp : Component
     /// <summary>+1 pushing, -1 pulling, 0 off.</summary>
     [SerializeIgnore] private int _thrust;
     [SerializeIgnore] private MeshRenderer _flame;
+    [SerializeIgnore] private float _soundForce;
 
     private static Material s_body, s_flame;
 
@@ -76,12 +77,11 @@ public sealed class ThrusterProp : Component
 
     public override void Update()
     {
-        // Like player movement, keys still work with the spawn menu open but not while paused or typing.
+        // Like player movement, keys still work with a menu open but not while typing.
         GameManager game = GameManager.Instance;
-        bool paused = game.IsMenuOpen && Time.TimeScale <= 0f;
         bool typing = game.Paper != null && game.Paper.WantsCaptureKeyboard;
 
-        if (!paused && !typing && !SpawnMenu.IsBindingKey)
+        if (!typing && !SpawnMenu.IsBindingKey)
         {
             if (Toggle)
             {
@@ -98,10 +98,15 @@ public sealed class ThrusterProp : Component
             foreach (MeshRenderer r in GetComponentsInChildren<MeshRenderer>())
                 if (r.GameObject.Name == "Flame") _flame = r;
         if (_flame.IsValid()) _flame.Enabled = _thrust != 0;
-        GameAudio.SetLoop(this, "thruster", _thrust != 0 && !paused, Transform.Position, true, 0.22f);
+        // Once a thruster has its loop the clip is ignored, so a force change takes a new loop.
+        if (_soundForce != Force) GameAudio.StopLoop(this);
+        _soundForce = Force;
+        float size = ThrusterSound.Size(Force);
+        GameAudio.SetLoop(this, ThrusterSound.Clip(Force), _thrust != 0, Transform.Position, true,
+            0.15f + size * 0.2f, maxDistance: 35f + size * 45f);
     }
 
-    public override void OnDisable() => GameAudio.SetLoop(this, "thruster", false);
+    public override void OnDisable() => GameAudio.StopLoop(this);
 
     public override void FixedUpdate()
     {

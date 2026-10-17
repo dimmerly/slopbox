@@ -12,7 +12,7 @@ using TextAlignment = Prowl.PaperUI.TextAlignment;
 namespace Slopbox;
 
 /// <summary>
-/// Escape: pauses the game. Laid out like DXRP's pause menu: a blurred backdrop, a header bar with the
+/// Escape: opens the pause menu, an overlay like the spawn menu. The world keeps running. Laid out like DXRP's pause menu: a blurred backdrop, a header bar with the
 /// Slopbox wordmark and a few stats, large menu items down the left, and the settings panel on the right.
 /// </summary>
 public sealed class PauseMenu : Component
@@ -41,12 +41,7 @@ public sealed class PauseMenu : Component
         _open = open;
         if (!open) _settingsOpen = false;
         GameManager game = GameManager.Instance;
-        if (game.IsValid())
-        {
-            game.SetMenuOpen(this, open);
-            game.IsPaused = open;
-        }
-        Time.TimeScale = open ? 0f : 1f;
+        if (game.IsValid()) game.SetMenuOpen(this, open);
     }
 
     public override void OnGui(Paper paper)
@@ -110,10 +105,17 @@ public sealed class PauseMenu : Component
             .BackgroundColor(Theme.Secondary).AsLifted()
             .Enter())
         {
-            using (paper.Row("brand").Width(UnitValue.Stretch()).Enter())
+            using (paper.Row("brand").Width(UnitValue.Stretch()).Gap(S3).Enter())
             {
+                float mark = Px(44f);
+                using (paper.Box("mark").Width(mark).Height(mark).Margin(0, 0, UnitValue.Stretch(), UnitValue.Stretch())
+                    .IsNotInteractable().Enter())
+                    paper.Draw((canvas, rect) => Icons.SpinningCube(canvas,
+                        rect.Min.X + rect.Size.X * 0.5f, rect.Min.Y + rect.Size.Y * 0.5f, mark, Theme.Accent,
+                        Time.TimeSinceStartup));
+
                 paper.Box("wordmark").Width(UnitValue.Auto)
-                    .Text("SLOPBOX", font).FontSize(Text2Xl).TextColor(Theme.Accent)
+                    .Text("SLOPBOX", Theme.TitleFont).FontSize(Px(34f)).LetterSpacing(Px(1.5f)).TextColor(Theme.Accent)
                     .Alignment(TextAlignment.MiddleLeft);
             }
 

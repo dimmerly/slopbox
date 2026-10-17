@@ -64,7 +64,9 @@ public sealed class Hud : Component
         {
             if (settings.ShowHud && !game.IsMenuOpen)
             {
-                Crosshair(paper);
+                // Free look turns the camera off the aim, so the crosshair would point at nothing.
+                float crosshair = 1f - player.FreeLookAmount;
+                if (crosshair > 0.01f) Crosshair(paper, crosshair);
                 ToolCard(paper, font, player);
                 InputHelper(paper, font, player);
                 Loadout(paper, font, player);
@@ -77,7 +79,7 @@ public sealed class Hud : Component
         paper.PopID();
     }
 
-    private static void Crosshair(Paper paper)
+    private static void Crosshair(Paper paper, float alpha)
     {
         float size = Px(40f);
         using (paper.Box("crosshair").PositionType(PositionType.SelfDirected)
@@ -89,7 +91,7 @@ public sealed class Hud : Component
             paper.Draw((canvas, rect) =>
             {
                 float cx = rect.Min.X + rect.Size.X * 0.5f, cy = rect.Min.Y + rect.Size.Y * 0.5f;
-                foreach ((Color c, float d) in new[] { (Theme.Black(1f), o), (Theme.White(0.8f), 0f) })
+                foreach ((Color c, float d) in new[] { (Theme.Black(alpha), o), (Theme.White(0.8f * alpha), 0f) })
                 {
                     canvas.RectFilled(cx - w / 2 + d, cy - gap - len + d, w, len, c);
                     canvas.RectFilled(cx - w / 2 + d, cy + gap + d, w, len, c);
@@ -209,6 +211,26 @@ public sealed class Hud : Component
                         .TextColor(active ? Theme.Accent : Theme.White(1f))
                         .Alignment(TextAlignment.MiddleCenter);
                 }
+            }
+
+            // Slot 0: empty hands, last as on the keyboard.
+            bool holstered = player.ActiveIndex == Player.Nothing;
+            using (paper.Column("slot nothing").Width(slotWidth).Height(UnitValue.Auto)
+                .Padding(S2, S2, S2, S2).Gap(Px(2f))
+                .Opacity(holstered ? 1f : 0.4f)
+                .Enter())
+            {
+                using (paper.Box("cap holder").Width(UnitValue.Auto).Height(Px(28f)).Margin(UnitValue.Stretch(), UnitValue.Stretch(), 0, 0).Enter())
+                    Ui.KeyCap(paper, "0");
+
+                using (paper.Box("icon").Height(iconHeight).Enter())
+                    paper.Draw((canvas, rect) => Icons.Draw(canvas, Icon.Close,
+                        rect.Min.X + rect.Size.X * 0.5f, rect.Min.Y + rect.Size.Y * 0.5f, Px(36f), Theme.White(0.8f)));
+
+                paper.Box("name").Height(Px(24f))
+                    .Text("Nothing", font).FontSize(Px(16f))
+                    .TextColor(holstered ? Theme.Accent : Theme.White(1f))
+                    .Alignment(TextAlignment.MiddleCenter);
             }
         }
     }

@@ -16,6 +16,10 @@ public sealed class ScrollState
     public float Offset;
     public float ContentHeight;
     public float ViewHeight;
+    /// <summary>The visible area, as laid out last.</summary>
+    public Rect View;
+
+    public bool IsVisible(Rect rect) => rect.Max.Y > View.Min.Y && rect.Min.Y < View.Max.Y;
 
     public float Max => MathF.Max(0f, ContentHeight - ViewHeight);
     public void Clamp() => Offset = Math.Clamp(Offset, 0f, Max);
@@ -75,6 +79,54 @@ public static class Ui
             .Text(text, Font).FontSize(Px(13f)).TextColor(Theme.White(0.95f))
             .Alignment(TextAlignment.MiddleLeft)
             .IsNotInteractable();
+    }
+
+    /// <summary>
+    /// A heading that folds the rows under it, with a chevron pointing right while folded and down while open,
+    /// and how many items the section holds.
+    /// </summary>
+    public static void SectionHeader(Paper paper, string text, int count, bool open, Action onClick, int id = 0)
+    {
+        using (paper.Row("ui section", id).Height(Px(28f)).Padding(Px(8f), Px(10f), 0, 0).Gap(Px(6f))
+            .BackgroundColor(Theme.SecondaryA(0.7f)).Rounded(Px(3f))
+            .Hovered.BackgroundColor(Theme.SecondaryA(0.9f)).End()
+            .Cursor(PaperCursor.Pointer)
+            .OnEnter(_ => GameAudio.Hover())
+            .OnClick(_ => { GameAudio.Click(); onClick(); })
+            .Enter())
+        {
+            float size = Px(12f);
+            using (paper.Box("chevron").Width(size).Height(size).Margin(0, 0, UnitValue.Stretch(), UnitValue.Stretch())
+                .IsNotInteractable().Enter())
+            {
+                paper.Draw((canvas, rect) =>
+                {
+                    float cx = rect.Min.X + rect.Size.X * 0.5f, cy = rect.Min.Y + rect.Size.Y * 0.5f, h = rect.Size.X * 0.3f;
+                    canvas.BeginPath();
+                    if (open)
+                    {
+                        canvas.MoveTo(cx - h * 1.3f, cy - h * 0.6f);
+                        canvas.LineTo(cx, cy + h * 0.7f);
+                        canvas.LineTo(cx + h * 1.3f, cy - h * 0.6f);
+                    }
+                    else
+                    {
+                        canvas.MoveTo(cx - h * 0.6f, cy - h * 1.3f);
+                        canvas.LineTo(cx + h * 0.7f, cy);
+                        canvas.LineTo(cx - h * 0.6f, cy + h * 1.3f);
+                    }
+                    canvas.SetStrokeColor(Theme.White(0.8f));
+                    canvas.SetStrokeWidth(MathF.Max(1.5f, Px(2f)));
+                    canvas.Stroke();
+                });
+            }
+            paper.Box("name").Width(UnitValue.Stretch())
+                .Text(text, Font).FontSize(Px(13f)).TextColor(Theme.White(0.95f))
+                .Alignment(TextAlignment.MiddleLeft).TextTruncate().IsNotInteractable();
+            paper.Box("count").Width(UnitValue.Auto)
+                .Text(count.ToString(), Font).FontSize(Px(12f)).TextColor(Theme.White(0.45f))
+                .Alignment(TextAlignment.MiddleRight).IsNotInteractable();
+        }
     }
 
     /// <summary>A tool in the tool list. Active is a soft accent tint.</summary>
@@ -407,7 +459,7 @@ public static class Ui
 
         IDisposable outer = paper.Box(id, intId)
             .Clip()
-            .OnPostLayout((_, rect) => state.ViewHeight = rect.Size.Y)
+            .OnPostLayout((_, rect) => { state.ViewHeight = rect.Size.Y; state.View = rect; })
             .OnScroll(e =>
             {
                 state.Offset -= e.Delta * Px(48f);

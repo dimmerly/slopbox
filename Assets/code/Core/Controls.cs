@@ -18,6 +18,7 @@ public static class Controls
     public static KeyCode Sprint = KeyCode.ShiftLeft;
     public static KeyCode Walk = KeyCode.AltLeft;
     public static KeyCode Noclip = KeyCode.V;
+    public static KeyCode ThirdPerson = KeyCode.C;
 
     // Actions
     public static KeyCode Use = KeyCode.E;
@@ -31,11 +32,17 @@ public static class Controls
     public const int Attack1 = 0;
     public const int Attack2 = 1;
 
+    /// <summary>Held to orbit the camera round the player without turning the aim.</summary>
+    public const int FreeLook = 2;
+
     public static readonly KeyCode[] Slots =
     [
         KeyCode.Number1, KeyCode.Number2, KeyCode.Number3, KeyCode.Number4, KeyCode.Number5,
         KeyCode.Number6, KeyCode.Number7, KeyCode.Number8, KeyCode.Number9,
     ];
+
+    /// <summary>Puts the equipment away, for empty hands. Slot 0, after 1 to 9 as on the keyboard.</summary>
+    public static readonly KeyCode Holster = KeyCode.Number0;
 
     public static bool Down(KeyCode key) => Input.GetKey(key);
     public static bool Pressed(KeyCode key) => Input.GetKeyDown(key);
