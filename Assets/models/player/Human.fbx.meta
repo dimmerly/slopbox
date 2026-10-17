@@ -1,0 +1,32 @@
+{
+  "guid": "94a07fd1-4956-43d7-8e1c-5362e2e2649d",
+  "importer": "EditorModelImporter",
+  "importerVersion": 1,
+  "settings": {
+    "generateNormals": true,
+    "generateSmoothNormals": true,
+    "smoothNormalsAngle": 80F,
+    "recalculateNormals": false,
+    "calculateTangents": true,
+    "flipUVs": true,
+    "unitScale": 1F,
+    "importCameras": true,
+    "importLights": true,
+    "loopAnimations": true,
+    "rigType": 2,
+    "animationSampleRate": 30F,
+    "clips": {
+
+    },
+    "materialRemap": {
+      "MikeAlger_Material": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.1": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.2": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.3": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.4": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.5": "44bbb3d3-9cc5-414f-b113-1838d5345543",
+      "MikeAlger_Material.6": "44bbb3d3-9cc5-414f-b113-1838d5345543"
+    },
+    "generateLightmapUVs": false
+  }
+}

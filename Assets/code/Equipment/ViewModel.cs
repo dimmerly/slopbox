@@ -2,6 +2,7 @@ using System;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
+using Slopbox.Mounting;
 
 namespace Slopbox;
 
@@ -21,13 +22,17 @@ public sealed class ViewModel : Component
     /// <summary>Uniform scale of the whole model. The parts are authored a little large.</summary>
     public float Scale = 0.65f;
 
+    /// <summary>The scale the model is drawn at: <see cref="Scale"/>, or 1 for a mounted game's model, which is real size.</summary>
+    public float ModelScale => _realSize ? 1f : Scale;
+
     /// <summary>Held by the body rather than drawn in front of the camera: no sway or bob, and it casts shadows.</summary>
     public bool World;
 
     private GameObject _model;
-    private Float3 _muzzle, _grip, _hold;
+    private Float3 _muzzle, _grip, _hold, _offset;
     private Float3? _support;
     private bool _visible = true;
+    private bool _realSize;
     private ShadowCasting _shadows = ShadowCasting.On;
     private float _lastYaw, _lastPitch;
     private Float2 _sway;
@@ -36,7 +41,7 @@ public sealed class ViewModel : Component
     /// <summary>The muzzle in world space, where beams start.</summary>
     public Float3 MuzzlePosition => _model.IsValid() ? _model.Transform.TransformPoint(_muzzle) : Owner.EyePosition;
 
-    /// <summary>Where the right hand holds it, in model space before <see cref="Scale"/>.</summary>
+    /// <summary>Where the right hand holds it, in model space before <see cref="ModelScale"/>.</summary>
     public Float3 Grip => _grip;
 
     /// <summary>Where the left hand steadies it, or null for a one handed hold.</summary>
@@ -79,10 +84,12 @@ public sealed class ViewModel : Component
         _model = new GameObject("Model");
         _model.SetParent(GameObject, false);
         _model.Transform.LocalScale = new Float3(Scale);
+        _realSize = false;
         _muzzle = new Float3(0f, 0f, 0.4f);
         _grip = new Float3(0f, -0.08f, -0.08f);
         _support = new Float3(0f, -0.05f, 0.1f);
         _hold = new Float3(0.02f, -0.14f, 0.42f);
+        _offset = Offset;
         equipment?.BuildViewModel(this);
         _model.Enabled = _visible;
     }
@@ -102,6 +109,30 @@ public sealed class ViewModel : Component
         return part;
     }
 
+    /// <summary>
+    /// Adds a model from a mounted game, such as "models/weapons/w_physics.mdl", from the first of
+    /// <paramref name="games"/> that has it. Such models are real size, so the whole view model then ignores
+    /// <see cref="Scale"/>, and the muzzle and grips are in metres. False if none of the games is mounted with it,
+    /// for the equipment to build its own parts instead.
+    /// </summary>
+    public bool AddMountedModel(string path, string[] games, Float3 position, Float3 euler, int skin = 0)
+    {
+        MountedModel mounted = MountDirectory.FindModel(path, games);
+        if (mounted == null) return false;
+
+        GameObject part = mounted.Instantiate();
+        mounted.ApplySkin(part, skin);
+        part.SetParent(_model, false);
+        part.Transform.LocalPosition = position;
+        part.Transform.LocalEulerAngles = euler;
+        foreach (MeshRenderer renderer in part.GetComponentsInChildren<MeshRenderer>())
+            renderer.ShadowCasting = PartShadows;
+
+        _realSize = true;
+        _model.Transform.LocalScale = Float3.One;
+        return true;
+    }
+
     public void SetMuzzle(Float3 local) => _muzzle = local;
 
     /// <summary>Where the hands go, in model space. Leave <paramref name="support"/> null for a one handed hold.</summary>
@@ -113,6 +144,9 @@ public sealed class ViewModel : Component
 
     /// <summary>Where the body holds it relative to the right shoulder, in aim space. See <see cref="Hold"/>.</summary>
     public void SetHold(Float3 offset) => _hold = offset;
+
+    /// <summary>Where this equipment rests relative to the camera in first person, instead of <see cref="Offset"/>.</summary>
+    public void SetViewOffset(Float3 offset) => _offset = offset;
 
     /// <summary>Knocks the model back, for firing.</summary>
     public void Kick(float amount = 1f) => _kick = MathF.Min(_kick + amount, 1.5f);
@@ -146,7 +180,7 @@ public sealed class ViewModel : Component
         _kick = MathF.Max(0f, _kick - dt * 6f);
         float kick = _kick * _kick;
 
-        _model.Transform.LocalPosition = Offset + new Float3(_sway.X, -_sway.Y, -kick * 0.06f) + bobOffset;
+        _model.Transform.LocalPosition = _offset + new Float3(_sway.X, -_sway.Y, -kick * 0.06f) + bobOffset;
         _model.Transform.LocalEulerAngles = new Float3(-kick * 6f + _sway.Y * 40f, _sway.X * 40f, 0f);
     }
 }

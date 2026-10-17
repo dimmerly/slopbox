@@ -8,22 +8,29 @@ using Prowl.Vector;
 namespace Slopbox;
 
 /// <summary>
-/// The player's visible body: <see cref="GameManager.PlayerModel"/> driven by <see cref="GameManager.PlayerAnimation"/> from the
-/// controller's velocity. Shown in third person, a shadow only in first person.
+/// The player's visible body: Half-Life 2's citizen when the game is mounted, else <see cref="GameManager.PlayerModel"/>,
+/// driven by <see cref="GameManager.PlayerAnimation"/> from the controller's velocity. Shown in third person, a shadow
+/// only in first person.
 /// </summary>
 public sealed partial class Player
 {
     // Where each gait sits in the graph's blend spaces, in m/s. Match models/player/Player.animgraph.
     private const float WalkSpeed = 2f, RunSpeed = 4.5f, SprintSpeed = 7.5f, CrouchSpeed = 1.6f;
 
-    // Hand rotations relative to the held model (x right, y up, z forward). At rest every bone of the model
-    // has no rotation: fingers point out sideways, palms face down and thumbs forward.
+    // Hand rotations relative to the held model (x right, y up, z forward), as turns from the T-pose rest:
+    // fingers out sideways, palms down and thumbs forward. The rig's own rest rotation goes on top.
     // Right: fingers forward and a little down along the grip, palm against it, thumb up.
     private static readonly Quaternion RightGrip = Quaternion.FromEuler(25f, 0f, 0f) * Quaternion.LookRotation(Float3.UnitY, Float3.UnitX);
     // Left: palm up under the front, fingers forward and in toward the middle, thumb out.
     private static readonly Quaternion LeftGrip = Quaternion.FromEuler(0f, 25f, 0f) * Quaternion.LookRotation(-Float3.UnitX, -Float3.UnitY);
 
+    // The citizen, from Half-Life 2 or the copy Garry's Mod ships with.
+    private const string CitizenModel = "models/humans/group01/male_07.mdl";
+    private static readonly string[] CitizenGames = ["hl2", "garrysmod"];
+
     private GameObject _body;
+    private bool _bodyIsCitizen;
+    private int _bodyMountVersion;
     private Animator _animator;
     private SkinnedMeshRenderer[] _bodyRenderers = [];
 
@@ -38,6 +45,7 @@ public sealed partial class Player
     private Transform _shoulder;
     private Float3 _shoulderLocal;
     private bool _haveShoulder;
+    private Quaternion _rightHandRest = Quaternion.Identity, _leftHandRest = Quaternion.Identity;
     private Float3 _holdPosition;
     private Quaternion _holdRotation = Quaternion.Identity;
     private float _holdWeight, _supportWeight;
@@ -47,25 +55,163 @@ public sealed partial class Player
 
     private void SetupBody()
     {
+        // Games mount in the background after start, so this runs again when one arrives.
+        _bodyMountVersion = Mounting.MountDirectory.Version;
+        Mounting.MountedModel citizen = Mounting.MountDirectory.FindCharacter(CitizenModel, CitizenGames);
+        if (_body.IsValid() && (citizen != null) == _bodyIsCitizen) return;
+
         // Set on the GameManager, which keeps them loaded with the scene.
         PrefabAsset prefab = GameManager.Instance.PlayerModel;
         AnimationGraph graph = GameManager.Instance.PlayerAnimation;
-        if (prefab.IsNotValid()) return;
+        if (citizen == null && prefab.IsNotValid()) return;
+
+        if (_body.IsValid()) _body.Destroy();
+        _haveShoulder = false;
+        _bodyIsCitizen = citizen != null;
 
         // The model keeps its own root name, which the rig binds by. The holder is what turns and moves.
         _body = new GameObject("Body");
         _body.SetParent(GameObject, false);
-        GameObject model = GameObject.Instantiate(prefab);
+        GameObject model = citizen != null ? citizen.Instantiate() : GameObject.Instantiate(prefab);
         model.SetParent(_body, false);
-        _animator = model.GetComponentInChildren<Animator>();
+        Quaternion rightHandRest = Quaternion.Identity, leftHandRest = Quaternion.Identity;
+        _animator = citizen != null
+            ? AddRig(model, citizen, out rightHandRest, out leftHandRest)
+            : model.GetComponentInChildren<Animator>();
         if (_animator.IsValid() && graph.IsValid()) _animator.Graph = graph;
         _bodyRenderers = _body.GetComponentsInChildren<SkinnedMeshRenderer>().ToArray();
         _body.AddComponent<MapLit>();
-        _shoulder = FindBone(model.Transform, "RightUpperArm");
+        _shoulder = FindHumanBone(model.Transform, Prowl.Motion.HumanBodyBone.RightUpperArm);
+        _rightHandRest = citizen != null ? rightHandRest : RestRotation(model.Transform, Prowl.Motion.HumanBodyBone.RightHand);
+        _leftHandRest = citizen != null ? leftHandRest : RestRotation(model.Transform, Prowl.Motion.HumanBodyBone.LeftHand);
 
         _bodyYaw = Yaw;
         PlaceBody(0f);
         UpdateBodyVisibility();
+    }
+
+    /// <summary>
+    /// An animator for a mounted character, with an avatar made from its skeleton, which maps a humanoid by its
+    /// bones' names and shape. The graph then drives it like any imported humanoid. Also gives each hand's rotation
+    /// in the avatar's T-pose, relative to the model, which the grips turn from.
+    /// </summary>
+    private static Animator AddRig(GameObject model, Mounting.MountedModel character, out Quaternion rightHandRest, out Quaternion leftHandRest)
+    {
+        // Every bone relative to the model. Source characters face along X; turning the root bones turns the
+        // skinned meshes with them.
+        Quaternion facing = Quaternion.FromEuler(0f, -90f, 0f);
+        int count = character.Bones.Count;
+        var ids = new Prowl.Motion.StringID[count];
+        var parents = new int[count];
+        var positions = new Float3[count];
+        var rotations = new Quaternion[count];
+        for (int i = 0; i < count; i++)
+        {
+            Mounting.MountedModel.Bone bone = character.Bones[i];
+            ids[i] = new Prowl.Motion.StringID(bone.Name);
+            parents[i] = bone.Parent;
+            positions[i] = facing * bone.Position;
+            rotations[i] = facing * bone.Rotation;
+            if (bone.Parent < 0 && FindBone(model.Transform, bone.Name) is { } root)
+            {
+                root.LocalPosition = positions[i];
+                root.LocalRotation = rotations[i];
+            }
+        }
+
+        var skeleton = new Prowl.Motion.Skeleton(ids, parents, ParentSpacePose(parents, positions, rotations));
+        Avatar.CreateAutomatic(skeleton, out Prowl.Motion.HumanoidMapResult report, character.Name);
+
+        // Valve's bipeds number their neck and head, which matching by name misses, and carry the shoulders on a
+        // fourth spine bone, the upper chest.
+        Prowl.Motion.HumanDescription human = report.Description;
+        MapBone(human, skeleton, Prowl.Motion.HumanBodyBone.Neck, "ValveBiped.Bip01_Neck1");
+        MapBone(human, skeleton, Prowl.Motion.HumanBodyBone.Head, "ValveBiped.Bip01_Head1");
+        MapBone(human, skeleton, Prowl.Motion.HumanBodyBone.Chest, "ValveBiped.Bip01_Spine2", replace: true);
+        MapBone(human, skeleton, Prowl.Motion.HumanBodyBone.UpperChest, "ValveBiped.Bip01_Spine4", replace: true);
+
+        rightHandRest = leftHandRest = Quaternion.Identity;
+        Avatar avatar;
+        if (human is { HasAllRequiredBones: true })
+        {
+            avatar = Avatar.CreateHumanoid(skeleton, human, character.Name);
+
+            // Source characters rest with their arms down, and the grips turn the hands from a T-pose, so take the
+            // hands' rest from the arms straightened out sideways.
+            StraightenArm(human, parents, positions, rotations, Float3.UnitX,
+                Prowl.Motion.HumanBodyBone.RightUpperArm, Prowl.Motion.HumanBodyBone.RightLowerArm,
+                Prowl.Motion.HumanBodyBone.RightHand, Prowl.Motion.HumanBodyBone.RightMiddleProximal);
+            StraightenArm(human, parents, positions, rotations, -Float3.UnitX,
+                Prowl.Motion.HumanBodyBone.LeftUpperArm, Prowl.Motion.HumanBodyBone.LeftLowerArm,
+                Prowl.Motion.HumanBodyBone.LeftHand, Prowl.Motion.HumanBodyBone.LeftMiddleProximal);
+            rightHandRest = rotations[human.GetSkeletonBoneIndex(Prowl.Motion.HumanBodyBone.RightHand)];
+            leftHandRest = rotations[human.GetSkeletonBoneIndex(Prowl.Motion.HumanBodyBone.LeftHand)];
+        }
+        else
+        {
+            Debug.LogWarning($"{character.Name} did not map as a humanoid, missing {string.Join(", ", report.UnmappedBones)}");
+            avatar = Avatar.CreateGeneric(skeleton, 0, character.Name);
+        }
+
+        Animator animator = model.AddComponent<Animator>();
+        animator.Avatar = avatar;
+        return animator;
+    }
+
+    /// <summary>Each bone relative to its parent, from bones relative to the model.</summary>
+    private static Prowl.Vector.Spatial.Transform3D[] ParentSpacePose(int[] parents, Float3[] positions, Quaternion[] rotations)
+    {
+        var pose = new Prowl.Vector.Spatial.Transform3D[parents.Length];
+        for (int i = 0; i < pose.Length; i++)
+        {
+            Float3 position = positions[i];
+            Quaternion rotation = rotations[i];
+            if (parents[i] >= 0)
+            {
+                Quaternion inverse = Quaternion.Inverse(rotations[parents[i]]);
+                position = inverse * (position - positions[parents[i]]);
+                rotation = inverse * rotation;
+            }
+            pose[i] = new Prowl.Vector.Spatial.Transform3D(position, rotation, Float3.One);
+        }
+        return pose;
+    }
+
+    /// <summary>Turns each joint of an arm, with everything below it, so the arm points along <paramref name="outward"/>.</summary>
+    private static void StraightenArm(Prowl.Motion.HumanDescription human, int[] parents, Float3[] positions, Quaternion[] rotations,
+        Float3 outward, params Prowl.Motion.HumanBodyBone[] chain)
+    {
+        for (int j = 0; j + 1 < chain.Length; j++)
+        {
+            if (!human.HasBone(chain[j]) || !human.HasBone(chain[j + 1])) return;
+            int joint = human.GetSkeletonBoneIndex(chain[j]), next = human.GetSkeletonBoneIndex(chain[j + 1]);
+            Float3 along = positions[next] - positions[joint];
+            if (Float3.Length(along) < 1e-5f) continue;
+            Quaternion turn = Quaternion.FromToRotation(Float3.Normalize(along), outward);
+            Float3 pivot = positions[joint];
+            // Parents come first, so a bone below the joint always follows one already turned.
+            for (int i = joint; i < parents.Length; i++)
+            {
+                if (i != joint && !IsBelow(parents, i, joint)) continue;
+                positions[i] = pivot + turn * (positions[i] - pivot);
+                rotations[i] = turn * rotations[i];
+            }
+        }
+    }
+
+    private static bool IsBelow(int[] parents, int bone, int ancestor)
+    {
+        for (int p = parents[bone]; p >= 0; p = parents[p])
+            if (p == ancestor) return true;
+        return false;
+    }
+
+    private static void MapBone(Prowl.Motion.HumanDescription human, Prowl.Motion.Skeleton skeleton, Prowl.Motion.HumanBodyBone bone,
+        string name, bool replace = false)
+    {
+        if (human == null || (human.HasBone(bone) && !replace)) return;
+        int index = skeleton.GetBoneIndex(new Prowl.Motion.StringID(name));
+        if (index >= 0) human.SetSkeletonBoneIndex(bone, index);
     }
 
     private void OnJumpedBody() => _jumpPulse = 0.15f;
@@ -78,6 +224,7 @@ public sealed partial class Player
     /// <summary>Runs after movement each frame, so the animator (which runs after every Update) sees this frame's state.</summary>
     private void UpdateBody(float dt)
     {
+        if (Mounting.MountDirectory.Version != _bodyMountVersion) SetupBody();
         if (_body.IsNotValid()) return;
 
         Float3 vel = Controller.Velocity;
@@ -163,10 +310,10 @@ public sealed partial class Player
         }
         else
         {
-            float scale = held.Scale;
-            _animator.SetTarget("RightHandTarget", Prowl.Motion.Target.FromWorld(new Prowl.Vector.Spatial.Transform3D(_holdPosition + _holdRotation * (held.Grip * scale), _holdRotation * RightGrip, Float3.One)));
+            float scale = held.ModelScale;
+            _animator.SetTarget("RightHandTarget", Prowl.Motion.Target.FromWorld(new Prowl.Vector.Spatial.Transform3D(_holdPosition + _holdRotation * (held.Grip * scale), _holdRotation * RightGrip * _rightHandRest, Float3.One)));
             if (held.Support is Float3 support)
-                _animator.SetTarget("LeftHandTarget", Prowl.Motion.Target.FromWorld(new Prowl.Vector.Spatial.Transform3D(_holdPosition + _holdRotation * (support * scale), _holdRotation * LeftGrip, Float3.One)));
+                _animator.SetTarget("LeftHandTarget", Prowl.Motion.Target.FromWorld(new Prowl.Vector.Spatial.Transform3D(_holdPosition + _holdRotation * (support * scale), _holdRotation * LeftGrip * _leftHandRest, Float3.One)));
             else
                 _animator.SetTarget("LeftHandTarget", default);
         }
@@ -186,6 +333,21 @@ public sealed partial class Player
         if (WorldModel.IsNotValid()) return;
         WorldModel.Transform.Position = _holdPosition;
         WorldModel.Transform.Rotation = _holdRotation;
+    }
+
+    /// <summary>The bone the avatar maps to a body part, whatever the rig calls it.</summary>
+    private Transform FindHumanBone(Transform root, Prowl.Motion.HumanBodyBone bone)
+    {
+        Prowl.Motion.HumanDescription human = _animator.IsValid() && _animator.Avatar.IsValid() ? _animator.Avatar.Description : null;
+        if (human == null || !human.HasBone(bone)) return null;
+        return FindBone(root, _animator.Avatar.Skeleton.GetBoneID(human.GetSkeletonBoneIndex(bone)).ToString());
+    }
+
+    /// <summary>A bone's rotation in the model's space while it is still in its rest pose.</summary>
+    private Quaternion RestRotation(Transform model, Prowl.Motion.HumanBodyBone bone)
+    {
+        Transform found = FindHumanBone(model, bone);
+        return found != null ? Quaternion.Inverse(model.Rotation) * found.Rotation : Quaternion.Identity;
     }
 
     private static Transform FindBone(Transform root, string name)

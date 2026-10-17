@@ -8,15 +8,7 @@
     "_colors": {
       "$id": 3,
       "entries": [
-        {
-          "key": "_MainColor",
-          "value": {
-            "R": 1F,
-            "G": 1F,
-            "B": 1F,
-            "A": 1F
-          }
-        }
+
       ]
     },
     "_vectors2": {
@@ -47,10 +39,6 @@
         {
           "key": "_Metallic",
           "value": 0F
-        },
-        {
-          "key": "_TranslucencyStrength",
-          "value": 0F
         }
       ]
     },
@@ -72,7 +60,7 @@
         {
           "key": "_MainTex",
           "value": {
-            "$asset": "81426954-0ad7-4db0-91ea-db13c6a7918e"
+            "$asset": "ce1b697e-d686-4bda-ac86-8ce722f25555"
           }
         }
       ]
@@ -93,11 +81,9 @@
   "_overrides": {
     "$id": 13,
     "$values": [
-      "_MainColor",
+      "_MainTex",
       "_Roughness",
-      "_Metallic",
-      "_TranslucencyStrength",
-      "_MainTex"
+      "_Metallic"
     ]
   },
   "_keywords": {
@@ -109,5 +95,5 @@
   "_renderQueue": -1,
   "_castShadows": true,
   "_surface": NULL,
-  "Name": "Citizen"
+  "Name": "Human"
 }

@@ -33,6 +33,15 @@ public sealed class MapProp : Component
     /// </summary>
     public const int Layer = 29;
 
+    /// <summary>
+    /// The layer models standing in a map's sunlight draw on (see <see cref="MapLit"/>). The scene's sun skips it;
+    /// the map's own sun lights it, as the game lights models in real time.
+    /// </summary>
+    public const int ModelLayer = 28;
+
+    /// <summary>The layer models standing in a map out of its sunlight draw on: under a roof, or the map has no sun.</summary>
+    public const int ShadeLayer = 27;
+
     private static readonly List<MapProp> s_all = new();
 
     /// <summary>Every map in the scene.</summary>
@@ -42,6 +51,7 @@ public sealed class MapProp : Component
     [SerializeIgnore] private MountedMap _map;
     [SerializeIgnore] private GameObject _geometry;
     [SerializeIgnore] private Scene _litScene;
+    [SerializeIgnore] private GameObject _sun;
 
     /// <param name="geometry">The <see cref="MountedMap.Instantiate"/>d map under this object, which the map's models join.</param>
     internal void Bind(MapSpawnable source, MountedMap map, GameObject geometry)
@@ -61,6 +71,7 @@ public sealed class MapProp : Component
         _litScene = GameObject.Scene;
         _map.AddLighting(_litScene, _geometry);
         AimSun();
+        AddModelLighting();
     }
 
     public override void OnDisable()
@@ -78,6 +89,46 @@ public sealed class MapProp : Component
         base.OnDispose();
     }
 
+    /// <summary>
+    /// The map's sun, which lights the models in its sunlight in real time, as the game does while the map has its
+    /// sunlight baked, and whose shadows of moving things the map's surfaces show (see SourceMaterials' map shader).
+    /// The map itself casts no shadow into it: its own are in its lightmaps. A map without a sun still gets one,
+    /// giving no light, so moving things cast shadows the way its shadow_control says, else straight down.
+    /// </summary>
+    private void AddModelLighting()
+    {
+        if (_sun.IsValid()) return;
+        MountedMap.ShadowSettings shadows = _map.Shadows ?? new MountedMap.ShadowSettings(-Float3.UnitY, 0.5f, true);
+        Float3 direction = Float3.Normalize(_map.SunDirection ?? shadows.Direction);
+
+        _sun = new GameObject("Map Sun");
+        _sun.SetParent(_geometry, false);
+        _sun.Transform.LocalRotation = Quaternion.LookRotation(direction, MathF.Abs(direction.Y) > 0.99f ? Float3.UnitZ : Float3.UnitY);
+        var sun = _sun.AddComponent<Light>();
+        sun.Type = LightType.Directional;
+        sun.LayerMask = LayerMask.FromMask(1u << ModelLayer);
+        sun.CastShadows = shadows.Enabled;
+        // How much of the light under a shadow it takes away at most.
+        sun.ShadowStrength = shadows.Darkness;
+        sun.ShadowDistance = 40f;
+
+        // The lightmaps hold sunlight as light times albedo; a light gives albedo over pi times eight times its
+        // colour, so this is the same light on a model as on the floor beside it.
+        Float3 light = _map.SunDirection != null ? _map.SunLight ?? Float3.Zero : Float3.Zero;
+        float strongest = MathF.Max(light.X, MathF.Max(light.Y, light.Z));
+        sun.Color = strongest > 0f ? new Color(light.X / strongest, light.Y / strongest, light.Z / strongest, 1f) : Color.White;
+        sun.Intensity = strongest > 0f ? strongest * MathF.PI / 8f : 0.0001f;
+    }
+
+    /// <summary>The way this map's sunlight travels in the world, or null when it has none to light models with.</summary>
+    public Float3? SunTravel => _sun.IsValid() && _map?.SunLight != null && _map.SunDirection != null ? _sun.Transform.Forward : null;
+
+    private void RemoveModelLighting()
+    {
+        if (_sun.IsValid()) _sun.Destroy();
+        _sun = null;
+    }
+
     /// <summary>Each sun's rotation from before a map turned it, to give back once no map with a sun is left.</summary>
     private static readonly Dictionary<Light, Quaternion> s_sunRotations = new();
 
@@ -92,7 +143,7 @@ public sealed class MapProp : Component
         Float3 up = MathF.Abs(direction.Y) > 0.99f ? Float3.UnitZ : Float3.UnitY;
         foreach (Light light in Scene.Current.FindObjectsOfType<Light>())
         {
-            if (light.Type != LightType.Directional) continue;
+            if (light.Type != LightType.Directional || light.GameObject == _sun) continue;
             s_sunRotations.TryAdd(light, light.Transform.Rotation);
             light.Transform.Rotation = Quaternion.LookRotation(direction, up);
         }
@@ -142,19 +193,23 @@ public sealed class MapProp : Component
         foreach (GameObject child in go.Children) SetLayer(child, layer);
     }
 
-    // Directional lights are the sun: none of them reaches the map layer.
+    // The scene's directional lights are its sun: none of them reaches a map or the models in it. A map's own sun
+    // reaches only its models.
     private static void KeepSunOff()
     {
+        const uint mapLayers = (1u << Layer) | (1u << ModelLayer) | (1u << ShadeLayer);
         foreach (Light light in Scene.Current.FindObjectsOfType<Light>())
         {
             if (light.Type != LightType.Directional) continue;
             uint mask = (uint)light.LayerMask.Mask;
-            if ((mask & (1u << Layer)) != 0) light.LayerMask = LayerMask.FromMask(mask & ~(1u << Layer));
+            if (mask == 1u << ModelLayer) continue;
+            if ((mask & mapLayers) != 0) light.LayerMask = LayerMask.FromMask(mask & ~mapLayers);
         }
     }
 
     private void RemoveLighting()
     {
+        RemoveModelLighting();
         if (_map != null && _litScene.IsValid()) _map.RemoveLighting(_litScene, _geometry);
         _litScene = null;
     }
@@ -193,6 +248,11 @@ public sealed class MapProp : Component
                 // Part of the map: its own physics and prop marker go.
                 foreach (Component c in go.GetComponentsInChildren<Component>(true, true).ToList())
                     if (c is Rigidbody3D or Collider or Prop) c.GameObject.RemoveComponent(c);
+
+                // Static props have their shadows baked into the map already.
+                if (model.ClassName == "prop_static")
+                    foreach (MeshRenderer renderer in go.GetComponentsInChildren<MeshRenderer>())
+                        renderer.ShadowCasting = ShadowCasting.Off;
 
                 if (spawnable is MountSpawnable mounted && mounted.Loader.GetOrCreate<MountedModel>() is { } built)
                 {

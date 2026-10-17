@@ -71,7 +71,8 @@ public sealed class Thumbnails : Component
 
     /// <summary>An equipment icon: its view model from the side, muzzle pointing right, wide and transparent.</summary>
     public Texture2D Get(Equipment equipment) => Get(new Shot(
-        "equipment:" + equipment.GetType().FullName,
+        // With the mount version, so the icon is drawn again once a game's model replaces the built one.
+        $"equipment:{equipment.GetType().FullName}:{Mounting.MountDirectory.Version}",
         () => BuildViewModel(equipment),
         new Float3(1f, 0.3f, 0.35f), Quaternion.Identity,
         256, 128, FitWidth: true, Lighting: 0.5f));

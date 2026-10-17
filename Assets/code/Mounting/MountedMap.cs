@@ -86,6 +86,18 @@ public sealed class MountedMap : IDisposable
     /// <summary>The way the map's sunlight travels, relative to the map, or null when it has no sun.</summary>
     public Float3? SunDirection { get; init; }
 
+    /// <summary>
+    /// The sun's light on a surface facing it, in the lightmaps' linear units, or null when it has no sun. The
+    /// lightmaps hold it already; models, which the game lights at runtime, take it from a light.
+    /// </summary>
+    public Float3? SunLight { get; init; }
+
+    /// <summary>How the shadows of moving things fall on the map, as the game projects them.</summary>
+    public readonly record struct ShadowSettings(Float3 Direction, float Darkness, bool Enabled);
+
+    /// <summary>The map's own shadow settings, or null to use its sun, else straight down.</summary>
+    public ShadowSettings? Shadows { get; init; }
+
     /// <summary>Finds the map's sounds and soundscapes, or null when it has none.</summary>
     public IMapAudio Audio { get; init; }
 
@@ -138,6 +150,8 @@ public sealed class MountedMap : IDisposable
             var renderer = child.AddComponent<MeshRenderer>();
             renderer.Mesh = part.Mesh;
             renderer.Materials = [.. part.Materials];
+            // Its shadows are in its lightmaps; realtime ones come only from what moves in it.
+            renderer.ShadowCasting = ShadowCasting.Off;
 
             if (part.Solid) child.AddComponent<MeshCollider>().Mesh = part.Mesh;
         }

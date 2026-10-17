@@ -46,6 +46,14 @@ public sealed class Physgun : Equipment
 
     public override void BuildViewModel(ViewModel vm)
     {
+        // Garry's Mod's gravity gun skin for the physgun, else Half-Life 2's own model.
+        if (vm.AddMountedModel("models/weapons/w_physics.mdl", ["garrysmod"], Float3.Zero, new Float3(0f, -90f, 0f), skin: 2)
+            || vm.AddMountedModel("models/weapons/w_physics.mdl", HalfLife2, Float3.Zero, new Float3(0f, -90f, 0f), skin: 1))
+        {
+            GravityGun.MountedLayout(vm);
+            return;
+        }
+
         if (_bodyMat.IsNotValid()) _bodyMat = Materials.Lit(new Color(0.12f, 0.13f, 0.15f, 1f), 0.6f, 0.35f);
         if (_darkMat.IsNotValid()) _darkMat = Materials.Lit(new Color(0.03f, 0.03f, 0.035f, 1f), 0.2f, 0.5f);
         if (_glowMat.IsNotValid()) _glowMat = Materials.Lit(new Color(0f, 0f, 0f, 1f)).Emissive(new Color(0.2f, 0.6f, 1f, 1f), 5f);

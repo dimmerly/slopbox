@@ -10,6 +10,7 @@ public sealed partial class Player
 
     private readonly List<Equipment> _equipment = new();
     private int _activeIndex = Nothing;
+    private int _mountVersion;
 
     public IReadOnlyList<Equipment> Equipment => _equipment;
     public Equipment ActiveEquipment => _activeIndex >= 0 && _activeIndex < _equipment.Count ? _equipment[_activeIndex] : null;
@@ -60,6 +61,15 @@ public sealed partial class Player
 
     private void UpdateInventory()
     {
+        // Games mount in the background after start. Equipment out before then rebuilds with their models.
+        int mounts = Mounting.MountDirectory.Version;
+        if (mounts != _mountVersion)
+        {
+            _mountVersion = mounts;
+            ViewModel.Rebuild(ActiveEquipment);
+            WorldModel.Rebuild(ActiveEquipment);
+        }
+
         if (InputEnabled)
         {
             for (int i = 0; i < Controls.Slots.Length && i < _equipment.Count; i++)

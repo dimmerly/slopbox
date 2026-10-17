@@ -43,6 +43,7 @@ public abstract class SourceMount : BaseGameMount, IContent
     private readonly Dictionary<string, SourceFile> _files = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Texture2D> _textures = new();
     private readonly Dictionary<string, SourceMaterial> _materials = new();
+    private readonly Dictionary<string, MountedModel> _characters = new(StringComparer.OrdinalIgnoreCase);
     private SoundScripts _sounds;
 
     protected override void Initialize(InitializeContext context)
@@ -72,6 +73,8 @@ public abstract class SourceMount : BaseGameMount, IContent
 
     protected override void Shutdown()
     {
+        foreach (MountedModel character in _characters.Values) character?.Dispose();
+        _characters.Clear();
         foreach (SourceMaterial material in _materials.Values) material?.Dispose();
         foreach (Texture2D texture in _textures.Values)
             if (texture.IsValid()) texture.Dispose();
@@ -145,6 +148,31 @@ public abstract class SourceMount : BaseGameMount, IContent
                 if (first) context.Add(ResourceType.Material, path, new VmtMaterialLoader(relative));
                 break;
         }
+    }
+
+    /// <summary>
+    /// A model by its path in the game, such as "models/humans/group01/male_07.mdl", built with its skeleton and
+    /// bone weights to animate as a character. Made the first time it is asked for. Null if missing.
+    /// </summary>
+    public MountedModel Character(string path)
+    {
+        path = ContentPaths.Normalize(path);
+        if (_characters.TryGetValue(path, out MountedModel cached)) return cached;
+
+        MountedModel model = null;
+        if (ReadFile(path) is { } mdl)
+        {
+            try
+            {
+                model = StudioModel.Build(Path.GetFileNameWithoutExtension(path), path, mdl, this, skinned: true);
+            }
+            catch (Exception e)
+            {
+                LogWarning($"Could not load character {path}: {e.Message}");
+            }
+        }
+        _characters[path] = model;
+        return model;
     }
 
     // ----------------------------------------------------------------

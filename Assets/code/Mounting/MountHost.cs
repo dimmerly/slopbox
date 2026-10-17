@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Prowl.Ember;
 using Prowl.Runtime;
 using Debug = Prowl.Runtime.Debug;
@@ -20,6 +21,11 @@ internal sealed class MountHost : IDisposable
     public ISteamIntegration Steam { get; init; }
 
     public IReadOnlyCollection<BaseGameMount> All => _sources.Values;
+
+    private int _version;
+
+    /// <summary>Goes up every time a game is mounted or unmounted.</summary>
+    public int Version => Volatile.Read(ref _version);
 
     public void Dispose()
     {
@@ -62,7 +68,10 @@ internal sealed class MountHost : IDisposable
             return;
         }
         if (source.IsMounted)
+        {
+            Interlocked.Increment(ref _version);
             Debug.Log($"Mounted {source.Title}: {source.Resources.Count} files in {timer.ElapsedMilliseconds} ms");
+        }
     }
 
     public void Unmount(string ident)
@@ -70,6 +79,7 @@ internal sealed class MountHost : IDisposable
         BaseGameMount source = GetSource(ident);
         if (source is null || !source.IsMounted) return;
         source.ShutdownInternal();
+        Interlocked.Increment(ref _version);
     }
 
     /// <summary>Creates and initializes every mount type in <paramref name="assembly"/>.</summary>
@@ -110,6 +120,44 @@ public static class MountDirectory
     public static void Mount(string ident) => Host.Mount(ident);
 
     public static void Unmount(string ident) => Host.Unmount(ident);
+
+    /// <summary>
+    /// Goes up every time a game is mounted or unmounted, from any thread. Compare it with a kept copy to notice
+    /// content arriving, since games mount in the background after start.
+    /// </summary>
+    public static int Version => Host.Version;
+
+    /// <summary>
+    /// A model by its path inside a game, such as "models/weapons/w_physics.mdl", from the first of
+    /// <paramref name="idents"/> that is mounted and has it. Null if none does.
+    /// </summary>
+    public static MountedModel FindModel(string path, params string[] idents)
+    {
+        foreach (string ident in idents)
+        {
+            BaseGameMount mount = Get(ident);
+            if (mount is not { IsMounted: true }) continue;
+            // Listed below whichever of the game's folders holds it, such as "hl2/models/...".
+            string suffix = "/" + path;
+            foreach (ResourceLoader loader in mount.GetAll(ResourceType.Model))
+                if (loader.RelativePath.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) && loader.GetOrCreate<MountedModel>() is { } model)
+                    return model;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// A Source character model by its path inside a game, such as "models/humans/group01/male_07.mdl", with its
+    /// skeleton as a hierarchy and its bone weights, from the first of <paramref name="idents"/> that is mounted and
+    /// has it. Null if none does.
+    /// </summary>
+    public static MountedModel FindCharacter(string path, params string[] idents)
+    {
+        foreach (string ident in idents)
+            if (Get(ident) is Source.SourceMount { IsMounted: true } mount && mount.Character(path) is { } model)
+                return model;
+        return null;
+    }
 
     /// <summary>Mounts every installed game.</summary>
     public static void MountInstalled()

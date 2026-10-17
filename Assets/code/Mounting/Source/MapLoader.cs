@@ -112,7 +112,8 @@ internal static class SourceMapBuilder
         var sounds = new List<MountedMap.PlacedSound>();
         var soundscapes = new List<MountedMap.SoundscapeZone>();
         Float3 min = new(float.MaxValue), max = new(float.MinValue);
-        Float3? sun = null;
+        Float3? sun = null, sunLight = null;
+        MountedMap.ShadowSettings? shadows = null;
 
         for (int e = 0; e < bsp.Entities.Count; e++)
         {
@@ -128,6 +129,13 @@ internal static class SourceMapBuilder
             if (className.Equals("light_environment", StringComparison.OrdinalIgnoreCase))
             {
                 sun = SunDirection(entity);
+                sunLight = LightValue(entity.Get("_light"));
+                continue;
+            }
+
+            if (className.Equals("shadow_control", StringComparison.OrdinalIgnoreCase))
+            {
+                shadows = ShadowControl(entity);
                 continue;
             }
 
@@ -213,6 +221,8 @@ internal static class SourceMapBuilder
             Sounds = sounds,
             Soundscapes = soundscapes,
             SunDirection = sun,
+            SunLight = sunLight,
+            Shadows = shadows,
             SourceLook = true,
             Audio = audio,
         };
@@ -246,6 +256,40 @@ internal static class SourceMapBuilder
             MathF.Sin(yaw * ToRadians) * MathF.Cos(pitch * ToRadians),
             MathF.Sin(pitch * ToRadians));
         return GoldSrcAssets.Direction(travel);
+    }
+
+    /// <summary>
+    /// A light's "_light" value, "r g b brightness", as the linear light vrad put in the lightmaps: the colour from
+    /// gamma to linear, times the brightness over 255. Null when it does not parse.
+    /// </summary>
+    private static Float3? LightValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        string[] parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 3) return null;
+        var c = new float[4] { 0f, 0f, 0f, 255f };
+        for (int i = 0; i < 4 && i < parts.Length; i++)
+            if (!float.TryParse(parts[i], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out c[i])) return null;
+        float brightness = c[3] / 255f;
+        return new Float3(
+            MathF.Pow(Math.Clamp(c[0] / 255f, 0f, 1f), 2.2f) * brightness,
+            MathF.Pow(Math.Clamp(c[1] / 255f, 0f, 1f), 2.2f) * brightness,
+            MathF.Pow(Math.Clamp(c[2] / 255f, 0f, 1f), 2.2f) * brightness);
+    }
+
+    /// <summary>
+    /// A shadow_control's settings: the way its angles point, and its colour's brightness as how dark shadows fall.
+    /// </summary>
+    private static MountedMap.ShadowSettings ShadowControl(Entity entity)
+    {
+        const float ToRadians = MathF.PI / 180f;
+        Vector3 angles = entity.Get("angles") != null ? entity.GetVector("angles") : new Vector3(80f, 30f, 0f);
+        float pitch = angles.X * ToRadians, yaw = angles.Y * ToRadians;
+        // Source's forward for these angles; a positive pitch looks down.
+        var forward = new Vector3(MathF.Cos(pitch) * MathF.Cos(yaw), MathF.Cos(pitch) * MathF.Sin(yaw), -MathF.Sin(pitch));
+        Vector3 color = entity.Get("color") != null ? entity.GetVector("color") : new Vector3(128f);
+        float darkness = Math.Clamp((color.X + color.Y + color.Z) / (3f * 255f), 0f, 1f);
+        return new MountedMap.ShadowSettings(GoldSrcAssets.Direction(forward), darkness, entity.GetInt("disableallshadows") == 0);
     }
 
     /// <summary>An ambient_generic that loops on its own from the start; ones fired by the map's logic are skipped.</summary>

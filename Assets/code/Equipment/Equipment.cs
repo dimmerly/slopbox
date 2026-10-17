@@ -34,7 +34,13 @@ public abstract class Equipment
     public virtual void OnEquip() { }
     public virtual void OnHolster() { }
 
-    /// <summary>Adds this equipment's parts to the view model. Called on every equip.</summary>
+    /// <summary>Where models from Half-Life 2 are looked for: the game itself, then the copy Garry's Mod ships with.</summary>
+    protected static readonly string[] HalfLife2 = ["hl2", "garrysmod"];
+
+    /// <summary>
+    /// Adds this equipment's parts to the view model. Called on every equip, and again when a game finishes
+    /// mounting, so equipment can use a mounted game's model and build its own parts without one.
+    /// </summary>
     public virtual void BuildViewModel(ViewModel vm) { }
 
     /// <summary>Every frame while out, after movement.</summary>

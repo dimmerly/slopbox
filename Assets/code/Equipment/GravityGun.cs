@@ -46,6 +46,13 @@ public sealed class GravityGun : Equipment
 
     public override void BuildViewModel(ViewModel vm)
     {
+        // Source's world models face along X and sit with the right hand at their origin.
+        if (vm.AddMountedModel("models/weapons/w_physics.mdl", HalfLife2, Float3.Zero, new Float3(0f, -90f, 0f)))
+        {
+            MountedLayout(vm);
+            return;
+        }
+
         if (_bodyMat.IsNotValid()) _bodyMat = Materials.Lit(new Color(0.5f, 0.25f, 0.05f, 1f), 0.5f, 0.4f);
         if (_clawMat.IsNotValid()) _clawMat = Materials.Lit(new Color(0.05f, 0.05f, 0.05f, 1f), 0.8f, 0.3f);
         if (_coreMat.IsNotValid()) _coreMat = Materials.Lit(new Color(0f, 0f, 0f, 1f)).Emissive(new Color(1f, 0.5f, 0.1f, 1f), 4f);
@@ -60,6 +67,15 @@ public sealed class GravityGun : Equipment
         }
         vm.SetMuzzle(new Float3(0f, 0f, 0.25f));
         vm.SetGrip(new Float3(0f, -0.06f, -0.09f), new Float3(0.03f, -0.05f, 0.08f));
+    }
+
+    /// <summary>Muzzle and hands on Half-Life 2's gravity gun, which the physgun shares.</summary>
+    internal static void MountedLayout(ViewModel vm)
+    {
+        vm.SetMuzzle(new Float3(0f, 0.06f, 0.7f));
+        vm.SetGrip(Float3.Zero, new Float3(0f, -0.07f, 0.3f));
+        vm.SetHold(new Float3(0.02f, -0.12f, 0.3f));
+        vm.SetViewOffset(new Float3(0.2f, -0.26f, 0.32f));
     }
 
     public override void Update()

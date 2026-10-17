@@ -173,11 +173,32 @@ public static class SourceMaterials
                 #if defined(GRAPHITE_STANDARD_FORWARD) && !defined(GRAPHITE_NO_OBJECT)
                     vec4 placement = Graphite_Object().lightmapScaleOffset;
                     vec3 albedo = s.BaseColor;
-                    s.BaseColor = albedo * graphite_BakedDiffuse(vec3(0.0, 1.0, 0.0), s.UV1 * placement.xy + placement.zw);
-
-                    // Realtime lights on top, such as the flashlight: the scene's sun leaves the map's layer out.
+                    vec3 baked = graphite_BakedDiffuse(vec3(0.0, 1.0, 0.0), s.UV1 * placement.xy + placement.zw);
                     vec3 normal = normalize(cross(dFdx(s.WorldPos), dFdy(s.WorldPos)));
                     if (dot(normal, s.ViewDir) < 0.0) normal = -normal;
+
+                    // Shadows of the models moving in the map, from the map's sun: the one directional light that
+                    // reaches the model layer. Its light is baked in already, so where something blocks it, it is
+                    // taken back out, never more than its shadow strength's share of the light there. A sun with
+                    // no light of its own only darkens by that share, as the game's projected shadows do.
+                    if ((Graphite_SurfaceLayers() & (1u << MAP_LAYER)) != 0u)
+                    {
+                        for (uint i = 0u; i < Graphite_DirectionalCount(); i++)
+                        {
+                            Graphite_DirectionalLight d = Graphite_GetDirectional(i);
+                            if ((d.layers & (1u << MODEL_LAYER)) == 0u || !d.shadow) continue;
+                            float NdotL = dot(normal, d.direction);
+                            if (NdotL <= 0.0) continue;
+                            float blocked = 1.0 - Graphite_DirectionalLightShadow(d, i, s.WorldPos, normal);
+                            if (blocked <= 0.0) continue;
+                            vec3 most = baked * d.shadowStrength;
+                            vec3 sun = d.color * (8.0 / PI) * NdotL;
+                            baked -= max(d.color.r, max(d.color.g, d.color.b)) > 0.001 ? min(sun * blocked, most) : most * blocked;
+                        }
+                    }
+                    s.BaseColor = albedo * baked;
+
+                    // Realtime lights on top, such as the flashlight: the scene's sun leaves the map's layers out.
                     s.Emission += CalculateForwardLighting(s.WorldPos, normal, normal, s.ViewDir, albedo, 0.0, 0.9, 1.0);
                 #endif
                 }
@@ -196,7 +217,10 @@ public static class SourceMaterials
             if (s_worldShader.IsValid()) return s_worldShader;
             try
             {
-                s_worldShader = Shader.FromSource(WorldShaderSource, "Slopbox/SourceLightmapped.shader");
+                string source = WorldShaderSource
+                    .Replace("MAP_LAYER", MapProp.Layer.ToString(CultureInfo.InvariantCulture))
+                    .Replace("MODEL_LAYER", MapProp.ModelLayer.ToString(CultureInfo.InvariantCulture));
+                s_worldShader = Shader.FromSource(source, "Slopbox/SourceLightmapped.shader");
             }
             catch (Exception e)
             {

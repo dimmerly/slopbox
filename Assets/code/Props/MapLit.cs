@@ -9,8 +9,8 @@ using Prowl.Vector;
 namespace Slopbox;
 
 /// <summary>
-/// Lights a model by the map it stands in, as the game does: from the map's light on the floor under it. Inside a
-/// map the model joins the map layer, out of the sun. Where the map can say which luxel that floor light is, the
+/// Lights a model by the map it stands in, as the game does: from the map's light on the floor under it, plus the
+/// map's sun where it reaches it. Inside a map the model joins one of the map's model layers, out of the scene's sun. Where the map can say which luxel that floor light is, the
 /// model's renderers read it straight from the map's lightmap as their indirect light, like the map's own
 /// surfaces; otherwise they are tinted so the scene's ambient light comes out as the map's. Outside every map it
 /// is left as it was.
@@ -25,6 +25,7 @@ public sealed class MapLit : Component
     private const float MaxTint = 4f;
 
     [SerializeIgnore] private bool _inMap;
+    [SerializeIgnore] private int _layer = MapProp.ShadeLayer;
     [SerializeIgnore] private int _outsideLayer;
     [SerializeIgnore] private float _nextCheck;
     [SerializeIgnore] private Float3 _checkedAt = new(float.MaxValue);
@@ -48,6 +49,7 @@ public sealed class MapLit : Component
         foreach (MapProp map in MapProp.All)
         {
             if (map.IsNotValid()) continue;
+            _layer = SeesSun(map, probe) ? MapProp.ModelLayer : MapProp.ShadeLayer;
             if (TryFindTypicalLuxel(map, probe, out int page, out Float2 uv))
             {
                 EnterLightmapped(page, uv);
@@ -75,6 +77,17 @@ public sealed class MapLit : Component
         centre.Y = MathF.Min(centre.Y, 1.2f);
         _localCentre = centre;
         return centre;
+    }
+
+    /// <summary>
+    /// Whether the map's sun reaches the model, as the game decides for each model: nothing of the map between its
+    /// middle and the sky. Only then does the map's sun light it.
+    /// </summary>
+    private static bool SeesSun(MapProp map, Float3 probe)
+    {
+        if (map.SunTravel is not { } travel) return false;
+        var mapOnly = new QueryFilter(LayerMask.FromMask(1u << MapProp.Layer));
+        return !Scene.Current.Physics.Raycast(probe, -travel, out RaycastHit _, 300f, mapOnly);
     }
 
     /// <summary>Offsets around the model the floor is sampled at, in metres.</summary>
@@ -132,8 +145,9 @@ public sealed class MapLit : Component
             _outsideLayer = GameObject.LayerIndex;
         }
 
-        // Every time, for children made since, such as a view model rebuilt for other equipment.
-        MapProp.SetLayer(GameObject, MapProp.Layer);
+        // Every time, for children made since, such as a view model rebuilt for other equipment, and as the model
+        // steps in and out of the sun.
+        MapProp.SetLayer(GameObject, _layer);
     }
 
     /// <summary>Every renderer reads the floor's luxel from the map's lightmap page as its indirect light.</summary>

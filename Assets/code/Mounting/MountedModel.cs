@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
@@ -66,7 +67,14 @@ public sealed class MountedModel : IDisposable
     }
 
     /// <summary>A bone, in its rest pose relative to the model.</summary>
-    public sealed record Bone(string Name, Float3 Position, Quaternion Rotation);
+    public sealed record Bone(string Name, Float3 Position, Quaternion Rotation)
+    {
+        /// <summary>The index of the bone it hangs from, or -1. Only skeletons kept as a hierarchy have parents.</summary>
+        public int Parent { get; init; } = -1;
+    }
+
+    /// <summary>True if the bones form a hierarchy, as a character's do, rather than all hanging from the model.</summary>
+    public bool HasHierarchy => Bones.Any(b => b.Parent >= 0);
 
     public string Name { get; }
     public IReadOnlyList<Part> Parts { get; }
@@ -90,7 +98,9 @@ public sealed class MountedModel : IDisposable
 
     /// <summary>
     /// A new object showing the model, a child per part, not in any scene. A skinned model also gets its bones
-    /// under a "Skeleton" child and a <see cref="ModelAnimator"/> playing its resting sequence.
+    /// under a "Skeleton" child and a <see cref="ModelAnimator"/> playing its resting sequence. Bones in a
+    /// <see cref="HasHierarchy"/> skeleton keep their own names and hang from their parents, for an
+    /// <see cref="Animator"/> to bind by name.
     /// </summary>
     public GameObject Instantiate()
     {
@@ -102,13 +112,16 @@ public sealed class MountedModel : IDisposable
             var skeleton = new GameObject("Skeleton");
             skeleton.SetParent(root, false);
             bones = new Transform[Bones.Count];
+            bool hierarchy = HasHierarchy;
             for (int i = 0; i < Bones.Count; i++)
             {
-                // Numbered, so two bones of one name still resolve to their own paths.
-                var bone = new GameObject($"{i} {Bones[i].Name}");
-                bone.SetParent(skeleton, false);
-                bone.Transform.LocalPosition = Bones[i].Position;
-                bone.Transform.LocalRotation = Bones[i].Rotation;
+                Bone source = Bones[i];
+                // Numbered when flat, so two bones of one name still resolve to their own paths.
+                var bone = new GameObject(hierarchy ? source.Name : $"{i} {source.Name}");
+                bone.SetParent(hierarchy && source.Parent >= 0 ? bones[source.Parent].GameObject : skeleton, false);
+                // Placed relative to the model; the parents are already in place.
+                bone.Transform.Position = root.Transform.TransformPoint(source.Position);
+                bone.Transform.Rotation = root.Transform.Rotation * source.Rotation;
                 bones[i] = bone.Transform;
             }
         }

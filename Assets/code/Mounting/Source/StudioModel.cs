@@ -18,13 +18,15 @@ internal sealed class StudioModelLoader(string gamePath, SourceFile file) : Reso
 /// <summary>
 /// Builds <see cref="MountedModel"/>s from Source studio models, versions 44 to 49: the first choice of every body
 /// part at its highest detail, posed as compiled, with a material per mesh for every skin. Vertices come from the
-/// .vvd, triangles from the .vtx, both checked against the .mdl's checksum.
+/// .vvd, triangles from the .vtx, both checked against the .mdl's checksum. A skinned build also keeps the
+/// skeleton, as a hierarchy, and each vertex's bone weights, for characters that animate.
 /// </summary>
 internal static class StudioModel
 {
     private const int VertexSize = 48;
+    private const int BoneSize = 216;
 
-    public static MountedModel Build(string name, string gamePath, byte[] mdl, IContent content)
+    public static MountedModel Build(string name, string gamePath, byte[] mdl, IContent content, bool skinned = false)
     {
         if (mdl == null || mdl.Length < 408 || Encoding.ASCII.GetString(mdl, 0, 4) != "IDST") return null;
         int version = I32(mdl, 4);
@@ -39,6 +41,9 @@ internal static class StudioModel
 
         Vertex[] vertices = ReadVertices(vvd);
         if (vertices == null) return null;
+
+        MountedModel.Bone[] bones = skinned ? ReadBones(mdl) : null;
+        if (bones is { Length: 0 }) bones = null;
 
         Material[][] skinMaterials = ReadSkins(mdl, content, out List<Material> made);
 
@@ -60,7 +65,7 @@ internal static class StudioModel
 
                 int vtxBodyPart = vtxBodyPartOffset + b * 8;
                 int vtxModel = vtxBodyPart + I32(vtx, vtxBodyPart + 4);
-                valid = BuildPart(mdl, vtx, vertices, model, vtxModel, stripGroupSize, partName, skinMaterials, parts);
+                valid = BuildPart(mdl, vtx, vertices, model, vtxModel, stripGroupSize, partName, skinMaterials, bones, parts);
             }
             if (valid) break;
         }
@@ -70,13 +75,47 @@ internal static class StudioModel
             foreach (Material material in made) material.Dispose();
             return null;
         }
-        return new MountedModel(name, parts, []);
+        return new MountedModel(name, parts, [], bones);
+    }
+
+    /// <summary>
+    /// The skeleton in the pose the vertices were bound in, each bone relative to the model, with its parent, in
+    /// the file's order, which puts parents first. Taken from each bone's pose-to-bone matrix rather than its
+    /// default position and rotation, which can differ from the bind pose.
+    /// </summary>
+    private static MountedModel.Bone[] ReadBones(byte[] mdl)
+    {
+        int count = I32(mdl, 156), start = I32(mdl, 160);
+        if (count <= 0 || start <= 0 || start + (long)count * BoneSize > mdl.Length) return [];
+
+        var bones = new MountedModel.Bone[count];
+        for (int i = 0; i < count; i++)
+        {
+            int bone = start + i * BoneSize;
+            int parent = I32(mdl, bone + 4);
+            if (parent >= i) return [];   // parents must come first
+
+            // Pose-to-bone is a 3x4 matrix, rows first, taking the model into the bone. Its rows are the bone's
+            // axes in the model, and the bone sits where it takes the origin back from.
+            int m = bone + 96;
+            var x = new Vector3(F32(mdl, m), F32(mdl, m + 4), F32(mdl, m + 8));
+            var y = new Vector3(F32(mdl, m + 16), F32(mdl, m + 20), F32(mdl, m + 24));
+            var z = new Vector3(F32(mdl, m + 32), F32(mdl, m + 36), F32(mdl, m + 40));
+            var origin = -(x * F32(mdl, m + 12) + y * F32(mdl, m + 28) + z * F32(mdl, m + 44));
+            var axes = new System.Numerics.Matrix4x4(x.X, x.Y, x.Z, 0f, y.X, y.Y, y.Z, 0f, z.X, z.Y, z.Z, 0f, 0f, 0f, 0f, 1f);
+            Float3 position = GoldSrcAssets.Position(origin);
+            Quaternion rotation = GoldSrcAssets.Rotation(System.Numerics.Quaternion.Normalize(System.Numerics.Quaternion.CreateFromRotationMatrix(axes)));
+            string name = String(mdl, bone + I32(mdl, bone));
+            bones[i] = new MountedModel.Bone(string.IsNullOrWhiteSpace(name) ? $"bone {i}" : name, position, rotation) { Parent = parent };
+        }
+        return bones;
     }
 
     private struct Vertex
     {
         public Vector3 Position, Normal;
         public Float2 UV;
+        public Float4 Bones, Weights;
     }
 
     /// <summary>The highest detail vertices, put in order by the fixup table where the file has one.</summary>
@@ -95,6 +134,16 @@ internal static class StudioModel
                 Position = new Vector3(F32(vvd, at + 16), F32(vvd, at + 20), F32(vvd, at + 24)),
                 Normal = new Vector3(F32(vvd, at + 28), F32(vvd, at + 32), F32(vvd, at + 36)),
                 UV = new Float2(F32(vvd, at + 40), F32(vvd, at + 44)),
+                // Up to three bones, each with its weight, then how many are used. Prowl counts bones from 1,
+                // keeping 0 for none.
+                Bones = new Float4(
+                    vvd[at + 15] > 0 ? vvd[at + 12] + 1 : 0f,
+                    vvd[at + 15] > 1 ? vvd[at + 13] + 1 : 0f,
+                    vvd[at + 15] > 2 ? vvd[at + 14] + 1 : 0f, 0f),
+                Weights = new Float4(
+                    vvd[at + 15] > 0 ? F32(vvd, at) : 0f,
+                    vvd[at + 15] > 1 ? F32(vvd, at + 4) : 0f,
+                    vvd[at + 15] > 2 ? F32(vvd, at + 8) : 0f, 0f),
             };
         }
 
@@ -178,7 +227,7 @@ internal static class StudioModel
 
     /// <summary>One body part's first model at its highest detail. False if the strip layout did not fit.</summary>
     private static bool BuildPart(byte[] mdl, byte[] vtx, Vertex[] vertices, int model, int vtxModel, int stripGroupSize,
-        string partName, Material[][] skins, List<MountedModel.Part> parts)
+        string partName, Material[][] skins, MountedModel.Bone[] bones, List<MountedModel.Part> parts)
     {
         int meshCount = I32(mdl, model + 72), meshIndex = I32(mdl, model + 76);
         int modelFirstVertex = I32(mdl, model + 84) / VertexSize;
@@ -192,6 +241,8 @@ internal static class StudioModel
         var positions = new List<Float3>();
         var normals = new List<Float3>();
         var uvs = new List<Float2>();
+        var boneIndices = new List<Float4>();
+        var boneWeights = new List<Float4>();
         var indices = new List<uint>();
         var submeshes = new List<SubMeshDescriptor>();
         var meshMaterials = new List<int>();
@@ -226,6 +277,8 @@ internal static class StudioModel
                     positions.Add(GoldSrcAssets.Position(vertex.Position));
                     normals.Add(GoldSrcAssets.Direction(vertex.Normal));
                     uvs.Add(vertex.UV);
+                    boneIndices.Add(vertex.Bones);
+                    boneWeights.Add(vertex.Weights);
                 }
 
                 for (int i = 0; i < indexCount; i += 3)
@@ -257,6 +310,20 @@ internal static class StudioModel
             UV = [.. uvs],
             Indices = [.. indices],
         };
+        if (bones != null)
+        {
+            prowlMesh.BoneIndices = [.. boneIndices];
+            prowlMesh.BoneWeights = [.. boneWeights];
+            var bindPoses = new Float4x4[bones.Length];
+            var boneNames = new string[bones.Length];
+            for (int i = 0; i < bones.Length; i++)
+            {
+                Float4x4.Invert(Float4x4.CreateTRS(bones[i].Position, bones[i].Rotation, Float3.One), out bindPoses[i]);
+                boneNames[i] = bones[i].Name;
+            }
+            prowlMesh.BindPoses = bindPoses;
+            prowlMesh.BoneNames = boneNames;
+        }
         prowlMesh.SetSubMeshCount(submeshes.Count);
         for (int i = 0; i < submeshes.Count; i++) prowlMesh.SetSubMesh(i, submeshes[i]);
         prowlMesh.RecalculateBounds();

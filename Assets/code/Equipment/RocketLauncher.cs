@@ -23,6 +23,16 @@ public sealed class RocketLauncher : Equipment
 
     public override void BuildViewModel(ViewModel vm)
     {
+        if (vm.AddMountedModel("models/weapons/w_rocket_launcher.mdl", HalfLife2, Float3.Zero, new Float3(0f, -90f, 0f)))
+        {
+            // Shouldered: the tube's back third behind the shoulder, the right hand on the trigger grip.
+            vm.SetMuzzle(new Float3(0f, 0.13f, 1.04f));
+            vm.SetGrip(new Float3(0f, 0f, 0.33f), new Float3(0f, 0.06f, 0.62f));
+            vm.SetHold(new Float3(0.02f, -0.06f, -0.08f));
+            vm.SetViewOffset(new Float3(0.2f, -0.26f, -0.05f));
+            return;
+        }
+
         if (_bodyMat.IsNotValid()) _bodyMat = Materials.Lit(new Color(0.12f, 0.17f, 0.06f, 1f), 0.55f, 0.45f);
         if (_darkMat.IsNotValid()) _darkMat = Materials.Lit(new Color(0.025f, 0.03f, 0.025f, 1f), 0.7f, 0.3f);
         if (_bandMat.IsNotValid()) _bandMat = Materials.Lit(Tint, 0.2f, 0.5f);

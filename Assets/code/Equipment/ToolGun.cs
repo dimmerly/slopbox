@@ -59,6 +59,16 @@ public sealed class ToolGun : Equipment
 
     public override void BuildViewModel(ViewModel vm)
     {
+        // Garry's Mod's tool gun. Half-Life 2 has none.
+        if (vm.AddMountedModel("models/weapons/w_toolgun.mdl", ["garrysmod"], Float3.Zero, new Float3(0f, -90f, 0f)))
+        {
+            vm.SetMuzzle(new Float3(0f, 0.075f, 0.35f));
+            vm.SetGrip(new Float3(0f, -0.02f, 0.03f), null);
+            vm.SetHold(new Float3(0.0f, -0.12f, 0.45f));
+            vm.SetViewOffset(new Float3(0.15f, -0.19f, 0.3f));
+            return;
+        }
+
         if (_bodyMat.IsNotValid()) _bodyMat = Materials.Lit(new Color(0.35f, 0.36f, 0.38f, 1f), 0.7f, 0.35f);
         if (_darkMat.IsNotValid()) _darkMat = Materials.Lit(new Color(0.04f, 0.04f, 0.045f, 1f), 0.3f, 0.5f);
         if (_screenMat.IsNotValid()) _screenMat = Materials.Lit(new Color(0f, 0f, 0f, 1f)).Emissive(new Color(0.49f, 0.8f, 0.17f, 1f), 2.5f);
