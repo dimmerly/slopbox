@@ -37,7 +37,7 @@ internal static class SourceMapBuilder
     /// <summary>
     /// The most light a surface can show, as a multiple of its texture. Source stores lightmaps as
     /// (light ^ (1 / 2.2)) / 2 in a byte and doubles them in the shader, in gamma space; drawn linearly that is the
-    /// texture times the stored light, up to 2 ^ 2.2. Shown through <see cref="Slopbox.SourceDisplay"/>, this is
+    /// texture times the stored light, up to 2 ^ 2.2. Shown through <see cref="Slopbox.MapCameraLook"/>, this is
     /// the game's own brightness.
     /// </summary>
     private static readonly float s_maxLight = MathF.Pow(2f, 2.2f);

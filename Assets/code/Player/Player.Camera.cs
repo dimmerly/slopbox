@@ -97,7 +97,7 @@ public sealed partial class Player
             Bloom bloom = Camera.Profile.Add<Bloom>();
             bloom.Intensity.Set(0.3f);
             bloom.Threshold.Set(1.1f);
-            Camera.Profile.Add<Tonemapping>().Mode.Set(TonemappingMode.ACES);
+            Camera.Tonemapping = TonemappingMode.ACES;
             Camera.AntiAliasing = AntiAliasingMode.FXAA;
         }
 
