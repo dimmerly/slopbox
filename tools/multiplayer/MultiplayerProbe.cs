@@ -40,6 +40,7 @@ public sealed class MultiplayerProbe : Component
     {
         _overrideInput = false;
         s_nextSend.SetValue(_inputPlayer, 0d);
+        typeof(Player).GetField("_hasSentInput", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(_inputPlayer, false);
     }
 
     public override async void Start()
@@ -115,7 +116,11 @@ public sealed class MultiplayerProbe : Component
             await GameTask.DelayRealtime(0.4f);
             OverrideInput(player, new EquipmentInput { Enabled = true, Slot = 0, Primary = true, PrimaryPressed = true });
             await Until(() => player.NetworkHolding, "remote physgun grab");
-            Checkpoint("remote physgun hold");
+            _overrideInput = false;
+            await GameTask.DelayRealtime(0.75f);
+            Check(player.NetworkHolding, "held input must persist without repeated RPCs");
+            Checkpoint("remote physgun hold without repeated RPCs");
+            _overrideInput = true;
             _input.SecondaryPressed = true;
             await Until(() => !player.NetworkHolding && prop.IsFrozen, "remote physgun freeze");
             ReleaseInput();
@@ -129,6 +134,12 @@ public sealed class MultiplayerProbe : Component
             Checkpoint("remote rocket launch");
             await Until(() => Scene.Current.FindObjectsOfType<RocketProjectile>().Length == 0, "rocket destruction");
             Checkpoint("rocket destruction");
+            await GameTask.DelayRealtime(0.3f);
+            var revisionField = typeof(Player).GetField("_inputRevision", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            int idleRevision = (int)revisionField.GetValue(player);
+            await GameTask.DelayRealtime(0.75f);
+            Check((int)revisionField.GetValue(player) == idleRevision, "idle equipment must not send RPCs");
+            Checkpoint("idle equipment sends no RPCs");
             Report("pass");
             Player host = Scene.Current.FindObjectsOfType<Player>().First(p => p.Network.Owner == null);
             NetworkAnimator hostAnimation = host.GetComponent<NetworkAnimator>();
