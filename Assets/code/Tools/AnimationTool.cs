@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Prowl.PaperUI;
 using Prowl.PaperUI.LayoutEngine;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Slopbox.Mounting;
 using static Slopbox.Theme;
 
@@ -13,6 +14,8 @@ public sealed class AnimationTool : BaseTool
     [ToolSetting("Speed", Min = 0f, Max = 3f, Format = "0.00x")] public float Speed = 1f;
 
     private ModelAnimator _last;
+    internal GameObject SelectedObject => _last.IsValid() ? _last.GetComponentInParent<Prop>().GameObject : null;
+    internal void SelectObject(GameObject target) => _last = target.IsValid() ? target.GetComponentInChildren<ModelAnimator>() : null;
 
     public override string PrimaryHint => "Next sequence";
     public override string SecondaryHint => "Previous sequence";
@@ -87,8 +90,8 @@ public sealed class AnimationTool : BaseTool
                 Ui.ToolItem(paper, label, _last.Sequence == i, () =>
                 {
                     if (_last.IsNotValid()) return;
-                    _last.Speed = Speed;
-                    _last.Play(index);
+                    if (Networking.IsClient) Owner.RequestAnimation(SelectedObject, index, Speed);
+                    else { _last.Speed = Speed; _last.Play(index); }
                 }, i);
             }
         }

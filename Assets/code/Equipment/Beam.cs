@@ -1,5 +1,6 @@
 using System;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -14,6 +15,7 @@ public sealed class Beam
     public Beam(string name, Color color, float width)
     {
         _go = new GameObject(name);
+        _go.Network.Mode = NetworkMode.Never;
         _line = _go.AddComponent<LineRenderer>();
         _line.Material = Materials.Line();
         _line.StartWidth = width;

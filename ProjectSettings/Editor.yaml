@@ -43,6 +43,10 @@ ColorPalette:
     - "#A0522D"
     - "#D2B48C"
     - "#FFDAB9"
+BackgroundImage: ""
+CustomResolutions:
+  $id: 3
+  $values: []
 SelectedResolutionIndex: 0
 $id: 1
 $type: "Prowl.Editor.Projects.Settings.ProjectsEditorSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

@@ -23,7 +23,7 @@ public sealed class ScaleTool : BaseTool
 
     public override bool Reload(in ToolTrace tr) => Resize(tr, 1f);
 
-    private static bool Resize(in ToolTrace tr, float scale)
+    private bool Resize(in ToolTrace tr, float scale)
     {
         if (!tr.HitBody) return false;
         Prop prop = tr.Prop;

@@ -31,6 +31,7 @@ public sealed class ThrusterTool : BaseTool
         GameObject go = ThrusterProp.Create(Force, Forward, Back, Toggle);
         go.Transform.Position = tr.Point + tr.Normal * (ThrusterProp.Height * 0.5f + 0.01f);
         go.Transform.Rotation = Quaternion.FromToRotation(Float3.UnitY, tr.Normal);
+        go.GetComponent<ThrusterProp>().Controller = Owner;
         Scene.Current.Add(go);
 
         if (Weld)

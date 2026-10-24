@@ -3,6 +3,7 @@ using Prowl.Echo;
 using Prowl.PaperUI;
 using Prowl.PaperUI.LayoutEngine;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Scribe;
 using Prowl.Vector;
@@ -19,6 +20,9 @@ public sealed class PauseMenu : Component
 {
     private bool _open;
     private bool _settingsOpen;
+    private bool _multiplayerOpen;
+    private string _address = "127.0.0.1:7777";
+    private string _playerName = "Player";
 
     public override void OnDisable()
     {
@@ -82,10 +86,12 @@ public sealed class PauseMenu : Component
                     MenuItem(paper, font, Icon.Settings, Theme.Tertiary, "Settings", () => _settingsOpen = !_settingsOpen, 1);
                     MenuItem(paper, font, Icon.Refresh, Theme.AccentSoft, "Respawn", () =>
                     {
-                        game.LocalPlayer.Respawn();
+                        if (game.LocalPlayer.IsValid()) game.LocalPlayer.Respawn();
                         SetOpen(false);
                     }, 2);
                     MenuItem(paper, font, Icon.Delete, Theme.Warning, "Clean up props", () => game.Cleanup(), 3);
+
+                    MenuItem(paper, font, Icon.Settings, Theme.Accent, "Multiplayer", () => { _multiplayerOpen = !_multiplayerOpen; _settingsOpen = false; }, 5);
 
                     paper.Box("spacer").Height(UnitValue.Stretch()).IsNotInteractable();
                     MenuItem(paper, font, Icon.Logout, Theme.Error, "Quit", Application.Quit, 4);
@@ -93,7 +99,8 @@ public sealed class PauseMenu : Component
 
                 paper.Box("middle").Width(UnitValue.Stretch()).IsNotInteractable();
 
-                if (_settingsOpen) SettingsPanel(paper, game);
+                if (_multiplayerOpen) MultiplayerPanel(paper, game);
+                else if (_settingsOpen) SettingsPanel(paper, game);
             }
         }
     }
@@ -166,6 +173,34 @@ public sealed class PauseMenu : Component
                 .Text(text, font).FontSize(Px(24f)).TextColor(Theme.White(1f))
                 .Alignment(TextAlignment.MiddleLeft)
                 .IsNotInteractable();
+        }
+    }
+
+    private void MultiplayerPanel(Paper paper, GameManager game)
+    {
+        using (paper.Column("multiplayer").Width(Px(460f)).Height(UnitValue.Auto)
+            .BackgroundColor(Theme.PrimaryA(0.85f)).Rounded(BodyRadius).AsLifted().Padding(S4).Gap(S3).Enter())
+        {
+            Ui.InspectorTitle(paper, "Multiplayer");
+            Ui.Description(paper, GameManager.NetworkStatus, 0);
+            if (Networking.Session == null)
+            {
+                Ui.Caption(paper, "Your name", 0);
+                Ui.SearchField(paper, "player name", _playerName, v => _playerName = v, "Player name");
+                Ui.Button(paper, "Host this world", () => game.Host(_playerName), 0);
+                Ui.Caption(paper, "Host address", 1);
+                Ui.SearchField(paper, "host address", _address, v => _address = v, "IP address:port");
+                Ui.Button(paper, "Join world", () => game.Join(_address, _playerName), 1);
+                Ui.Description(paper, "Direct connection. Everyone needs the same game and mounted content.", 1);
+            }
+            else
+            {
+                Ui.Description(paper, Networking.JoinState.ToString(), 1);
+                int id = 0;
+                foreach (var peer in Networking.Session.Peers)
+                    Ui.Description(paper, peer.Name + (peer.IsHost ? " (host)" : ""), 10 + id++);
+                Ui.Button(paper, Networking.IsHost ? "Stop hosting" : "Disconnect", game.LeaveSession, 2);
+            }
         }
     }
 

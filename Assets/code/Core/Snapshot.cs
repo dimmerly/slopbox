@@ -130,34 +130,42 @@ public sealed class Snapshot
         foreach (Prop prop in props.Where(CanCapture).Distinct())
         {
             Rigidbody3D body = prop.Body;
-            var data = new PropData
-            {
-                Spawn = prop.SpawnId,
-                Position = Vec(inverse * (body.Transform.Position - origin)),
-                Rotation = Quat(inverse * body.Transform.Rotation),
-                Scale = prop.Scale,
-                Tint = prop.Tint != Color.White ? Col(prop.Tint) : null,
-                Material = prop.MaterialOverride.IsValid() ? prop.MaterialOverride.AssetID.ToString() : null,
-                Frozen = prop.IsFrozen,
-                Gravity = body.AffectedByGravity,
-                Mass = body.Mass,
-            };
-            if (prop.GameObject.TryGetComponent(out LightProp light))
-            {
-                data.Spawn = "";
-                data.Light = new LightData { Color = Col(light.Color), Brightness = light.Brightness, Range = light.Range };
-            }
-            if (prop.GameObject.TryGetComponent(out ThrusterProp thruster))
-            {
-                data.Spawn = "";
-                data.Thruster = new ThrusterData { Force = thruster.Force, Forward = thruster.Forward, Back = thruster.Back, Toggle = thruster.Toggle };
-            }
+            PropData data = CaptureProp(prop, origin, inverse);
             index[body] = snap.Props.Count;
             snap.Props.Add(data);
         }
 
         CaptureConstraints(snap, index, origin, inverse);
         return snap;
+    }
+
+    internal static PropData CaptureProp(Prop prop, Float3 origin, Quaternion inverse)
+    {
+        Rigidbody3D body = prop.Body;
+        if (body.IsNotValid()) return new PropData { Spawn = prop.SpawnId };
+        var data = new PropData
+        {
+            Spawn = prop.SpawnId,
+            Position = Vec(inverse * (body.Transform.Position - origin)),
+            Rotation = Quat(inverse * body.Transform.Rotation),
+            Scale = prop.Scale,
+            Tint = prop.Tint != Color.White ? Col(prop.Tint) : null,
+            Material = prop.MaterialOverride.IsValid() ? prop.MaterialOverride.AssetID.ToString() : null,
+            Frozen = prop.IsFrozen,
+            Gravity = body.AffectedByGravity,
+            Mass = body.Mass,
+        };
+        if (prop.GameObject.TryGetComponent(out LightProp light))
+        {
+            data.Spawn = "";
+            data.Light = new LightData { Color = Col(light.Color), Brightness = light.Brightness, Range = light.Range };
+        }
+        if (prop.GameObject.TryGetComponent(out ThrusterProp thruster))
+        {
+            data.Spawn = "";
+            data.Thruster = new ThrusterData { Force = thruster.Force, Forward = thruster.Forward, Back = thruster.Back, Toggle = thruster.Toggle };
+        }
+        return data;
     }
 
     private static void CaptureConstraints(Snapshot snap, Dictionary<Rigidbody3D, int> index, Float3 origin, Quaternion inverse)
@@ -296,7 +304,7 @@ public sealed class Snapshot
         return made;
     }
 
-    private static GameObject Build(GameManager game, PropData data)
+    internal static GameObject Build(GameManager game, PropData data)
     {
         if (data.Light != null)
             return LightProp.Create(C(data.Light.Color), data.Light.Brightness, data.Light.Range);

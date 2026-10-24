@@ -1,0 +1,35 @@
+Configuration:
+  AppVersion: 0
+  BatchMessages: true
+  CongestionControl: false
+  ConnectTimeoutSeconds: 5
+  Execution: 0
+  FastResend: 2
+  InterpolationMilliseconds: 100
+  JitterMilliseconds: 0
+  JoinTimeoutSeconds: 10
+  LatencyMilliseconds: 0
+  LocalAddress: "host"
+  MaxMessageSize: 16777216
+  MaxPeers: 64
+  MaxRetransmits: 40
+  MaxSnapshotDecompressedBytes: 67108864
+  MaxSnapshotDepth: 128
+  MaxSnapshotNodes: 250000
+  Mtu: 1200
+  NoDelay: true
+  PacketLossPercent: 0
+  PingIntervalSeconds: 1
+  Port: 7777
+  ProtocolId: 1347567959
+  ReceiveWindow: 4096
+  SceneLoadTimeoutSeconds: 60
+  SendWindow: 4096
+  SimulateNetwork: false
+  TickRate: 30
+  TimeoutSeconds: 10
+  Transport: 0
+  UpdateIntervalMilliseconds: 10
+  $id: 2
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.NetworkingSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

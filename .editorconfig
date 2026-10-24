@@ -1,0 +1,20 @@
+root = true
+
+# Prowl code style begin
+# Written from Project Settings > Code Style. Change it there, this section is rewritten.
+[*.cs]
+indent_style = space
+indent_size = 4
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = true
+csharp_style_var_elsewhere = false
+csharp_style_namespace_declarations = file_scoped
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true
+# Prowl code style end

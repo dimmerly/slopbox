@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prowl.PaperUI;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
+using Prowl.Runtime.Networking;
+using Prowl.Warp;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -14,7 +17,7 @@ namespace Slopbox;
 /// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Game Manager")]
-public sealed class GameManager : Component
+public sealed class GameManager : Component, INetworkListener
 {
     private static GameManager s_instance;
 
@@ -61,10 +64,13 @@ public sealed class GameManager : Component
     [Tooltip("Adds bloom, tonemapping and FXAA to the camera when it has no effects of its own.")]
     public bool DefaultCameraEffects = true;
 
-    public Player LocalPlayer { get; private set; }
+    public Player LocalPlayer { get; internal set; }
+    internal Player ActingPlayer { get; set; }
     public SpawnCatalog Catalog { get; private set; }
-    public ToolRegistry Tools { get; private set; }
-    public UndoHistory Undo { get; private set; }
+    public ToolRegistry Tools => LocalPlayer.IsValid() ? LocalPlayer.Tools : _fallbackTools;
+    private ToolRegistry _fallbackTools;
+    public UndoHistory Undo => LocalPlayer.IsValid() ? LocalPlayer.Undo : _fallbackUndo;
+    private UndoHistory _fallbackUndo;
     public Thumbnails Thumbnails { get; private set; }
     public MaterialCatalog MaterialLibrary { get; private set; }
     public Settings Settings { get; } = new();
@@ -99,19 +105,21 @@ public sealed class GameManager : Component
     {
         if (Instance != this) return;
 
-        Audio = GameObject.AddComponent<GameAudio>();
+        Audio = GetComponent<GameAudio>();
+        if (Audio.IsNotValid()) Audio = GameObject.AddComponent<GameAudio>();
         ApplyGravity();
         Catalog = new SpawnCatalog(PropsFolder);
         MaterialLibrary = new MaterialCatalog();
-        Tools = new ToolRegistry();
-        Undo = new UndoHistory();
+        _fallbackTools = new ToolRegistry();
+        _fallbackUndo = new UndoHistory();
 
-        Thumbnails = GameObject.AddComponent<Thumbnails>();
-        GameObject.AddComponent<Hud>();
-        GameObject.AddComponent<SpawnMenu>();
-        GameObject.AddComponent<PauseMenu>();
+        Thumbnails = GetComponent<Thumbnails>();
+        if (Thumbnails.IsNotValid()) Thumbnails = GameObject.AddComponent<Thumbnails>();
+        if (GetComponent<Hud>().IsNotValid()) GameObject.AddComponent<Hud>();
+        if (GetComponent<SpawnMenu>().IsNotValid()) GameObject.AddComponent<SpawnMenu>();
+        if (GetComponent<PauseMenu>().IsNotValid()) GameObject.AddComponent<PauseMenu>();
 
-        SpawnPlayer();
+        if (!Networking.IsClient) SpawnPlayer();
     }
 
     public override void Update()
@@ -121,8 +129,9 @@ public sealed class GameManager : Component
         if (LocalPlayer.IsValid() && LocalPlayer.Transform.Position.Y < KillHeight)
             LocalPlayer.Respawn();
 
-        if (!IsMenuOpen && Controls.Pressed(Controls.Undo)) Undo.UndoLast();
+        if (!IsMenuOpen && Controls.Pressed(Controls.Undo)) UndoLast();
 
+        UpdateSession();
         UpdateCursor();
     }
 
@@ -156,17 +165,22 @@ public sealed class GameManager : Component
     //  Player
     // ----------------------------------------------------------------
 
-    private void SpawnPlayer()
+    public Player SpawnPlayer(NetPeer owner = null)
     {
         (Float3 position, float yaw) = FindSpawn();
-        var go = new GameObject("Player");
+        var go = new GameObject(owner == null ? "Player" : owner.Name);
         go.Transform.Position = position;
         go.Transform.Rotation = Quaternion.FromEuler(0f, yaw, 0f);
         go.AddComponent<CharacterController>();
         go.AddComponent<PlayerController>();
-        LocalPlayer = go.AddComponent<Player>();
+        Player player = go.AddComponent<Player>();
+        go.GetComponent<PlayerController>().Gravity = Gravity;
         Scene.Current.Add(go);
+        if (Networking.IsHost) go.Network.Spawn(owner);
+        else go.Network.Mode = NetworkMode.Object;
+        if (owner == null || owner.IsLocal) LocalPlayer = player;
         ApplyGravity();
+        return player;
     }
 
     /// <summary>A random SpawnPoint's position and facing, or <see cref="DefaultSpawn"/> when there are none.</summary>
@@ -183,8 +197,15 @@ public sealed class GameManager : Component
     // ----------------------------------------------------------------
 
     /// <summary>Removes every spawned prop, like gmod's "clean up map".</summary>
+    public void UndoLast()
+    {
+        if (Networking.IsClient) { if (LocalPlayer.IsValid()) LocalPlayer.RequestUndo(); }
+        else Undo.UndoLast();
+    }
+
     public void Cleanup()
     {
+        if (Networking.IsClient) { Notify.Error("Only the host can clean up the map"); return; }
         int count = 0;
         foreach (Prop prop in Prop.All)
         {
@@ -195,5 +216,79 @@ public sealed class GameManager : Component
 
         Undo.Clear();
         Notify.Info($"Cleaned up {count} props");
+    }
+    private readonly Dictionary<int, Player> _players = new();
+    private bool _hadSession;
+    public static string NetworkStatus { get; private set; } = "Single player";
+
+    public void Host(string name)
+    {
+        try
+        {
+            LocalPlayer.GameObject.Network.Mode = NetworkMode.Object;
+            foreach (Prop prop in Prop.All)
+                if (prop.SpawnId.Length > 0 || Snapshot.CanCapture(prop)) prop.SpawnNetwork();
+            Networking.Host(string.IsNullOrWhiteSpace(name) ? "Host" : name.Trim());
+            GameManager game = GameManager.Instance;
+            game.LocalPlayer.GameObject.Network.Spawn();
+            NetworkStatus = $"Hosting on port {Networking.LocalPort}";
+        }
+        catch (Exception e) { NetworkStatus = e.Message; Notify.Error(NetworkStatus); }
+    }
+
+    public void Join(string address, string name)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(address)) { Notify.Error("Enter a host address"); return; }
+            Networking.Join(address.Trim(), string.IsNullOrWhiteSpace(name) ? "Player" : name.Trim());
+            NetworkStatus = "Connecting...";
+        }
+        catch (Exception e) { NetworkStatus = e.Message; Notify.Error(NetworkStatus); }
+    }
+
+    public void LeaveSession()
+    {
+        Networking.Shutdown();
+        NetworkStatus = "Single player";
+    }
+
+    public void OnPeerReady(NetPeer peer)
+    {
+        if (peer.IsLocal || _players.ContainsKey(peer.Id)) return;
+        _players[peer.Id] = GameManager.Instance.SpawnPlayer(peer);
+    }
+
+    public void OnPeerDisconnected(NetPeer peer, SessionEndReason reason)
+    {
+        if (_players.Remove(peer.Id, out Player player) && player.IsValid()) player.GameObject.Destroy();
+    }
+
+    public void OnNetworkReady() => NetworkStatus = Networking.IsHost
+        ? $"Hosting on port {Networking.LocalPort}" : "Connected";
+
+    private void UpdateSession()
+    {
+        if (Networking.Session != null) { _hadSession = true; return; }
+        if (!_hadSession) return;
+        _hadSession = false;
+        foreach (Player player in Scene.Current.FindObjectsOfType<Player>())
+            if (player != GameManager.Instance.LocalPlayer) player.GameObject.Destroy();
+        _players.Clear();
+        // Keep the shared world when returning to single player, and restore physics.
+        foreach (Prop prop in Prop.All) prop.RestoreSimulation();
+        if (GameManager.Instance.LocalPlayer.IsNotValid()) GameManager.Instance.SpawnPlayer();
+        NetworkStatus = "Disconnected — single player";
+    }
+
+    public override void LateUpdate()
+    {
+        if (!Networking.IsHost) return;
+        foreach (Prop prop in Prop.All)
+        {
+            if (prop.GameObject.IsDestroyQueued || prop.Network.Active) continue;
+            if (prop.SpawnId.Length == 0 && !Snapshot.CanCapture(prop)) continue;
+            prop.SpawnNetwork();
+        }
     }
 }

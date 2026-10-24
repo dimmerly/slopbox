@@ -95,5 +95,5 @@ public abstract class BaseTool
     /// <summary>Called when switching away. Clear any half finished multi click action here.</summary>
     public virtual void OnDeselect() { }
 
-    protected static UndoHistory Undo => GameManager.Instance.Undo;
+    protected UndoHistory Undo => Owner.Undo;
 }

@@ -32,7 +32,7 @@ public sealed partial class Player
 
     private void UpdateFlashlight()
     {
-        if (_flashlight.IsNotValid()) return;
+        if (!IsLocalPlayer || _flashlight.IsNotValid()) return;
         GameManager game = GameManager.Instance;
         if (game.IsMenuOpen || !Controls.Pressed(Controls.Flashlight)) return;
 

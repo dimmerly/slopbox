@@ -1,7 +1,7 @@
 {
   "name": "Slopbox",
   "engine": "Prowl",
-  "version": "1.0-preview.5",
+  "version": "1.0",
   "created": "2026-10-11T04:20:20.6968946\u002B00:00",
-  "appliedSteps": 11
+  "appliedSteps": 3
 }

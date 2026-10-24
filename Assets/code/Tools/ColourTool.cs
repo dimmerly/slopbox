@@ -23,7 +23,7 @@ public sealed class ColourTool : BaseTool
 
     public override bool Reload(in ToolTrace tr) => Paint(tr, Color.White);
 
-    private static bool Paint(in ToolTrace tr, Color color)
+    private bool Paint(in ToolTrace tr, Color color)
     {
         if (!tr.HitBody) return false;
         Prop prop = tr.Prop;

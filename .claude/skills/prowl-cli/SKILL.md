@@ -72,6 +72,7 @@ Animation graphs are built with the `graph` command. See the prowl-animation ski
 - `input --action key --keys W,ShiftLeft --seconds 1` holds keys, `input --action mouse --button 0`, `input --action mouse --position '[640,360]'` clicks at that point in game view pixels, as measured on a game screenshot, which presses UI buttons there, `input --action look --delta '[5,0]' --seconds 0.5`. Key names are listed in the prowl-scenes skill.
 - `screenshot --view scene` or `--view game` saves a PNG and returns its path. Open the view first if needed with `menu --path Window/General/Game`.
 - `logs --since <nextSeq>` returns only what is new since the last call.
+- `snapshot --action capture`, `snapshot_dump` and `snapshot_replay` inspect how a frame was rendered and write images of pass outputs. See the prowl-profiler skill.
 
 ## Building
 
@@ -115,4 +116,4 @@ return Prowl.Editor.Navigation.NavMeshBakeService.Instance.Start(surface);
 - A new script type exists only after `compile` succeeds. Add the component after that.
 - Shell quoting: in bash wrap JSON in single quotes. Windows PowerShell 5.1 strips double quotes from arguments, so escape each one as \" inside single quotes, for example `--values '{\"Height\": 1.8}'`, or pipe a here string into `eval -`. PowerShell 7.3 and later pass single quoted JSON unchanged.
 
-<!-- prowl:generated 08c81e954bcec9d0 Remove this line to stop the Prowl editor updating this file. -->
+<!-- prowl:generated a5f399e56c76b295 Remove this line to stop the Prowl editor updating this file. -->

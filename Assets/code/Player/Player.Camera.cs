@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Prowl.Echo;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Rendering;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
@@ -74,9 +75,28 @@ public sealed partial class Player
 
     private void SetupCamera()
     {
+        if (!IsLocalPlayer)
+        {
+            var rig = new GameObject("Remote view");
+            rig.Network.Mode = NetworkMode.Never;
+            rig.SetParent(GameObject, false);
+            Camera = rig.AddComponent<Camera>();
+            Camera.Enabled = false;
+            ViewModel = rig.AddComponent<ViewModel>();
+            ViewModel.Owner = this;
+            ViewModel.Visible = false;
+            var model = new GameObject("World Model");
+            model.Network.Mode = NetworkMode.Never;
+            model.SetParent(GameObject, false);
+            WorldModel = model.AddComponent<ViewModel>();
+            WorldModel.Owner = this;
+            WorldModel.World = true;
+            WorldModel.Scale = 1.2f;
+            return;
+        }
         // Reuse the scene's camera so its effects and settings stay, else make one.
         Camera = Scene.Current.FindObjectsOfType<Camera>()
-            .Where(c => c.Target.IsNotValid())
+            .Where(c => c.Enabled && c.Target.IsNotValid())
             .OrderByDescending(c => c.Depth)
             .FirstOrDefault();
 
@@ -88,6 +108,7 @@ public sealed partial class Player
         }
 
         Camera.GameObject.SetParent(null);
+        Camera.GameObject.Network.Mode = NetworkMode.Never;
         Camera.NearClipPlane = 0.03f;
         Camera.FarClipPlane = MathF.Max(Camera.FarClipPlane, 1000f);
 
@@ -116,6 +137,7 @@ public sealed partial class Player
         ViewModel.Shadows = ShadowCasting.Off;
 
         var world = new GameObject("World Model");
+        world.Network.Mode = NetworkMode.Never;
         world.SetParent(GameObject, false);
         WorldModel = world.AddComponent<ViewModel>();
         WorldModel.Owner = this;

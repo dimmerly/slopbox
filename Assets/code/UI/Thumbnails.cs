@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Rendering;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
@@ -159,6 +160,7 @@ public sealed class Thumbnails : Component
         _target = new RenderTexture(shot.Width, shot.Height, true, [TextureFormat.RGBA8]);
 
         _rig = new GameObject("Thumbnail Camera");
+        _rig.Network.Mode = NetworkMode.Never;
         _rig.Transform.Position = center + direction * distance;
         _rig.Transform.LookAt(center);
         Camera camera = _rig.AddComponent<Camera>();

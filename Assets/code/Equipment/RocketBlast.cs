@@ -1,5 +1,6 @@
 using System;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -20,6 +21,7 @@ public sealed class RocketBlast : Component
     public static void Create(Float3 position, float radius, Float3 normal = default)
     {
         var go = new GameObject("Rocket Explosion");
+        go.Network.Mode = NetworkMode.Never;
         go.Transform.Position = position;
         var blast = go.AddComponent<RocketBlast>();
         blast._radius = radius;

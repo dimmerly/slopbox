@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Prowl.Echo;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -71,6 +72,7 @@ public sealed partial class Player
 
         // The model keeps its own root name, which the rig binds by. The holder is what turns and moves.
         _body = new GameObject("Body");
+        _body.Network.Mode = NetworkMode.Never;
         _body.SetParent(GameObject, false);
         GameObject model = citizen != null ? citizen.Instantiate() : GameObject.Instantiate(prefab);
         model.SetParent(_body, false);
@@ -79,6 +81,7 @@ public sealed partial class Player
             ? AddRig(model, citizen, out rightHandRest, out leftHandRest)
             : model.GetComponentInChildren<Animator>();
         if (_animator.IsValid() && graph.IsValid()) _animator.Graph = graph;
+        if (_animator.IsValid()) GetComponent<NetworkAnimator>().Bind(_animator);
         _bodyRenderers = _body.GetComponentsInChildren<SkinnedMeshRenderer>().ToArray();
         _body.AddComponent<MapLit>();
         _shoulder = FindHumanBone(model.Transform, Prowl.Motion.HumanBodyBone.RightUpperArm);
@@ -236,6 +239,12 @@ public sealed partial class Player
         UpdateBodyYaw(dt, moving);
         PlaceBody(dt);
 
+        if (!IsLocalPlayer)
+        {
+            UpdateHold(dt);
+            return;
+        }
+
         // Velocity in the body's frame: X right, Y forward.
         Quaternion facing = Quaternion.FromEuler(0f, _bodyYaw, 0f);
         Float3 forward = facing * Float3.UnitZ, right = facing * Float3.UnitX;
@@ -379,7 +388,7 @@ public sealed partial class Player
     private void UpdateBodyVisibility()
     {
         // In first person the body still casts its shadow.
-        ShadowCasting mode = _orbitShown ? ShadowCasting.On : ShadowCasting.ShadowsOnly;
+        ShadowCasting mode = (!IsLocalPlayer || _orbitShown) ? ShadowCasting.On : ShadowCasting.ShadowsOnly;
         foreach (SkinnedMeshRenderer renderer in _bodyRenderers)
             if (renderer.IsValid()) renderer.ShadowCasting = mode;
     }

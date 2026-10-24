@@ -1,0 +1,18 @@
+IndentWithTabs: false
+IndentSize: 4
+BracesOnNewLine: true
+NewLineBeforeElse: true
+NewLineBeforeCatch: true
+NewLineBeforeFinally: true
+SpaceAfterCast: false
+SpaceAfterControlFlowKeyword: true
+PreferVar: 1
+Namespaces: 0
+Usings: 0
+SystemUsingsFirst: true
+Severities:
+  $id: 2
+  $values: []
+WriteEditorConfig: true
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.CodeStyleSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
