@@ -3,7 +3,7 @@ ProductName: "My Game"
 CompanyName: "DefaultCompany"
 Version: "0.1.0"
 TargetId: "windows-x64"
-BuildDateUtcTicks: 639278324833326664
+BuildDateUtcTicks: 639284300598361307
 DefaultScene: "51863a84-84e2-455b-ae5b-6eadb787bc57"
 AssemblyLoadOrder:
   $id: 2

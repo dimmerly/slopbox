@@ -9,14 +9,15 @@
     ".NETCoreApp,Version=v10.0/win-x64": {
       "Slopbox/1.0.0": {
         "dependencies": {
-          "Jitter2": "2.10.0",
-          "Silk.NET": "2.23.0",
-          "Silk.NET.OpenAL.Soft.Native": "1.23.1",
+          "Jitter2": "2.13.0",
+          "Silk.NET.Input.Glfw": "2.23.0",
           "Silk.NET.OpenXR": "2.23.0",
           "Silk.NET.OpenXR.Extensions.EXT": "2.23.0",
           "Silk.NET.OpenXR.Extensions.KHR": "2.23.0",
+          "Silk.NET.Windowing.Glfw": "2.23.0",
           "Prowl.Player.Desktop": "1.0.0.0",
           "Prowl.Runtime": "1.0.0.0",
+          "Prowl.Warp": "3.9.3.0",
           "Slopbox.Game": "0.0.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "10.0.11"
         },
@@ -71,6 +72,10 @@
             "fileVersion": "10.0.1126.37416"
           },
           "System.Diagnostics.StackTrace.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1126.37416"
+          },
+          "System.Diagnostics.TraceSource.dll": {
             "assemblyVersion": "10.0.0.0",
             "fileVersion": "10.0.1126.37416"
           },
@@ -307,11 +312,11 @@
           }
         }
       },
-      "Jitter2/2.10.0": {
+      "Jitter2/2.13.0": {
         "runtime": {
           "lib/net10.0/Jitter2.dll": {
             "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.10.0.0"
+            "fileVersion": "2.13.0.0"
           }
         }
       },
@@ -329,17 +334,6 @@
             "assemblyVersion": "9.0.0.9",
             "fileVersion": "9.0.925.41916"
           }
-        }
-      },
-      "Silk.NET/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Core": "2.23.0",
-          "Silk.NET.GLFW": "2.23.0",
-          "Silk.NET.Input": "2.23.0",
-          "Silk.NET.OpenAL": "2.23.0",
-          "Silk.NET.OpenGL": "2.23.0",
-          "Silk.NET.Vulkan": "2.23.0",
-          "Silk.NET.Vulkan.Extensions.KHR": "2.23.0"
         }
       },
       "Silk.NET.Core/2.23.0": {
@@ -364,12 +358,6 @@
             "assemblyVersion": "2.23.0.0",
             "fileVersion": "2.23.0.0"
           }
-        }
-      },
-      "Silk.NET.Input/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Input.Common": "2.23.0",
-          "Silk.NET.Input.Glfw": "2.23.0"
         }
       },
       "Silk.NET.Input.Common/2.23.0": {
@@ -398,36 +386,6 @@
       "Silk.NET.Maths/2.23.0": {
         "runtime": {
           "lib/net5.0/Silk.NET.Maths.dll": {
-            "assemblyVersion": "2.23.0.0",
-            "fileVersion": "2.23.0.0"
-          }
-        }
-      },
-      "Silk.NET.OpenAL/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Core": "2.23.0"
-        },
-        "runtime": {
-          "lib/net5.0/Silk.NET.OpenAL.dll": {
-            "assemblyVersion": "2.23.0.0",
-            "fileVersion": "2.23.0.0"
-          }
-        }
-      },
-      "Silk.NET.OpenAL.Soft.Native/1.23.1": {
-        "native": {
-          "runtimes/win-x64/native/soft_oal.dll": {
-            "fileVersion": "1.23.1.0"
-          }
-        }
-      },
-      "Silk.NET.OpenGL/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Core": "2.23.0",
-          "Silk.NET.Maths": "2.23.0"
-        },
-        "runtime": {
-          "lib/net5.0/Silk.NET.OpenGL.dll": {
             "assemblyVersion": "2.23.0.0",
             "fileVersion": "2.23.0.0"
           }
@@ -464,29 +422,6 @@
         },
         "runtime": {
           "lib/net5.0/Silk.NET.OpenXR.Extensions.KHR.dll": {
-            "assemblyVersion": "2.23.0.0",
-            "fileVersion": "2.23.0.0"
-          }
-        }
-      },
-      "Silk.NET.Vulkan/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Core": "2.23.0"
-        },
-        "runtime": {
-          "lib/net5.0/Silk.NET.Vulkan.dll": {
-            "assemblyVersion": "2.23.0.0",
-            "fileVersion": "2.23.0.0"
-          }
-        }
-      },
-      "Silk.NET.Vulkan.Extensions.KHR/2.23.0": {
-        "dependencies": {
-          "Silk.NET.Core": "2.23.0",
-          "Silk.NET.Vulkan": "2.23.0"
-        },
-        "runtime": {
-          "lib/net5.0/Silk.NET.Vulkan.Extensions.KHR.dll": {
             "assemblyVersion": "2.23.0.0",
             "fileVersion": "2.23.0.0"
           }
@@ -539,6 +474,14 @@
           }
         }
       },
+      "Prowl.Warp/3.9.3.0": {
+        "runtime": {
+          "Prowl.Warp.dll": {
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
+          }
+        }
+      },
       "Slopbox.Game/0.0.0.0": {
         "runtime": {
           "Slopbox.Game.dll": {
@@ -547,147 +490,163 @@
           }
         }
       },
-      "Paper/3.7.2.0": {
+      "Paper/3.9.3.0": {
         "runtime": {
           "Paper.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Echo/3.7.2.0": {
+      "Echo/3.9.3.0": {
         "runtime": {
           "Echo.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Vector/3.7.2.0": {
+      "Vector/3.9.3.0": {
         "runtime": {
           "Vector.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Motion/3.7.2.0": {
+      "Motion/3.9.3.0": {
         "runtime": {
           "Motion.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Ember.Contracts/3.7.2.0": {
+      "Prowl.Ember.Contracts/3.9.3.0": {
         "runtime": {
           "Prowl.Ember.Contracts.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Graphite.Rendering/3.7.2.0": {
+      "Prowl.Graphite.Rendering/3.9.3.0": {
         "runtime": {
           "Prowl.Graphite.Rendering.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Graphite.ShaderDef/3.7.2.0": {
+      "Prowl.Graphite.ShaderDef/3.9.3.0": {
         "runtime": {
           "Prowl.Graphite.ShaderDef.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Graphite/3.7.2.0": {
+      "Prowl.Graphite/3.9.3.0": {
         "runtime": {
           "Prowl.Graphite.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Recast/3.7.2.0": {
+      "Prowl.Recast/3.9.3.0": {
         "runtime": {
           "Prowl.Recast.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Scribe/3.7.2.0": {
+      "Scribe/3.9.3.0": {
         "runtime": {
           "Scribe.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Graphite.ShaderDef.Compiler/3.7.2.0": {
+      "Prowl.Graphite.ShaderDef.Compiler/3.9.3.0": {
         "runtime": {
           "Prowl.Graphite.ShaderDef.Compiler.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Aperture/3.7.2.0": {
+      "Aperture/3.9.3.0": {
         "runtime": {
           "Aperture.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Quill/3.7.2.0": {
+      "Silk.NET.Vulkan/2.23.0.0": {
+        "runtime": {
+          "Silk.NET.Vulkan.dll": {
+            "assemblyVersion": "2.23.0.0",
+            "fileVersion": "2.23.0.0"
+          }
+        }
+      },
+      "Quill/3.9.3.0": {
         "runtime": {
           "Quill.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Clay/3.7.2.0": {
+      "Clay/3.9.3.0": {
         "runtime": {
           "Clay.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Unwrapper/3.7.2.0": {
+      "Unwrapper/3.9.3.0": {
         "runtime": {
           "Unwrapper.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Scaffold/3.7.2.0": {
+      "Scaffold/3.9.3.0": {
         "runtime": {
           "Scaffold.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Quire/3.7.2.0": {
+      "Quire/3.9.3.0": {
         "runtime": {
           "Quire.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       },
-      "Prowl.Crumb/3.7.2.0": {
+      "Prowl.Crumb/3.9.3.0": {
         "runtime": {
           "Prowl.Crumb.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
+          }
+        }
+      },
+      "Silk.NET.Vulkan.Extensions.KHR/2.23.0.0": {
+        "runtime": {
+          "Silk.NET.Vulkan.Extensions.KHR.dll": {
+            "assemblyVersion": "2.23.0.0",
+            "fileVersion": "2.23.0.0"
           }
         }
       },
@@ -699,11 +658,11 @@
           }
         }
       },
-      "Prowl.Prism/3.7.2.0": {
+      "Prowl.Prism/3.9.3.0": {
         "runtime": {
           "Prowl.Prism.dll": {
-            "assemblyVersion": "3.7.2.0",
-            "fileVersion": "3.7.2.0"
+            "assemblyVersion": "3.9.3.0",
+            "fileVersion": "3.9.3.0"
           }
         }
       }
@@ -720,12 +679,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Jitter2/2.10.0": {
+    "Jitter2/2.13.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-OhjVUnn/y+tZOpyct0NStzwE1Gcrz9MyGKCXlavbTxtTIi1epnw7xtap3tnscMHaVIhhZq+u2lib1qgWU830nA==",
-      "path": "jitter2/2.10.0",
-      "hashPath": "jitter2.2.10.0.nupkg.sha512"
+      "sha512": "sha512-8ytb4TAo/kT/hjWGL9cAHmeIpwXQUs+iP/BegzhY/51Kcd4tv8QWZPsJkS8VYwVhN2d3Wmbcs4NoLyytGad43w==",
+      "path": "jitter2/2.13.0",
+      "hashPath": "jitter2.2.13.0.nupkg.sha512"
     },
     "Microsoft.DotNet.PlatformAbstractions/3.1.6": {
       "type": "package",
@@ -741,13 +700,6 @@
       "path": "microsoft.extensions.dependencymodel/9.0.9",
       "hashPath": "microsoft.extensions.dependencymodel.9.0.9.nupkg.sha512"
     },
-    "Silk.NET/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-9h3saHV0WjZxh4agyHTWFtcAiaOwrW2KZID9k7OzIcUN9ugmvRl9FJxDRZ1Sjbvf7ZcewLCw1C5RCcQomT8Vgw==",
-      "path": "silk.net/2.23.0",
-      "hashPath": "silk.net.2.23.0.nupkg.sha512"
-    },
     "Silk.NET.Core/2.23.0": {
       "type": "package",
       "serviceable": true,
@@ -761,13 +713,6 @@
       "sha512": "sha512-UIs4sH57xlPUNHQ/1bt9rymPWlGy8IMDCNv86h0iM4TOA1CkIx0XM/n/tA4AReh1zQkNrvkxPEdZ3Blvy1dyXg==",
       "path": "silk.net.glfw/2.23.0",
       "hashPath": "silk.net.glfw.2.23.0.nupkg.sha512"
-    },
-    "Silk.NET.Input/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-Xzl+tVwAp2eEd8blmGQjmJrsZPnp3PWG0KJjiAQHaY2Zr/ELVWeAROKXmZdCAvexzmte2JVGEy/dxnMycbxlpg==",
-      "path": "silk.net.input/2.23.0",
-      "hashPath": "silk.net.input.2.23.0.nupkg.sha512"
     },
     "Silk.NET.Input.Common/2.23.0": {
       "type": "package",
@@ -790,27 +735,6 @@
       "path": "silk.net.maths/2.23.0",
       "hashPath": "silk.net.maths.2.23.0.nupkg.sha512"
     },
-    "Silk.NET.OpenAL/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-O8EaDRWGOcKniZ2VxKD/xOmugzUJz747KpqGRw3cezDsz8nD66OZW217o1rT06cG76f8eYigy/yY6eRdhRqHHQ==",
-      "path": "silk.net.openal/2.23.0",
-      "hashPath": "silk.net.openal.2.23.0.nupkg.sha512"
-    },
-    "Silk.NET.OpenAL.Soft.Native/1.23.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-gZIbksInoiXbJZmepYnTs5O6Edg5O5k86c1+Uus0zSaVnQx5WRbInGz2VTlvudbs0qAqXs/asL1YvJzco/nfAQ==",
-      "path": "silk.net.openal.soft.native/1.23.1",
-      "hashPath": "silk.net.openal.soft.native.1.23.1.nupkg.sha512"
-    },
-    "Silk.NET.OpenGL/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-CIakUoUqiAyRPykMk54tr1M1XpbJrT/iw12T85HDQcuRCFlBa1cxbX7v3FmtznKO5eM89esfmGNCgqDaKBiWfg==",
-      "path": "silk.net.opengl/2.23.0",
-      "hashPath": "silk.net.opengl.2.23.0.nupkg.sha512"
-    },
     "Silk.NET.OpenXR/2.23.0": {
       "type": "package",
       "serviceable": true,
@@ -831,20 +755,6 @@
       "sha512": "sha512-nWGPV91lFHivoSCjgZPd+wBdTuG9K5Hyj2hW5ZtnLQg+GKc78TE0fE4vmxiF6p2gpXFpbLthjbNamZl+ht+NVw==",
       "path": "silk.net.openxr.extensions.khr/2.23.0",
       "hashPath": "silk.net.openxr.extensions.khr.2.23.0.nupkg.sha512"
-    },
-    "Silk.NET.Vulkan/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-3/irtlSWXZ3eTi8N6nelI6L34NTB8ZJHpqVMNzZx2aX7Ek9YEQ34NoQW8/Tljrtmkg8KRhHW8hKTEzZaKV8PgA==",
-      "path": "silk.net.vulkan/2.23.0",
-      "hashPath": "silk.net.vulkan.2.23.0.nupkg.sha512"
-    },
-    "Silk.NET.Vulkan.Extensions.KHR/2.23.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-uRaf4j+SmH3DumjSSSUbFg33BnsGZUyXGj93O9NgGKZSJN3OTmNmQDxRew+/KiVLcgH6qzbto8aNGZ++j9GFWg==",
-      "path": "silk.net.vulkan.extensions.khr/2.23.0",
-      "hashPath": "silk.net.vulkan.extensions.khr.2.23.0.nupkg.sha512"
     },
     "Silk.NET.Windowing.Common/2.23.0": {
       "type": "package",
@@ -877,97 +787,112 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Prowl.Warp/3.9.3.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Slopbox.Game/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Paper/3.7.2.0": {
+    "Paper/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Echo/3.7.2.0": {
+    "Echo/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Vector/3.7.2.0": {
+    "Vector/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Motion/3.7.2.0": {
+    "Motion/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Ember.Contracts/3.7.2.0": {
+    "Prowl.Ember.Contracts/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Graphite.Rendering/3.7.2.0": {
+    "Prowl.Graphite.Rendering/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Graphite.ShaderDef/3.7.2.0": {
+    "Prowl.Graphite.ShaderDef/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Graphite/3.7.2.0": {
+    "Prowl.Graphite/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Recast/3.7.2.0": {
+    "Prowl.Recast/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Scribe/3.7.2.0": {
+    "Scribe/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Graphite.ShaderDef.Compiler/3.7.2.0": {
+    "Prowl.Graphite.ShaderDef.Compiler/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Aperture/3.7.2.0": {
+    "Aperture/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Quill/3.7.2.0": {
+    "Silk.NET.Vulkan/2.23.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Clay/3.7.2.0": {
+    "Quill/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Unwrapper/3.7.2.0": {
+    "Clay/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Scaffold/3.7.2.0": {
+    "Unwrapper/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Quire/3.7.2.0": {
+    "Scaffold/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Crumb/3.7.2.0": {
+    "Quire/3.9.3.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Prowl.Crumb/3.9.3.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Silk.NET.Vulkan.Extensions.KHR/2.23.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -977,7 +902,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Prowl.Prism/3.7.2.0": {
+    "Prowl.Prism/3.9.3.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

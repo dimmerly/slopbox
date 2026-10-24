@@ -6,7 +6,7 @@ Scenes:
       Enabled: true
       $id: 3
 Config: 1
-OutputDirectory: "X:\\slopbox\\Builds\\MultiplayerVerification"
+OutputDirectory: "X:\\slopbox\\Builds"
 PackagingMode: 2
 AssetMode: 0
 MaxPakSizeMB: 2048
