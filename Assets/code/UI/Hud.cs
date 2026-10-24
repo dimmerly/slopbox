@@ -2,6 +2,7 @@ using System;
 using Prowl.PaperUI;
 using Prowl.PaperUI.LayoutEngine;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Scribe;
 using Prowl.Vector;
@@ -125,9 +126,10 @@ public sealed class Hud : Component
                 .Text(tool.Description, font).FontSize(TextBase).TextColor(Theme.White(0.85f))
                 .Alignment(TextAlignment.MiddleLeft);
 
-            if (tool.Status.Length > 0)
+            string status = Networking.IsClient ? player.ToolStatus : tool.Status;
+            if (status.Length > 0)
                 paper.Box("status").Width(UnitValue.Auto).Height(Px(22f))
-                    .Text(tool.Status, font).FontSize(TextSm).TextColor(Theme.AccentSoft)
+                    .Text(status, font).FontSize(TextSm).TextColor(Theme.AccentSoft)
                     .Alignment(TextAlignment.MiddleLeft);
 
             int i = 0;

@@ -77,6 +77,12 @@ public sealed partial class DuplicatorTool : BaseTool
     [ToolSetting("Paste frozen")] public bool PasteFrozen;
 
     private Snapshot _copied;
+    internal string NetworkCopy => _copied?.ToJson() ?? "";
+    internal void LoadNetworkCopy(string json)
+    {
+        _copied = Snapshot.FromJson(json);
+        _name = $"{_copied.Count} props";
+    }
     private string _name = "";
 
     public override string PrimaryHint => _copied != null ? $"Paste {_name}" : "";

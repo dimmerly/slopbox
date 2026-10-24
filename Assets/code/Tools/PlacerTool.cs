@@ -36,6 +36,7 @@ public sealed class PlacerTool : BaseTool
     /// <summary>Models made per frame, so a large batch does not stall a frame building every model at once.</summary>
     private const int BuildsPerFrame = 6;
 
+    internal string[] NetworkList;
     private IReadOnlyList<Spawnable> _listedFrom, _props = [];
     private int _next;
     private string _source = "";
@@ -52,6 +53,8 @@ public sealed class PlacerTool : BaseTool
     {
         get
         {
+            if (!Owner.IsLocalPlayer && NetworkList != null)
+                return NetworkList.Select(id => GameManager.Instance.Catalog.Find(id)).Where(s => s != null && s.IsProp).ToArray();
             SpawnMenu menu = Menu;
             if (menu.IsNotValid()) return [];
 

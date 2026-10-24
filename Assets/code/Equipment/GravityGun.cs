@@ -26,6 +26,9 @@ public sealed class GravityGun : Equipment
     private float _sincePunt = 10f;
     private Material _bodyMat, _clawMat, _coreMat;
 
+    internal bool IsHolding => _hold.IsHolding;
+    internal Float3 HoldPoint => _hold.IsHolding ? _hold.WorldAnchor : Float3.Zero;
+
     public override string Name => "Gravity Gun";
     public override string Description => "Pull, carry and launch physics objects.";
     public override Color Tint => new(1f, 0.55f, 0.1f, 1f);

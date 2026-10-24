@@ -1,5 +1,6 @@
 using System;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -13,6 +14,7 @@ public static class Spawner
     /// <summary>Spawns at the crosshair and records an undo. Returns the new object, or null.</summary>
     public static GameObject SpawnAtCrosshair(Player player, Spawnable spawnable)
     {
+        if (Networking.IsClient) { player.RequestSpawn(spawnable.Id); return null; }
         GameManager game = GameManager.Instance;
         Ray aim = player.AimRay;
         Float3 point, normal;
@@ -32,7 +34,7 @@ public static class Spawner
         GameObject go = Spawn(spawnable, point, normal, rotation);
         if (go.IsValid())
         {
-            game.Undo.Add(spawnable.Name, go);
+            player.Undo.Add(spawnable.Name, go);
             GameAudio.Play("spawn", 0.4f, 0.96f + Random.Shared.NextSingle() * 0.08f);
         }
         return go;

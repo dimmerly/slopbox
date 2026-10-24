@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 
 namespace Slopbox;
 
@@ -54,7 +55,7 @@ public sealed partial class Player
         ViewModel.Rebuild(ActiveEquipment);
         WorldModel.Rebuild(ActiveEquipment);
         ActiveEquipment?.OnEquip();
-        GameAudio.Play("equip", 0.35f, 0.96f + System.Random.Shared.NextSingle() * 0.08f);
+        if (IsLocalPlayer) GameAudio.Play("equip", 0.35f, 0.96f + System.Random.Shared.NextSingle() * 0.08f);
     }
 
     public void Switch(Equipment equipment) => Switch(_equipment.IndexOf(equipment));
@@ -88,7 +89,9 @@ public sealed partial class Player
             }
         }
 
-        ActiveEquipment?.Update();
+        CaptureEquipmentInput();
+        if (!Networking.IsClient) ActiveEquipment?.Update();
+        else if (ActiveEquipment is ToolGun toolgun) toolgun.Update();
     }
 
     private void FixedUpdateInventory() => ActiveEquipment?.FixedUpdate();

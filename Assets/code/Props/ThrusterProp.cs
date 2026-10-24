@@ -1,5 +1,6 @@
 using Prowl.Echo;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -24,6 +25,8 @@ public sealed class ThrusterProp : Component
     public KeyCode Back = KeyCode.Keypad2;
     /// <summary>A press turns it on and the next turns it off, instead of firing only while held.</summary>
     public bool Toggle;
+    public Player Controller;
+    private int _inputRevision;
 
     /// <summary>+1 pushing, -1 pulling, 0 off.</summary>
     [SerializeIgnore] private int _thrust;
@@ -31,6 +34,7 @@ public sealed class ThrusterProp : Component
     [SerializeIgnore] private float _soundForce;
 
     private static Material s_body, s_flame;
+    internal int Thrust { get => _thrust; set => _thrust = value; }
 
     /// <summary>Builds a thruster, detached from the scene, ready to be positioned and added.</summary>
     public static GameObject Create(float force, KeyCode forward, KeyCode back, bool toggle)
@@ -81,18 +85,20 @@ public sealed class ThrusterProp : Component
         GameManager game = GameManager.Instance;
         bool typing = game.Paper != null && game.Paper.WantsCaptureKeyboard;
 
-        if (!typing && !SpawnMenu.IsBindingKey)
+        if (!Networking.IsClient && !typing && !SpawnMenu.IsBindingKey)
         {
-            if (Toggle)
+            if (Toggle && (!Controller.IsValid() || Controller.IsLocalPlayer || Controller.EquipmentInput.Revision != _inputRevision))
             {
                 if (Pressed(Forward)) _thrust = _thrust == 1 ? 0 : 1;
                 if (Pressed(Back)) _thrust = _thrust == -1 ? 0 : -1;
             }
-            else
+            else if (!Toggle)
             {
                 _thrust = (Down(Forward) ? 1 : 0) - (Down(Back) ? 1 : 0);
             }
         }
+
+        if (Controller.IsValid()) _inputRevision = Controller.EquipmentInput.Revision;
 
         if (_flame.IsNotValid())
             foreach (MeshRenderer r in GetComponentsInChildren<MeshRenderer>())
@@ -110,7 +116,7 @@ public sealed class ThrusterProp : Component
 
     public override void FixedUpdate()
     {
-        if (_thrust == 0) return;
+        if (Networking.IsClient || _thrust == 0) return;
 
         // Push the welded body directly at the nozzle, so a heavy prop is not dragged through the weld
         // by a one kilogram thruster.
@@ -125,6 +131,8 @@ public sealed class ThrusterProp : Component
     }
 
     private static bool Usable(KeyCode key) => key != KeyCode.Unknown && key != SpawnMenu.SwallowedKey;
-    private static bool Down(KeyCode key) => Usable(key) && Controls.Down(key);
-    private static bool Pressed(KeyCode key) => Usable(key) && Controls.Pressed(key);
+    private bool Down(KeyCode key) => Usable(key) && (Controller.IsValid() && !Controller.IsLocalPlayer
+        ? Controller.CanUseEquipment && (Controller.EquipmentInput.KeysDown ?? "").Contains($",{(int)key},") : Controls.Down(key));
+    private bool Pressed(KeyCode key) => Usable(key) && (Controller.IsValid() && !Controller.IsLocalPlayer
+        ? Controller.CanUseEquipment && (Controller.EquipmentInput.KeysPressed ?? "").Contains($",{(int)key},") : Controls.Pressed(key));
 }

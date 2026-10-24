@@ -524,7 +524,7 @@ public sealed class SpawnMenu : Component
             Ui.Caption(paper, "World", 0);
             using (paper.Column("world").Height(UnitValue.Auto).Padding(S2, S2, 0, 0).Gap(S2).Enter())
             {
-                Ui.Button(paper, "Undo last action", () => game.Undo.UndoLast(), 0, icon: Icon.Undo);
+                Ui.Button(paper, "Undo last action", () => game.UndoLast(), 0, icon: Icon.Undo);
                 Ui.Button(paper, "Clean up all props", () => game.Cleanup(), 1, icon: Icon.Delete);
             }
 

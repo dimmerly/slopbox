@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -31,8 +32,9 @@ public sealed class Physgun : Equipment
     public override string Name => "Physics Gun";
     public override string Description => "Pick up, move, rotate and freeze physics objects.";
     public override Color Tint => new(0.35f, 0.75f, 1f, 1f);
-    public override bool CapturesScroll => _hold.IsHolding;
-    public bool IsHolding => _hold.IsHolding;
+    public override bool CapturesScroll => IsHolding;
+    public bool IsHolding => _hold.IsHolding || (Networking.IsClient && Owner.NetworkHolding);
+    internal Float3 HoldPoint => _hold.IsHolding ? _hold.WorldAnchor : Float3.Zero;
 
     public override IEnumerable<InputHint> Hints => _hold.IsHolding
         ? [new("RMB", "Freeze"), new("Wheel", "Push / pull"), new("E + Mouse", "Rotate"), new("Shift", "Snap rotation")]
@@ -92,7 +94,7 @@ public sealed class Physgun : Equipment
             return;
         }
 
-        float wheel = Input.MouseWheelDelta;
+        float wheel = Owner.EquipmentInput.Wheel;
         if (wheel != 0f)
         {
             _distance = Math.Clamp(_distance + wheel * MathF.Max(0.25f, _distance * 0.08f), MinDistance, Range);
@@ -103,7 +105,7 @@ public sealed class Physgun : Equipment
         if (_rotating)
         {
             Owner.LookLocked = true;
-            Rotate(Input.MouseDelta);
+            Rotate(Owner.EquipmentInput.Mouse);
         }
 
         if (Attack2Pressed) Freeze();
@@ -142,7 +144,7 @@ public sealed class Physgun : Equipment
     private Quaternion TargetRotation()
     {
         Quaternion world = YawRotation * _relativeRotation;
-        if (_rotating && Input.IsShiftPressed) world = Snap(world, 45f);
+        if (_rotating && Owner.EquipmentInput.Shift) world = Snap(world, 45f);
         return world;
     }
 
@@ -162,7 +164,7 @@ public sealed class Physgun : Equipment
         if (!_hold.IsHolding) return;
 
         // Letting go mid-snap keeps the snapped angle.
-        if (_rotating && Input.IsShiftPressed) _relativeRotation = Quaternion.Inverse(YawRotation) * TargetRotation();
+        if (_rotating && Owner.EquipmentInput.Shift) _relativeRotation = Quaternion.Inverse(YawRotation) * TargetRotation();
         _hold.Release();
         GameAudio.SetLoop(this, "hum", false);
         _rotating = false;

@@ -4,6 +4,7 @@ using Jitter2.Dynamics;
 using Prowl.Echo;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
+using Prowl.Runtime.Networking;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -14,7 +15,7 @@ namespace Slopbox;
 /// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Prop")]
-public sealed class Prop : Component
+public sealed class Prop : Component, INetworkEvents
 {
     /// <summary>The <see cref="Spawnable.Id"/> this came from, empty for props placed in the editor.</summary>
     public string SpawnId = "";
@@ -39,7 +40,8 @@ public sealed class Prop : Component
     /// <summary>The material painted over every surface by the material tool, or null for the model's own.</summary>
     public Material MaterialOverride => _material;
 
-    public bool IsFrozen => Body.IsValid() && Body.MotionType != MotionType.Dynamic;
+    private bool _receivedFrozen;
+    public bool IsFrozen => Body.IsValid() && (IsProxy ? _receivedFrozen : Body.MotionType != MotionType.Dynamic);
 
     public override void OnEnable()
     {
@@ -55,6 +57,104 @@ public sealed class Prop : Component
         _material = null;
         Refresh();
         base.OnDispose();
+    }
+
+    [Sync] public string Description { get; set; } = "";
+    [Sync] public int Sequence { get; set; }
+    [Sync] public float AnimationSpeed { get; set; } = 1f;
+    [Sync] public int Thrust { get; set; }
+    private string _appliedDescription;
+    private bool _hasVisuals;
+    private double _nextCapture, _nextRetry;
+
+    internal void SpawnNetwork()
+    {
+        // Runtime geometry is rebuilt locally. Colliders and simulation remain on this actual prop.
+        var renderer = GetComponent<MeshRenderer>();
+        if (renderer.IsValid())
+        {
+            var visual = new GameObject("Visual");
+            visual.SetParent(GameObject, false);
+            var copy = visual.AddComponent<MeshRenderer>();
+            copy.Mesh = renderer.Mesh;
+            for (int i = 0; i < ((IMaterialRenderer)renderer).MaterialSlotCount; i++) ((IMaterialRenderer)copy).SetMaterial(i, ((IMaterialRenderer)renderer).GetMaterial(i));
+            foreach (RendererState state in _renderers)
+                if (ReferenceEquals(state.Renderer, renderer)) state.Renderer = copy;
+            GameObject.RemoveComponent(renderer);
+        }
+        foreach (GameObject child in GameObject.Children) child.Network.Mode = NetworkMode.Never;
+        CaptureNetworkState();
+        Network.Spawn();
+    }
+
+    private void CaptureNetworkState()
+    {
+        var snapshot = new Snapshot();
+        var data = Snapshot.CaptureProp(this, Float3.Zero, Quaternion.Identity);
+        snapshot.Props.Add(data);
+        data.Position = [0, 0, 0]; data.Rotation = [0, 0, 0, 1]; data.Scale = 1;
+        Description = snapshot.ToJson();
+        var animator = GetComponentInChildren<Slopbox.Mounting.ModelAnimator>();
+        if (animator.IsValid()) { Sequence = animator.Sequence; AnimationSpeed = animator.Speed; }
+        if (TryGetComponent(out ThrusterProp thruster)) Thrust = thruster.Thrust;
+    }
+
+    public void OnNetworkSpawn() { if (IsProxy) _hasVisuals = false; }
+
+    public override void LateUpdate()
+    {
+        if (!Network.Active) return;
+        if (Networking.IsHost)
+        {
+            if (Time.TimeSinceStartup >= _nextCapture)
+            {
+                _nextCapture = Time.TimeSinceStartup + 0.2;
+                CaptureNetworkState();
+            }
+            return;
+        }
+        if (Description.Length == 0) return;
+        if (_appliedDescription != Description && Time.TimeSinceStartup >= _nextRetry)
+        {
+            _nextRetry = Time.TimeSinceStartup + 1;
+            var data = Snapshot.FromJson(Description).Props[0];
+            if (!_hasVisuals)
+            {
+                var staleAnimator = GetComponent<Slopbox.Mounting.ModelAnimator>();
+                if (staleAnimator.IsValid()) GameObject.RemoveComponent(staleAnimator);
+                var staleMap = GetComponent<MapProp>();
+                if (staleMap.IsValid()) GameObject.RemoveComponent(staleMap);
+                GameObject visual = Snapshot.Build(GameManager.Instance, data);
+                if (visual.IsNotValid())
+                {
+                    Debug.LogWarning($"Missing shared content: {data.Spawn}. Install the same mounted game as the host.");
+                    return;
+                }
+                foreach (Component c in visual.GetComponents<Component>())
+                    if (c is Prop or Rigidbody3D or Collider or Light or LightProp or ThrusterProp
+                        || (c is MapLit && GetComponent<MapLit>().IsValid()))
+                        visual.RemoveComponent(c);
+                visual.Network.Mode = NetworkMode.Never;
+                visual.SetParent(GameObject, false);
+                _hasVisuals = true;
+            }
+            ApplyAppearance(data);
+            _appliedDescription = Description;
+            _nextRetry = 0;
+        }
+        var animation = GetComponentInChildren<Slopbox.Mounting.ModelAnimator>();
+        if (animation.IsValid())
+        {
+            animation.Speed = AnimationSpeed;
+            if (animation.Sequence != Sequence) animation.Play(Sequence);
+        }
+        if (TryGetComponent(out ThrusterProp flame)) flame.Thrust = Thrust;
+    }
+
+    internal void RestoreSimulation()
+    {
+        if (Body.IsNotValid() || Description.Length == 0) return;
+        Body.MotionType = Snapshot.FromJson(Description).Props[0].Frozen ? MotionType.Kinematic : MotionType.Dynamic;
     }
 
     /// <summary>The prop a trace hit belongs to, adding a Prop to any plain rigidbody so tools work on scene objects too.</summary>
@@ -109,6 +209,19 @@ public sealed class Prop : Component
     // ----------------------------------------------------------------
     //  Look: material override and colour
     // ----------------------------------------------------------------
+
+    internal void ApplyAppearance(Snapshot.PropData data)
+    {
+        _receivedFrozen = data.Frozen;
+        if (Body.IsValid()) { Body.Mass = data.Mass > 0 ? data.Mass : Body.Mass; Body.AffectedByGravity = data.Gravity; }
+        _tint = data.Tint is { Length: 4 } c ? new Color(c[0], c[1], c[2], c[3]) : Color.White;
+        _material = Guid.TryParse(data.Material, out Guid id) ? AssetDatabase.Get<Material>(id) : null;
+        Refresh();
+        if (TryGetComponent(out ThrusterProp thruster) && data.Thruster != null)
+            thruster.Set(data.Thruster.Force, data.Thruster.Forward, data.Thruster.Back, data.Thruster.Toggle);
+        if (TryGetComponent(out LightProp light) && data.Light != null)
+            light.Set(new Color(data.Light.Color[0], data.Light.Color[1], data.Light.Color[2], data.Light.Color[3]), data.Light.Brightness, data.Light.Range);
+    }
 
     public void SetTint(Color tint)
     {

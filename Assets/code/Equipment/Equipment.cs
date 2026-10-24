@@ -53,10 +53,10 @@ public abstract class Equipment
     public virtual void LateUpdate() { }
 
     // Input helpers that respect open menus.
-    protected bool Attack1Pressed => Owner.InputEnabled && Input.GetMouseButtonDown(Controls.Attack1);
-    protected bool Attack1Down => Owner.InputEnabled && Input.GetMouseButton(Controls.Attack1);
-    protected bool Attack2Pressed => Owner.InputEnabled && Input.GetMouseButtonDown(Controls.Attack2);
-    protected bool Attack2Down => Owner.InputEnabled && Input.GetMouseButton(Controls.Attack2);
-    protected bool ReloadPressed => Owner.InputEnabled && Controls.Pressed(Controls.Reload);
-    protected bool UseDown => Owner.InputEnabled && Controls.Down(Controls.Use);
+    protected bool Attack1Pressed => Owner.InputEnabled && Owner.EquipmentInput.PrimaryPressed;
+    protected bool Attack1Down => Owner.InputEnabled && Owner.EquipmentInput.Primary;
+    protected bool Attack2Pressed => Owner.InputEnabled && Owner.EquipmentInput.SecondaryPressed;
+    protected bool Attack2Down => Owner.InputEnabled && Owner.EquipmentInput.Secondary;
+    protected bool ReloadPressed => Owner.InputEnabled && Owner.EquipmentInput.Reload;
+    protected bool UseDown => Owner.InputEnabled && Owner.EquipmentInput.Use;
 }

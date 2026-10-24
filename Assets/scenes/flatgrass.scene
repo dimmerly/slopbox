@@ -350,6 +350,8 @@
               "Sharpness": 0.025F,
               "JitterSpread": 8
             },
+            "HDR": true,
+            "Tonemapping": 2L,
             "Background": 0L,
             "BackgroundColor": {
               "R": 0F,
@@ -420,37 +422,37 @@
           {
             "$id": 18,
             "$type": "Prowl.Runtime.Light, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-            "Type": 0L,
-            "Color": {
+            "type": 0L,
+            "color": {
               "R": 1F,
               "G": 1F,
               "B": 1F,
               "A": 1F
             },
-            "Intensity": 1F,
-            "Range": 10F,
-            "InnerAngle": 30F,
-            "OuterAngle": 45F,
-            "Width": 1F,
-            "Height": 1F,
-            "Length": 1F,
-            "SourceRadius": 0F,
-            "AngularRadius": 0.27F,
-            "Cookie": NULL,
-            "IesProfile": NULL,
-            "LayerMask": {
+            "intensity": 1F,
+            "range": 10F,
+            "innerAngle": 30F,
+            "outerAngle": 45F,
+            "width": 1F,
+            "height": 1F,
+            "length": 1F,
+            "sourceRadius": 0F,
+            "angularRadius": 0.27F,
+            "cookie": NULL,
+            "iesProfile": NULL,
+            "layerMask": {
               "mask": 4294967295U
             },
-            "CastShadows": true,
-            "ShadowStrength": 1F,
-            "ShadowResolution": 1024L,
-            "ShadowFilter": 1L,
-            "DepthBias": 1F,
-            "NormalBias": 1F,
-            "Cascades": 2L,
-            "ShadowDistance": 50F,
-            "CascadeBlend": 0.1F,
-            "BakeMode": 0L,
+            "castShadows": true,
+            "shadowStrength": 1F,
+            "shadowResolution": 1024L,
+            "shadowFilter": 1L,
+            "depthBias": 1F,
+            "normalBias": 1F,
+            "cascades": 2L,
+            "shadowDistance": 50F,
+            "cascadeBlend": 0.1F,
+            "bakeMode": 0L,
             "_identifier": "348e6aa8-cd76-4393-a5bc-9c2be9779bc7",
             "_enabled": true,
             "_enabledInHierarchy": true,
@@ -496,10 +498,10 @@
           {
             "$id": 21,
             "$type": "Prowl.Runtime.MeshRenderer, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-            "Mesh": {
+            "mesh": {
               "$asset": "38151a92-9ae6-525d-b9cd-13fbcd700c8a"
             },
-            "Materials": {
+            "materials": {
               "$id": 22,
               "$values": [
                 {
@@ -507,8 +509,8 @@
                 }
               ]
             },
-            "ShadowCasting": 1L,
-            "ReceiveShadows": true,
+            "shadowCasting": 1L,
+            "receiveShadows": true,
             "_identifier": "3af79c2c-b546-4797-b63b-b774229fd235",
             "_enabled": true,
             "_enabledInHierarchy": true,

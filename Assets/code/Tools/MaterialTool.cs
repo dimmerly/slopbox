@@ -33,7 +33,7 @@ public sealed class MaterialTool : BaseTool
 
     public override bool Reload(in ToolTrace tr) => Paint(Target(tr), null);
 
-    private static bool Paint(Prop prop, Material material)
+    private bool Paint(Prop prop, Material material)
     {
         if (prop.IsNotValid()) return false;
         if (material.IsNotValid() && prop.MaterialOverride.IsNotValid()) return false;

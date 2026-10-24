@@ -33,6 +33,12 @@ public static class Notify
 
     public static void Post(string text, NotifyKind kind)
     {
+        GameManager game = GameManager.Instance;
+        if (game.IsValid() && game.ActingPlayer.IsValid() && !game.ActingPlayer.IsLocalPlayer)
+        {
+            game.ActingPlayer.ReceiveNotice(text, kind);
+            return;
+        }
         if (kind == NotifyKind.Error) GameAudio.Error();
         else if (kind == NotifyKind.Undo) GameAudio.Play("undo", 0.35f, ui: true);
         else GameAudio.Play("confirm", 0.2f, ui: true, cooldown: 0.15f);

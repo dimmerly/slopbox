@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
+using Prowl.Runtime.Networking;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -57,6 +58,7 @@ public sealed class GameAudio : Component
     private AudioSource MakeSource(string name)
     {
         var go = new GameObject(name);
+        go.Network.Mode = NetworkMode.Never;
         go.SetParent(GameObject, false);
         var source = go.AddComponent<AudioSource>();
         source.PlayOnStart = false;
@@ -104,9 +106,16 @@ public sealed class GameAudio : Component
         _clips.Clear();
     }
 
+    private static bool s_playingRemote;
+
     public static void Play(string sound, float gain = 0.5f, float pitch = 1f, bool ui = false,
         Float3? position = null, float cooldown = 0.04f, float maxDistance = 45f, float minDistance = 2f)
     {
+        if (Networking.IsHost && position.HasValue && !ui && !s_playingRemote)
+        {
+            PlayWorld(sound, gain, pitch, position.Value, cooldown, maxDistance, minDistance);
+            return;
+        }
         GameAudio audio = Current;
         if (audio.IsNotValid()) return;
         double now = Time.TimeSinceStartup;
@@ -124,6 +133,14 @@ public sealed class GameAudio : Component
         voice.Source.Pitch = pitch;
         voice.Source.Volume = gain * audio.Level(ui);
         voice.Source.Play();
+    }
+
+    [Rpc.Broadcast(RpcFlags.HostOnly)]
+    private static void PlayWorld(string sound, float gain, float pitch, Float3 position, float cooldown, float maxDistance, float minDistance)
+    {
+        s_playingRemote = true;
+        try { Play(sound, gain, pitch, false, position, cooldown, maxDistance, minDistance); }
+        finally { s_playingRemote = false; }
     }
 
     /// <summary>Plays a clip that is not one of the game's own sounds, such as a mounted game's footstep.</summary>

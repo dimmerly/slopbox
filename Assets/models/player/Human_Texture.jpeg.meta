@@ -1,5 +1,8 @@
 {
   "guid": "ce1b697e-d686-4bda-ac86-8ce722f25555",
   "importer": "TextureImporter",
-  "importerVersion": 1
+  "importerVersion": 1,
+  "settings": {
+    "maxSize": 16384
+  }
 }

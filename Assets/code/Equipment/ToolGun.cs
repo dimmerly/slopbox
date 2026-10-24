@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -28,7 +29,7 @@ public sealed class ToolGun : Equipment
     {
         get
         {
-            if (_tool == null && GameManager.Instance.Tools.All.Count > 0) Select(GameManager.Instance.Tools.All[0]);
+            if (_tool == null && Owner.Tools.All.Count > 0) Select(Owner.Tools.All[0]);
             return _tool;
         }
     }
@@ -88,12 +89,27 @@ public sealed class ToolGun : Equipment
         BaseTool tool = Tool;
         if (tool == null) return;
 
-        tool.Think();
+        if (Owner.IsLocalPlayer) tool.Think();
         if (!Owner.InputEnabled) return;
 
-        if (Attack1Pressed) Use(tool.Primary);
-        else if (Attack2Pressed) Use(tool.Secondary);
-        else if (ReloadPressed) Use(tool.Reload);
+        int action = Attack1Pressed ? 0 : Attack2Pressed ? 1 : ReloadPressed ? 2 : -1;
+        if (action < 0) return;
+        if (Networking.IsClient)
+        {
+            var listed = GameManager.Instance.GameObject.GetComponent<SpawnMenu>().Listed;
+            var ids = new string[Math.Min(listed.Count, 500)];
+            for (int i = 0; i < ids.Length; i++) ids[i] = listed[i].Id;
+            Owner.RequestTool(tool.GetType().Name, ToolSettings.Write(tool), action,
+                tool is DuplicatorTool dupe ? dupe.NetworkCopy : "", System.Text.Json.JsonSerializer.Serialize(ids, GameJson.Options));
+        }
+        else UseAction(action);
+    }
+
+    public void UseAction(int action)
+    {
+        if (action == 0) Use(Tool.Primary);
+        else if (action == 1) Use(Tool.Secondary);
+        else if (action == 2) Use(Tool.Reload);
     }
 
     private delegate bool ToolAction(in ToolTrace tr);
@@ -119,10 +135,18 @@ public sealed class ToolGun : Equipment
             GameAudio.Error();
             return;
         }
-        GameAudio.Play("confirm", 0.4f, 1.2f);
-        GameAudio.Play("flashlight", 0.35f, 1.4f);
-        Owner.Kick(0.6f);
-        _tracerEnd = tr.Hit ? tr.Point : Owner.EyePosition + Owner.Forward * Range;
+        Owner.ShowToolShot(tr.Hit ? tr.Point : Owner.EyePosition + Owner.Forward * Range);
+    }
+
+    internal void ShowShot(Float3 end)
+    {
+        if (Owner.IsLocalPlayer)
+        {
+            GameAudio.Play("confirm", 0.4f, 1.2f);
+            GameAudio.Play("flashlight", 0.35f, 1.4f);
+            Owner.Kick(0.6f);
+        }
+        _tracerEnd = end;
         _tracerFade = 1f;
     }
 

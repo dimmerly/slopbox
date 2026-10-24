@@ -1,5 +1,6 @@
 using Prowl.Echo;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -10,7 +11,7 @@ namespace Slopbox;
 /// <see cref="PlayerController"/>, owns the camera and the equipment. Split across partial files by
 /// concern (camera, inventory), the way dxrp's Player is.
 /// </summary>
-[RequireComponent(typeof(PlayerController))]
+[RequireComponent(typeof(PlayerController), typeof(NetworkAnimator))]
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Player")]
 public sealed partial class Player : Component
@@ -32,7 +33,7 @@ public sealed partial class Player : Component
     private bool _ready;
 
     /// <summary>False while a menu is open: equipment should ignore attacks.</summary>
-    public bool InputEnabled => !GameManager.Instance.IsMenuOpen;
+    public bool InputEnabled => IsLocalPlayer ? !GameManager.Instance.IsMenuOpen : EquipmentInput.Enabled && CanUseEquipment;
 
     public Float3 EyePosition => Controller.EyePosition;
     public Quaternion EyeRotation => Quaternion.FromEuler(Pitch, Yaw, 0f);
@@ -44,7 +45,7 @@ public sealed partial class Player : Component
     public Ray AimRay => new(EyePosition, Forward);
 
     /// <summary>The muzzle of whichever model of the held equipment is being seen, where beams and shots start.</summary>
-    public Float3 MuzzlePosition => _orbitShown && WorldModel.IsValid() && WorldModel.HasModel ? WorldModel.MuzzlePosition : ViewModel.MuzzlePosition;
+    public Float3 MuzzlePosition => (!IsLocalPlayer || _orbitShown) && WorldModel.IsValid() && WorldModel.HasModel ? WorldModel.MuzzlePosition : ViewModel.MuzzlePosition;
 
     /// <summary>Recoil on both models of the held equipment.</summary>
     public void Kick(float amount = 1f)
@@ -56,7 +57,6 @@ public sealed partial class Player : Component
     public override void OnEnable()
     {
         Controller = GetComponent<PlayerController>();
-        Local = this;
         Yaw = Transform.EulerAngles.Y;
         Controller.Landed += OnLanded;
         Controller.Jumped += OnJumped;
@@ -66,6 +66,7 @@ public sealed partial class Player : Component
 
     public override void OnDisable()
     {
+        ActiveEquipment?.OnHolster();
         Controller.Landed -= OnLanded;
         Controller.Jumped -= OnJumped;
         Controller.Landed -= OnLandedBody;
@@ -75,6 +76,11 @@ public sealed partial class Player : Component
 
     public override void Start()
     {
+        if (IsLocalPlayer)
+        {
+            Local = this;
+            GameManager.Instance.LocalPlayer = this;
+        }
         SetupCamera();
         SetupInventory();
         SetupFlashlight();
@@ -85,6 +91,7 @@ public sealed partial class Player : Component
     public override void Update()
     {
         if (!_ready) return;
+        if (!IsLocalPlayer) { UpdateNetworkPlayer(); return; }
         float dt = Time.DeltaTime;
         GameManager game = GameManager.Instance;
 
@@ -102,19 +109,21 @@ public sealed partial class Player : Component
         UpdateBody(dt);
         UpdateMovementAudio(dt);
         UpdateInventory();
+        UpdateNetworkPlayer();
     }
 
     public override void FixedUpdate()
     {
-        if (_ready) FixedUpdateInventory();
+        if (_ready && (!Networking.IsClient || !IsLocalPlayer)) FixedUpdateInventory();
     }
 
     public override void LateUpdate()
     {
         if (!_ready) return;
         LateUpdateBody();
-        UpdateCamera(Time.DeltaTime);
+        if (IsLocalPlayer) UpdateCamera(Time.DeltaTime);
         LateUpdateInventory();
+        UpdateNetworkEffects();
     }
 
     private void UpdateLook()

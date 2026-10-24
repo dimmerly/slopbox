@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Jitter2.Dynamics;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
+using Prowl.Runtime.Networking;
+using Prowl.Echo;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -11,12 +13,13 @@ namespace Slopbox;
 public sealed class RocketProjectile : Component
 {
     private const float CollisionRadius = 0.1f;
-    private Float3 _direction;
-    private float _speed, _radius, _blastSpeed, _age;
+    [SerializeField] private Float3 _direction;
+    [SerializeField] private float _speed, _radius, _blastSpeed;
+    private float _age;
     private bool _exploded;
     private Material _metal, _glow, _trailMaterial;
     private LineRenderer _trail;
-    private Float3 _launchPosition;
+    [SerializeField] private Float3 _launchPosition;
 
     public static void Launch(Float3 eye, Float3 muzzle, Float3 direction, float speed, float radius, float blastSpeed)
     {
@@ -30,6 +33,7 @@ public sealed class RocketProjectile : Component
         rocket._blastSpeed = blastSpeed;
         rocket._launchPosition = muzzle;
         Scene.Current.Add(go);
+        if (Networking.IsHost) go.Network.Spawn();
 
         // The muzzle can be beyond a nearby wall: sweep from the eye before allowing flight.
         Float3 offset = muzzle - eye;
@@ -53,6 +57,7 @@ public sealed class RocketProjectile : Component
                 new Float3(0.12f, 0.02f, 0.14f), new Float3(0f, 0f, i * 90f));
         }
         var trail = new GameObject("Rocket Exhaust");
+        trail.Network.Mode = NetworkMode.Never;
         trail.SetParent(GameObject, false);
         _trail = trail.AddComponent<LineRenderer>();
         _trailMaterial = Materials.Line();
@@ -67,6 +72,7 @@ public sealed class RocketProjectile : Component
     private void AddPart(Mesh mesh, Material material, Float3 position, Float3 scale, Float3 rotation = default)
     {
         var go = new GameObject("Rocket Part");
+        go.Network.Mode = NetworkMode.Never;
         go.SetParent(GameObject, false);
         go.Transform.LocalPosition = position;
         go.Transform.LocalScale = scale;
@@ -78,7 +84,7 @@ public sealed class RocketProjectile : Component
 
     public override void FixedUpdate()
     {
-        if (_exploded) return;
+        if (_exploded || IsProxy) return;
         float distance = _speed * Time.FixedDeltaTime;
         Float3 start = Transform.Position;
         if (Scene.Current.Physics.SphereCast(start, CollisionRadius, _direction, distance, out ShapeCastHit hit))
@@ -109,10 +115,14 @@ public sealed class RocketProjectile : Component
         _exploded = true;
         GameAudio.StopLoop(this);
         Blast(position, _radius, _blastSpeed);
-        RocketBlast.Create(position, _radius, normal);
+        ShowExplosion(position, _radius, normal);
         GameAudio.Play("rocket_explosion_" + Random.Shared.Next(1, 4), 0.9f, position: position, maxDistance: 120f, minDistance: 6f);
         GameObject.Destroy();
     }
+
+    [Rpc.Broadcast(RpcFlags.HostOnly)]
+    private void ShowExplosion(Float3 position, float radius, Float3 normal)
+        => RocketBlast.Create(position, radius, normal);
 
     /// <summary>Overlap colliders, then apply a single mass-scaled impulse to each body.</summary>
     public static void Blast(Float3 position, float radius, float speed)
