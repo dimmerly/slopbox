@@ -100,7 +100,7 @@ public sealed class ToolGun : Equipment
             var ids = new string[Math.Min(listed.Count, 500)];
             for (int i = 0; i < ids.Length; i++) ids[i] = listed[i].Id;
             Owner.RequestTool(tool.GetType().Name, ToolSettings.Write(tool), action,
-                tool is DuplicatorTool dupe ? dupe.NetworkCopy : "", System.Text.Json.JsonSerializer.Serialize(ids));
+                tool is DuplicatorTool dupe ? dupe.NetworkCopy : "", System.Text.Json.JsonSerializer.Serialize(ids, GameJson.Options));
         }
         else UseAction(action);
     }

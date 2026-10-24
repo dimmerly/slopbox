@@ -71,6 +71,8 @@ public sealed class MultiplayerProbe : Component
             Prop prop = Prop.All.Last(p => p.SpawnId == "shape:cube_1");
             await Until(() => prop.GetComponentInChildren<MeshRenderer>().IsValid(), "runtime geometry");
             Check(prop.Network.Active && prop.IsProxy && prop.Body.MotionType == MotionType.Kinematic, "native prop proxy");
+            if (!Application.IsHeadless)
+                await Until(() => prop.GetComponentInChildren<MeshRenderer>().Renderable.IsValid, "spawned renderer must enter render world");
             Checkpoint("spawn and physics proxy");
             await GameTask.DelayRealtime(0.5f);
             Aim(player, prop.Transform.Position);
@@ -134,6 +136,23 @@ public sealed class MultiplayerProbe : Component
             Checkpoint("remote rocket launch");
             await Until(() => Scene.Current.FindObjectsOfType<RocketProjectile>().Length == 0, "rocket destruction");
             Checkpoint("rocket destruction");
+            var mounted = GameManager.Instance.Catalog.All.OfType<MountSpawnable>()
+                .FirstOrDefault(s => s.Loader.RelativePath.EndsWith("props_c17/oildrum001.mdl", StringComparison.OrdinalIgnoreCase));
+            if (mounted != null)
+            {
+                player.Yaw = 90; player.Pitch = 35;
+                await GameTask.DelayRealtime(0.4f);
+                player.RequestSpawn(mounted.Id);
+                await Until(() => Prop.All.Any(p => p.SpawnId == mounted.Id), "mounted prop spawn");
+                Prop mountedProp = Prop.All.First(p => p.SpawnId == mounted.Id);
+                await Until(() => mountedProp.GetComponentInChildren<MeshRenderer>().IsValid(), "mounted prop geometry");
+                if (!Application.IsHeadless)
+                    await Until(() => mountedProp.GetComponentInChildren<MeshRenderer>().Renderable.IsValid, "mounted prop rendering");
+                Checkpoint("mounted model reconstruction and rendering");
+                player.RequestUndo();
+                await Until(() => mountedProp.IsNotValid(), "mounted prop undo");
+            }
+
             await GameTask.DelayRealtime(0.3f);
             var revisionField = typeof(Player).GetField("_inputRevision", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             int idleRevision = (int)revisionField.GetValue(player);

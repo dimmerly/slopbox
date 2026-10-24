@@ -1,4 +1,4 @@
-param([string]$EditorExecutable = 'X:\External\prowl\Build\Editor\Debug\net10.0\Prowl.Editor.exe')
+param([string]$EditorExecutable = 'X:\External\prowl\Build\Editor\Debug\net10.0\Prowl.Editor.exe', [switch]$RenderedClients)
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -24,7 +24,8 @@ function Evaluate([string]$Code) {
 function Launch-Client([string]$Name, [int]$Index) {
     $log = Join-Path $env:TEMP "slopbox-$Name.log"
     $errors = Join-Path $env:TEMP "slopbox-$Name-errors.log"
-    $arguments = @('--play-instance', $projectRoot, '--join', "127.0.0.1:$script:port", '--name', $Name, '--instance', $Index, '--headless')
+    $arguments = @('--play-instance', $projectRoot, '--join', "127.0.0.1:$script:port", '--name', $Name, '--instance', $Index)
+    if (!$RenderedClients) { $arguments += '--headless' }
     $process = Start-Process -FilePath $EditorExecutable -ArgumentList $arguments -WindowStyle Hidden -RedirectStandardOutput $log -RedirectStandardError $errors -PassThru
     $clients.Add($process)
 }
@@ -96,7 +97,7 @@ finally {
         $client.Dispose()
     }
     if ($copied) {
-        Remove-Item -LiteralPath $probe
+        if (Test-Path -LiteralPath $probe) { Remove-Item -LiteralPath $probe }
         if (Test-Path -LiteralPath "$probe.meta") { Remove-Item -LiteralPath "$probe.meta" }
         $compile = Invoke-Prowl -Arguments @('command', 'compile')
         if (!$compile.ok) { throw ($compile | ConvertTo-Json -Depth 8) }

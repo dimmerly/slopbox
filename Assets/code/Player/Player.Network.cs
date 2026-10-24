@@ -112,7 +112,7 @@ public sealed partial class Player
         if (tool == null) return;
         ToolSettings.Read(tool, settings);
         if (tool is DuplicatorTool duplicator && payload.Length > 0) duplicator.LoadNetworkCopy(payload);
-        if (tool is PlacerTool placer) placer.NetworkList = System.Text.Json.JsonSerializer.Deserialize<string[]>(listed);
+        if (tool is PlacerTool placer) placer.NetworkList = System.Text.Json.JsonSerializer.Deserialize<string[]>(listed, GameJson.Options);
         ToolGun gun = Get<ToolGun>();
         gun.Select(tool);
         RunAuthoritative(() => gun.UseAction(action));

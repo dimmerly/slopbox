@@ -74,10 +74,8 @@ public sealed class Snapshot
 
     [JsonIgnore] public int Count => Props.Count;
 
-    private static readonly JsonSerializerOptions s_json = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
-
-    public string ToJson() => JsonSerializer.Serialize(this, s_json);
-    public static Snapshot FromJson(string json) => JsonSerializer.Deserialize<Snapshot>(json, s_json);
+    public string ToJson() => JsonSerializer.Serialize(this, GameJson.Options);
+    public static Snapshot FromJson(string json) => JsonSerializer.Deserialize<Snapshot>(json, GameJson.Options);
 
     /// <summary>Whether <paramref name="prop"/> can be rebuilt: spawned from the catalog, a light or a thruster.</summary>
     public static bool CanCapture(Prop prop)
