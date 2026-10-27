@@ -27,6 +27,9 @@ Configuration:
   SendWindow: 4096
   SimulateNetwork: false
   TickRate: 30
+  TransformPositionThreshold: 0.001
+  TransformRotationThresholdDegrees: 0.1
+  TransformScaleThreshold: 0.0001
   TimeoutSeconds: 10
   Transport: 0
   UpdateIntervalMilliseconds: 10
