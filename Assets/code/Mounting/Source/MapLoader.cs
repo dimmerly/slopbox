@@ -194,6 +194,7 @@ internal static class SourceMapBuilder
 
         return new MountedMap(name, parts, pages, spawns, models, bounds, owned, ownedTextures)
         {
+            Probes = Probes(bsp),
             Sounds = sounds,
             Soundscapes = soundscapes,
             Audio = audio,
@@ -540,6 +541,34 @@ internal static class SourceMapBuilder
             pages.Add(texture);
         }
         return (lightmaps, pages);
+    }
+
+    /// <summary>
+    /// The map's leaf ambient samples as probes: the light the game gives a model there from each side, which vrad
+    /// computed for exactly that. Maps compiled without them give none.
+    /// </summary>
+    private static List<MountedMap.Probe> Probes(BspFile bsp)
+    {
+        var probes = new List<MountedMap.Probe>(bsp.Ambient.Length);
+        byte[] light = bsp.AmbientLighting;
+        float brightest = 0f;
+        foreach (AmbientSample sample in bsp.Ambient)
+        {
+            // Stored +X, -X, +Y, -Y, +Z, -Z in Source's axes; Prowl's +X is Source's -Y, +Y its +Z and +Z its +X.
+            var source = new Float3[6];
+            for (int side = 0; side < 6; side++)
+            {
+                int src = sample.CubeOffset + side * 4;
+                float scale = MathF.Pow(2f, (sbyte)light[src + 3]) / 255f;
+                source[side] = new Float3(Curve(light[src] * scale), Curve(light[src + 1] * scale), Curve(light[src + 2] * scale));
+                brightest = MathF.Max(brightest, MathF.Max(source[side].X, MathF.Max(source[side].Y, source[side].Z)));
+            }
+            probes.Add(new MountedMap.Probe(GoldSrcAssets.Position(sample.Position),
+                [source[3], source[2], source[4], source[5], source[0], source[1]]));
+        }
+
+        // Decompiled and rebuilt maps keep the lump but leave it black.
+        return brightest < 0.01f ? [] : probes;
     }
 
     /// <summary>

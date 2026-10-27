@@ -429,7 +429,7 @@
               "B": 1F,
               "A": 1F
             },
-            "intensity": 1F,
+            "intensity": 0.6F,
             "range": 10F,
             "innerAngle": 30F,
             "outerAngle": 45F,

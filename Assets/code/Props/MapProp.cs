@@ -38,6 +38,9 @@ public sealed class MapProp : Component
     [SerializeIgnore] private GameObject _geometry;
     [SerializeIgnore] private Scene _litScene;
 
+    /// <summary>Every map giving a scene its light, whose probes together are that scene's.</summary>
+    private static readonly List<MapProp> s_lit = new();
+
     /// <param name="geometry">The <see cref="MountedMap.Instantiate"/>d map under this object, which the map's models join.</param>
     internal void Bind(MapSpawnable source, MountedMap map, GameObject geometry)
     {
@@ -51,6 +54,8 @@ public sealed class MapProp : Component
         if (_map == null || _geometry.IsNotValid() || _litScene.IsValid() || GameObject.Scene.IsNotValid()) return;
         _litScene = GameObject.Scene;
         _map.AddLighting(_litScene, _geometry);
+        s_lit.Add(this);
+        UpdateProbes(_litScene);
 
         foreach (GameObject part in _geometry.Children.Take(_map.Parts.Count)) part.LayerIndex = Layer;
         foreach (Light light in Scene.Current.FindObjectsOfType<Light>())
@@ -68,8 +73,33 @@ public sealed class MapProp : Component
 
     private void RemoveLighting()
     {
-        if (_map != null && _litScene.IsValid()) _map.RemoveLighting(_litScene, _geometry);
+        if (!s_lit.Remove(this)) return;
+        if (_map != null && _litScene.IsValid())
+        {
+            _map.RemoveLighting(_litScene, _geometry);
+            UpdateProbes(_litScene);
+        }
         _litScene = null;
+    }
+
+    /// <summary>
+    /// The scene's light probes, from every map in it, so models and players are lit like the map around them.
+    /// The probes are not tetrahedralised; the renderer blends the nearest ones.
+    /// </summary>
+    private static void UpdateProbes(Scene scene)
+    {
+        var positions = new List<Float3>();
+        var sh = new List<Prowl.Runtime.Rendering.SphericalHarmonicsL2>();
+        foreach (MapProp map in s_lit)
+            if (map._litScene == scene && map._geometry.IsValid())
+                map._map.AppendProbes(map._geometry.Transform, positions, sh);
+
+        Scene.BakedLightingData baked = scene.BakedLighting;
+        baked.ProbePositions = [.. positions];
+        baked.ProbeSH = [.. sh];
+        baked.ProbeTetrahedra = [];
+        baked.ProbeTetNeighbours = [];
+        scene.InvalidateProbeVolume();
     }
 
     public override void Start()
