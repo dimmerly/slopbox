@@ -164,7 +164,6 @@ public sealed class MountSpawnable : Spawnable
         GameObject go = model.Instantiate();
         go.Name = Name;
         ModelSpawnable.AddBoxPhysics(go, Id);
-        go.AddComponent<MapLit>();
         return go;
     }
 

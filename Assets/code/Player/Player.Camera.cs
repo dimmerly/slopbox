@@ -124,15 +124,10 @@ public sealed partial class Player
 
         if (!Camera.GameObject.TryGetComponent(out AudioListener _))
             Camera.GameObject.AddComponent<AudioListener>();
-        if (!Camera.GameObject.TryGetComponent(out MapCameraLook _))
-            Camera.GameObject.AddComponent<MapCameraLook>();
 
         var vm = new GameObject("View Model");
         vm.SetParent(Camera.GameObject, false);
         ViewModel = vm.AddComponent<ViewModel>();
-
-        // In a map, the held equipment is out of the sun like everything else there.
-        vm.AddComponent<MapLit>();
         ViewModel.Owner = this;
         ViewModel.Shadows = ShadowCasting.Off;
 
@@ -144,7 +139,6 @@ public sealed partial class Player
         WorldModel.World = true;
         // Larger than life, as world models usually are, so it reads from behind.
         WorldModel.Scale = 1.2f;
-        world.AddComponent<MapLit>();
         ApplyViewVisibility();
 
         UpdateCamera(0f);

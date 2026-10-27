@@ -8,7 +8,6 @@ using Prowl.Vector;
 using Slopbox.Mounting.GoldSrc;
 using Slopbox.Mounting.Source.Bsp;
 using Vector3 = System.Numerics.Vector3;
-using Plane = Slopbox.Mounting.Source.Bsp.Plane;
 
 namespace Slopbox.Mounting.Source;
 
@@ -37,8 +36,7 @@ internal static class SourceMapBuilder
     /// <summary>
     /// The most light a surface can show, as a multiple of its texture. Source stores lightmaps as
     /// (light ^ (1 / 2.2)) / 2 in a byte and doubles them in the shader, in gamma space; drawn linearly that is the
-    /// texture times the stored light, up to 2 ^ 2.2. Shown through <see cref="Slopbox.MapCameraLook"/>, this is
-    /// the game's own brightness.
+    /// texture times the stored light, up to 2 ^ 2.2.
     /// </summary>
     private static readonly float s_maxLight = MathF.Pow(2f, 2.2f);
 
@@ -99,12 +97,6 @@ internal static class SourceMapBuilder
         }
 
         (Lightmap[] lightmaps, List<Texture2D> pages) = PackLightmaps(bsp);
-        int ambientPage = -1;
-        if (BuildAmbientPage(bsp, out int ambientSize) is { } ambient)
-        {
-            pages.Add(ambient);
-            ambientPage = pages.Count - 1;
-        }
 
         var parts = new List<MountedMap.Part>();
         var spawns = new List<MountedMap.SpawnPoint>();
@@ -112,8 +104,6 @@ internal static class SourceMapBuilder
         var sounds = new List<MountedMap.PlacedSound>();
         var soundscapes = new List<MountedMap.SoundscapeZone>();
         Float3 min = new(float.MaxValue), max = new(float.MinValue);
-        Float3? sun = null, sunLight = null;
-        MountedMap.ShadowSettings? shadows = null;
 
         for (int e = 0; e < bsp.Entities.Count; e++)
         {
@@ -123,19 +113,6 @@ internal static class SourceMapBuilder
             if (s_spawnClasses.Contains(className))
             {
                 spawns.Add(new MountedMap.SpawnPoint(GoldSrcAssets.Position(entity.GetVector("origin")), -entity.GetVector("angles").Y));
-                continue;
-            }
-
-            if (className.Equals("light_environment", StringComparison.OrdinalIgnoreCase))
-            {
-                sun = SunDirection(entity);
-                sunLight = LightValue(entity.Get("_light"));
-                continue;
-            }
-
-            if (className.Equals("shadow_control", StringComparison.OrdinalIgnoreCase))
-            {
-                shadows = ShadowControl(entity);
                 continue;
             }
 
@@ -217,13 +194,8 @@ internal static class SourceMapBuilder
 
         return new MountedMap(name, parts, pages, spawns, models, bounds, owned, ownedTextures)
         {
-            Light = new LightSampler(bsp, lightmaps, ambientPage, ambientSize),
             Sounds = sounds,
             Soundscapes = soundscapes,
-            SunDirection = sun,
-            SunLight = sunLight,
-            Shadows = shadows,
-            SourceLook = true,
             Audio = audio,
         };
     }
@@ -239,57 +211,6 @@ internal static class SourceMapBuilder
             * System.Numerics.Quaternion.CreateFromAxisAngle(Vector3.UnitY, angles.X * ToRadians)
             * System.Numerics.Quaternion.CreateFromAxisAngle(Vector3.UnitX, angles.Z * ToRadians);
         return GoldSrcAssets.Rotation(q);
-    }
-
-    /// <summary>
-    /// The way a light_environment's sunlight travels, in Prowl's space. Its pitch counts up from the horizon, so
-    /// -90 shines straight down; a "pitch" key overrides the angles' own.
-    /// </summary>
-    private static Float3 SunDirection(Entity entity)
-    {
-        Vector3 angles = entity.GetVector("angles");
-        float pitch = entity.Get("pitch") != null ? entity.GetFloat("pitch") : angles.X;
-        float yaw = entity.Get("angle") != null ? entity.GetFloat("angle") : angles.Y;
-        const float ToRadians = MathF.PI / 180f;
-        var travel = new Vector3(
-            MathF.Cos(yaw * ToRadians) * MathF.Cos(pitch * ToRadians),
-            MathF.Sin(yaw * ToRadians) * MathF.Cos(pitch * ToRadians),
-            MathF.Sin(pitch * ToRadians));
-        return GoldSrcAssets.Direction(travel);
-    }
-
-    /// <summary>
-    /// A light's "_light" value, "r g b brightness", as the linear light vrad put in the lightmaps: the colour from
-    /// gamma to linear, times the brightness over 255. Null when it does not parse.
-    /// </summary>
-    private static Float3? LightValue(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return null;
-        string[] parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 3) return null;
-        var c = new float[4] { 0f, 0f, 0f, 255f };
-        for (int i = 0; i < 4 && i < parts.Length; i++)
-            if (!float.TryParse(parts[i], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out c[i])) return null;
-        float brightness = c[3] / 255f;
-        return new Float3(
-            MathF.Pow(Math.Clamp(c[0] / 255f, 0f, 1f), 2.2f) * brightness,
-            MathF.Pow(Math.Clamp(c[1] / 255f, 0f, 1f), 2.2f) * brightness,
-            MathF.Pow(Math.Clamp(c[2] / 255f, 0f, 1f), 2.2f) * brightness);
-    }
-
-    /// <summary>
-    /// A shadow_control's settings: the way its angles point, and its colour's brightness as how dark shadows fall.
-    /// </summary>
-    private static MountedMap.ShadowSettings ShadowControl(Entity entity)
-    {
-        const float ToRadians = MathF.PI / 180f;
-        Vector3 angles = entity.Get("angles") != null ? entity.GetVector("angles") : new Vector3(80f, 30f, 0f);
-        float pitch = angles.X * ToRadians, yaw = angles.Y * ToRadians;
-        // Source's forward for these angles; a positive pitch looks down.
-        var forward = new Vector3(MathF.Cos(pitch) * MathF.Cos(yaw), MathF.Cos(pitch) * MathF.Sin(yaw), -MathF.Sin(pitch));
-        Vector3 color = entity.Get("color") != null ? entity.GetVector("color") : new Vector3(128f);
-        float darkness = Math.Clamp((color.X + color.Y + color.Z) / (3f * 255f), 0f, 1f);
-        return new MountedMap.ShadowSettings(GoldSrcAssets.Direction(forward), darkness, entity.GetInt("disableallshadows") == 0);
     }
 
     /// <summary>An ambient_generic that loops on its own from the start; ones fired by the map's logic are skipped.</summary>
@@ -622,59 +543,6 @@ internal static class SourceMapBuilder
     }
 
     /// <summary>
-    /// A small page holding each leaf ambient sample's light as one texel, the average of its cube's six sides,
-    /// which models read as their indirect light the way the game lights props from the ambient cube they are in.
-    /// </summary>
-    private static Texture2D BuildAmbientPage(BspFile bsp, out int size)
-    {
-        size = 0;
-        int count = bsp.Ambient.Length;
-        if (count == 0) return null;
-        size = 1;
-        while (size * size < count) size *= 2;
-
-        var data = new byte[size * size * 4];
-        byte[] light = bsp.AmbientLighting;
-        float mean = 0f;
-        for (int i = 0; i < count; i++)
-        {
-            int at = bsp.Ambient[i].CubeOffset;
-            Float3 sum = Float3.Zero;
-            for (int side = 0; side < 6; side++)
-            {
-                int src = at + side * 4;
-                float scale = MathF.Pow(2f, (sbyte)light[src + 3]) / 255f;
-                sum += new Float3(light[src] * scale, light[src + 1] * scale, light[src + 2] * scale);
-            }
-            sum /= 6f;
-            mean += (sum.X + sum.Y + sum.Z) / (3f * count);
-            WriteRgbm(new Float3(Curve(sum.X), Curve(sum.Y), Curve(sum.Z)), data, i * 4);
-        }
-
-        // Maps compiled without ambient lighting, or decompiled and rebuilt, keep the lump but leave it black.
-        if (mean < 0.01f)
-        {
-            size = 0;
-            return null;
-        }
-
-        var texture = new Texture2D((uint)size, (uint)size, TextureFormat.RGBA8, mipmaps: false, srgb: false) { Name = "Ambient light" };
-        texture.SetData(new Memory<byte>(data));
-        return texture;
-    }
-
-    private static void WriteRgbm(Float3 c, byte[] page, int dst)
-    {
-        float m = Math.Clamp(MathF.Max(c.X, MathF.Max(c.Y, c.Z)) / 8f, 1f / 255f, 1f);
-        m = MathF.Ceiling(m * 255f) / 255f;
-        float scale = 1f / (m * 8f);
-        page[dst] = ToByte(c.X * scale);
-        page[dst + 1] = ToByte(c.Y * scale);
-        page[dst + 2] = ToByte(c.Z * scale);
-        page[dst + 3] = (byte)(m * 255f);
-    }
-
-    /// <summary>
     /// A luxel's light, every style added so switchable lights show on. Faces lit for bump mapping keep four
     /// lightmaps per style, the first being the plain one.
     /// </summary>
@@ -723,158 +591,4 @@ internal static class SourceMapBuilder
     }
 
     private static byte ToByte(float v) => (byte)Math.Clamp((int)MathF.Round(v * 255f), 0, 255);
-
-    /// <summary>
-    /// The light of the floor under a point: straight down to the nearest upward facing lit face of the world,
-    /// then its luxel there. Floors are bucketed on a grid so a sample only tests the faces near it.
-    /// </summary>
-    private sealed class LightSampler : IMapLightmapLight
-    {
-        private const float Reach = 2048f, Cell = 256f;
-
-        private readonly BspFile _bsp;
-        private readonly Lightmap[] _lightmaps;
-        private readonly Dictionary<(int, int), List<Floor>> _grid = new();
-
-        private sealed class Floor
-        {
-            public int Face;
-            public Vector3 Normal;
-            public float Distance;
-            public System.Numerics.Vector2[] Corners;
-        }
-
-        private readonly int _ambientPage, _ambientSize;
-
-        public LightSampler(BspFile bsp, Lightmap[] lightmaps, int ambientPage, int ambientSize)
-        {
-            _bsp = bsp;
-            _lightmaps = lightmaps;
-            _ambientPage = ambientPage;
-            _ambientSize = ambientSize;
-
-            BrushModel world = bsp.Models.Length > 0 ? bsp.Models[0] : default;
-            for (int f = world.FirstFace; f < world.FirstFace + world.FaceCount && f < bsp.Faces.Length; f++)
-            {
-                Face face = bsp.Faces[f];
-                if (!lightmaps[f].Has || face.EdgeCount < 3 || face.DispInfo >= 0) continue;
-
-                Plane plane = bsp.Planes[face.Plane];
-                Vector3 normal = plane.Normal;
-                if (normal.Z < 0.1f) continue;
-
-                var floor = new Floor
-                {
-                    Face = f,
-                    Normal = normal,
-                    Distance = plane.Distance,
-                    Corners = new System.Numerics.Vector2[face.EdgeCount],
-                };
-                float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
-                for (int i = 0; i < face.EdgeCount; i++)
-                {
-                    Vector3 p = bsp.FaceVertex(face, i);
-                    floor.Corners[i] = new System.Numerics.Vector2(p.X, p.Y);
-                    minX = MathF.Min(minX, p.X); maxX = MathF.Max(maxX, p.X);
-                    minY = MathF.Min(minY, p.Y); maxY = MathF.Max(maxY, p.Y);
-                }
-                for (int cx = (int)MathF.Floor(minX / Cell); cx <= (int)MathF.Floor(maxX / Cell); cx++)
-                    for (int cy = (int)MathF.Floor(minY / Cell); cy <= (int)MathF.Floor(maxY / Cell); cy++)
-                    {
-                        if (!_grid.TryGetValue((cx, cy), out List<Floor> list)) _grid[(cx, cy)] = list = new List<Floor>();
-                        list.Add(floor);
-                    }
-            }
-        }
-
-        public bool TrySample(Float3 position, out Float3 light)
-        {
-            light = default;
-            if (!TryFindFloor(position, out Face face, out Lightmap lightmap, out int s, out int t)) return false;
-            light = Luxel(_bsp, face, t * lightmap.Width + s, lightmap.Width * lightmap.Height);
-            return true;
-        }
-
-        public bool TryFindLuxel(Float3 position, out int page, out Float2 uv)
-        {
-            page = -1;
-            uv = default;
-            if (TryFindAmbient(position, out int sample))
-            {
-                page = _ambientPage;
-                uv = new Float2((sample % _ambientSize + 0.5f) / _ambientSize, (sample / _ambientSize + 0.5f) / _ambientSize);
-                return true;
-            }
-            if (!TryFindFloor(position, out _, out Lightmap lightmap, out int s, out int t)) return false;
-            page = lightmap.Page;
-            uv = new Float2((lightmap.X + 1 + s + 0.5f) / PageSize, (lightmap.Y + 1 + t + 0.5f) / PageSize);
-            return true;
-        }
-
-        /// <summary>The ambient sample nearest a point in the BSP leaf it is in.</summary>
-        private bool TryFindAmbient(Float3 position, out int sample)
-        {
-            sample = -1;
-            if (_ambientPage < 0) return false;
-            var p = new Vector3(position.Z, -position.X, position.Y) / GoldSrcAssets.Scale;
-            int leaf = _bsp.LeafAt(p);
-            if (leaf < 0 || leaf >= _bsp.Leaves.Length) return false;
-            Leaf l = _bsp.Leaves[leaf];
-            float best = float.MaxValue;
-            for (int i = l.FirstAmbient; i < l.FirstAmbient + l.AmbientCount && i < _bsp.Ambient.Length; i++)
-            {
-                float d = Vector3.DistanceSquared(_bsp.Ambient[i].Position, p);
-                if (d < best)
-                {
-                    best = d;
-                    sample = i;
-                }
-            }
-            return sample >= 0;
-        }
-
-        /// <summary>The floor face under a point and the luxel of it there.</summary>
-        private bool TryFindFloor(Float3 position, out Face face, out Lightmap lightmap, out int s, out int t)
-        {
-            face = default;
-            lightmap = default;
-            s = t = 0;
-            var p = new Vector3(position.Z, -position.X, position.Y) / GoldSrcAssets.Scale;
-            if (!_grid.TryGetValue(((int)MathF.Floor(p.X / Cell), (int)MathF.Floor(p.Y / Cell)), out List<Floor> floors)) return false;
-
-            Floor best = null;
-            float bestDrop = Reach;
-            foreach (Floor floor in floors)
-            {
-                float z = (floor.Distance - floor.Normal.X * p.X - floor.Normal.Y * p.Y) / floor.Normal.Z;
-                float drop = p.Z - z;
-                if (drop < -4f || drop >= bestDrop || !Inside(floor.Corners, p.X, p.Y)) continue;
-                best = floor;
-                bestDrop = drop;
-            }
-            if (best == null) return false;
-
-            face = _bsp.Faces[best.Face];
-            TexInfo texInfo = _bsp.TexInfos[face.TexInfo];
-            lightmap = _lightmaps[best.Face];
-            var hit = new Vector3(p.X, p.Y, p.Z - bestDrop);
-            s = Math.Clamp((int)MathF.Round(Vector3.Dot(hit, texInfo.LightS) + texInfo.LightOffsetS - face.LightMinS), 0, lightmap.Width - 1);
-            t = Math.Clamp((int)MathF.Round(Vector3.Dot(hit, texInfo.LightT) + texInfo.LightOffsetT - face.LightMinT), 0, lightmap.Height - 1);
-            return true;
-        }
-
-        private static bool Inside(System.Numerics.Vector2[] corners, float x, float y)
-        {
-            bool? sign = null;
-            for (int i = 0; i < corners.Length; i++)
-            {
-                System.Numerics.Vector2 a = corners[i], b = corners[(i + 1) % corners.Length];
-                float cross = (b.X - a.X) * (y - a.Y) - (b.Y - a.Y) * (x - a.X);
-                if (MathF.Abs(cross) < 1e-3f) continue;
-                if (sign == null) sign = cross > 0;
-                else if (sign != cross > 0) return false;
-            }
-            return true;
-        }
-    }
 }

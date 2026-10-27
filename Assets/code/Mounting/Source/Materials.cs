@@ -102,8 +102,7 @@ public static class SourceMaterials
         Texture2D texture = string.IsNullOrWhiteSpace(baseName) ? null : content.Texture(baseName);
         if (texture.IsNotValid() && shader is "refract" or "eyerefract") return Hidden(result);
 
-        bool world = s_worldShaders.Contains(shader) && !unlit && !selfIllum;
-        var material = new Material(world ? WorldShader : Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
+        var material = new Material(Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
         if (texture.IsValid()) material.SetTexture("_MainTex", texture);
 
         Color color = ParseColor(p.GetValueOrDefault("color")) ?? ParseColor(p.GetValueOrDefault("color2")) ?? Color.White;
@@ -155,103 +154,6 @@ public static class SourceMaterials
         result.Material = material;
         MaterialSurfaces.Set(material, p.GetValueOrDefault("surfaceprop"));
         return result;
-    }
-
-    /// <summary>
-    /// What brushes are drawn with: the texture times the map's lightmap, fogged, and nothing else, as the games
-    /// draw them, plus realtime lights such as the flashlight. Lit would add the sky's reflection on top, which washes
-    /// shade and rooms out with a flat blue sheen. Faces with no lightmap fall back to the scene's ambient light.
-    /// </summary>
-    private const string WorldShaderSource = """
-        Shader "Slopbox/SourceLightmapped"
-        {
-            Surface "Unlit"
-            {
-                GLSLPROGRAM
-                void Surface(inout Graphite_SurfaceData s)
-                {
-                #if defined(GRAPHITE_STANDARD_FORWARD) && !defined(GRAPHITE_NO_OBJECT)
-                    vec4 placement = Graphite_Object().lightmapScaleOffset;
-                    vec3 albedo = s.BaseColor;
-                    vec3 baked = graphite_BakedDiffuse(vec3(0.0, 1.0, 0.0), s.UV1 * placement.xy + placement.zw);
-                    vec3 normal = normalize(cross(dFdx(s.WorldPos), dFdy(s.WorldPos)));
-                    if (dot(normal, s.ViewDir) < 0.0) normal = -normal;
-
-                    // Shadows of the models moving in the map, from the map's sun: the one directional light that
-                    // reaches the model layer. Its light is baked in already, so where something blocks it, it is
-                    // taken back out, never more than its shadow strength's share of the light there. A sun with
-                    // no light of its own only darkens by that share, as the game's projected shadows do.
-                    if ((Graphite_SurfaceLayers() & (1u << MAP_LAYER)) != 0u)
-                    {
-                        for (uint i = 0u; i < Graphite_DirectionalCount(); i++)
-                        {
-                            Graphite_DirectionalLight d = Graphite_GetDirectional(i);
-                            if ((d.layers & (1u << MODEL_LAYER)) == 0u || !d.shadow) continue;
-                            float NdotL = dot(normal, d.direction);
-                            if (NdotL <= 0.0) continue;
-                            float blocked = 1.0 - Graphite_DirectionalLightShadow(d, i, s.WorldPos, normal);
-                            if (blocked <= 0.0) continue;
-                            vec3 most = baked * d.shadowStrength;
-                            vec3 sun = d.color * (8.0 / PI) * NdotL;
-                            baked -= max(d.color.r, max(d.color.g, d.color.b)) > 0.001 ? min(sun * blocked, most) : most * blocked;
-                        }
-                    }
-                    s.BaseColor = albedo * baked;
-
-                    // Realtime lights on top, such as the flashlight: the scene's sun leaves the map's layers out.
-                    s.Emission += CalculateForwardLighting(s.WorldPos, normal, normal, s.ViewDir, albedo, 0.0, 0.9, 1.0);
-                #endif
-                }
-                ENDGLSL
-            }
-        }
-        """;
-
-    // Not carried over a hot reload, so edits to the source above take effect.
-    [ReloadIgnore] private static Shader s_worldShader;
-
-    private static Shader WorldShader
-    {
-        get
-        {
-            if (s_worldShader.IsValid()) return s_worldShader;
-            try
-            {
-                string source = WorldShaderSource
-                    .Replace("MAP_LAYER", MapProp.Layer.ToString(CultureInfo.InvariantCulture))
-                    .Replace("MODEL_LAYER", MapProp.ModelLayer.ToString(CultureInfo.InvariantCulture));
-                s_worldShader = Shader.FromSource(source, "Slopbox/SourceLightmapped.shader");
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Could not build the map shader, using Lit: {e.Message}");
-            }
-            if (s_worldShader.IsNotValid()) s_worldShader = Shader.LoadDefault(DefaultShader.Lit);
-            return s_worldShader;
-        }
-    }
-
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Material, Material> s_mapVariants = new();
-
-    /// <summary>
-    /// <paramref name="material"/> drawn the way the map's own surfaces are while it stands in a Source map: its
-    /// texture times the map's light, plus realtime lights, without the sky reflection Lit adds, which turns dark
-    /// props blue. Emissive and non-Lit materials are returned as they are.
-    /// </summary>
-    public static Material MapVariant(Material material)
-    {
-        if (material.IsNotValid() || material.Shader == WorldShader) return material;
-        if (s_mapVariants.TryGetValue(material, out Material cached) && cached.IsValid()) return cached;
-        if (material.Shader != Shader.LoadDefault(DefaultShader.Lit) || material.GetInt("_Emission") != 0) return material;
-
-        var variant = new Material(WorldShader) { Name = material.Name + " (map)" };
-        if (material.GetTexture("_MainTex") is { } texture && texture.IsValid()) variant.SetTexture("_MainTex", texture);
-        variant.SetColor("_MainColor", material.GetColor("_MainColor"));
-        variant.SetFloat("_AlphaCutoff", material.GetFloat("_AlphaCutoff"));
-        if (material.Surface is { } surface) variant.Surface = surface;
-        MaterialSurfaces.Set(variant, MaterialSurfaces.Get(material));
-        s_mapVariants.AddOrUpdate(material, variant);
-        return variant;
     }
 
     private static SourceMaterial Hidden(SourceMaterial material)

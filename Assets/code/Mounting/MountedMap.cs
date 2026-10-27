@@ -6,29 +6,6 @@ using Prowl.Vector;
 
 namespace Slopbox.Mounting;
 
-/// <summary>The light a map's surfaces give the models standing in it.</summary>
-public interface IMapLight
-{
-    /// <summary>
-    /// The linear light of the floor under <paramref name="position"/>, relative to the map, as the game lights a
-    /// model standing there. False when there is no floor below.
-    /// </summary>
-    bool TrySample(Float3 position, out Float3 light);
-}
-
-/// <summary>
-/// A map light that can also say where in its lightmap pages a point's floor light sits, so models standing there
-/// can read it the way the map's own surfaces do.
-/// </summary>
-public interface IMapLightmapLight : IMapLight
-{
-    /// <summary>
-    /// The lightmap page, an index into <see cref="MountedMap.LightmapPages"/>, and the UV in it of the floor luxel
-    /// under <paramref name="position"/>, relative to the map. False when there is no floor below.
-    /// </summary>
-    bool TryFindLuxel(Float3 position, out int page, out Float2 uv);
-}
-
 /// <summary>
 /// A map built from a mounted game's file: its world and brush entities as meshes, each part optionally solid
 /// and lit by one of the map's lightmap pages, and where players start. In Prowl's space (metres, Y up). What a
@@ -77,27 +54,6 @@ public sealed class MountedMap : IDisposable
     /// <summary>Where each soundscape plays.</summary>
     public IReadOnlyList<SoundscapeZone> Soundscapes { get; init; } = [];
 
-    /// <summary>
-    /// Drawn the way its game drew it: no tonemapping, colours clamped, so a camera inside the map switches its
-    /// tonemapper off (see MapCameraLook).
-    /// </summary>
-    public bool SourceLook { get; init; }
-
-    /// <summary>The way the map's sunlight travels, relative to the map, or null when it has no sun.</summary>
-    public Float3? SunDirection { get; init; }
-
-    /// <summary>
-    /// The sun's light on a surface facing it, in the lightmaps' linear units, or null when it has no sun. The
-    /// lightmaps hold it already; models, which the game lights at runtime, take it from a light.
-    /// </summary>
-    public Float3? SunLight { get; init; }
-
-    /// <summary>How the shadows of moving things fall on the map, as the game projects them.</summary>
-    public readonly record struct ShadowSettings(Float3 Direction, float Darkness, bool Enabled);
-
-    /// <summary>The map's own shadow settings, or null to use its sun, else straight down.</summary>
-    public ShadowSettings? Shadows { get; init; }
-
     /// <summary>Finds the map's sounds and soundscapes, or null when it has none.</summary>
     public IMapAudio Audio { get; init; }
 
@@ -112,8 +68,6 @@ public sealed class MountedMap : IDisposable
     /// <summary>The NPCs, items and other models the map places.</summary>
     public IReadOnlyList<PlacedModel> Models { get; }
 
-    /// <summary>Lights models standing in the map, or null when the map has no light to give.</summary>
-    public IMapLight Light { get; init; }
     public AABB Bounds { get; }
 
     /// <summary>Textures the map made itself, freed with it. Shared ones, such as WAD textures, are not listed.</summary>
@@ -150,8 +104,6 @@ public sealed class MountedMap : IDisposable
             var renderer = child.AddComponent<MeshRenderer>();
             renderer.Mesh = part.Mesh;
             renderer.Materials = [.. part.Materials];
-            // Its shadows are in its lightmaps; realtime ones come only from what moves in it.
-            renderer.ShadowCasting = ShadowCasting.Off;
 
             if (part.Solid) child.AddComponent<MeshCollider>().Mesh = part.Mesh;
         }

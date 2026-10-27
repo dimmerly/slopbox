@@ -83,7 +83,6 @@ public sealed partial class Player
         if (_animator.IsValid() && graph.IsValid()) _animator.Graph = graph;
         if (_animator.IsValid()) GetComponent<NetworkAnimator>().Bind(_animator);
         _bodyRenderers = _body.GetComponentsInChildren<SkinnedMeshRenderer>().ToArray();
-        _body.AddComponent<MapLit>();
         _shoulder = FindHumanBone(model.Transform, Prowl.Motion.HumanBodyBone.RightUpperArm);
         _rightHandRest = citizen != null ? rightHandRest : RestRotation(model.Transform, Prowl.Motion.HumanBodyBone.RightHand);
         _leftHandRest = citizen != null ? leftHandRest : RestRotation(model.Transform, Prowl.Motion.HumanBodyBone.LeftHand);

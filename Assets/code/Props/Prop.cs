@@ -131,8 +131,7 @@ public sealed class Prop : Component, INetworkEvents
                     return;
                 }
                 foreach (Component c in visual.GetComponents<Component>())
-                    if (c is Prop or Rigidbody3D or Collider or Light or LightProp or ThrusterProp
-                        || (c is MapLit && GetComponent<MapLit>().IsValid()))
+                    if (c is Prop or Rigidbody3D or Collider or Light or LightProp or ThrusterProp)
                         visual.RemoveComponent(c);
                 visual.Network.Mode = NetworkMode.Never;
                 visual.SetParent(GameObject, false);

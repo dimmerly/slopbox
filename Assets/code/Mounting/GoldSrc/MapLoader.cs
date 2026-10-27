@@ -129,10 +129,7 @@ internal sealed class MapLoader(string fullPath) : ResourceLoader<GameMount>
         if (spawns.Count == 0) spawns.Add(new MountedMap.SpawnPoint(Float3.Zero, 0f));
 
         var bounds = min.X <= max.X ? new AABB(min, max) : new AABB(new Float3(-1f), new Float3(1f));
-        return new MountedMap(Name, parts, pages, spawns, models, bounds, [.. materials.Values], owned)
-        {
-            Light = new LightSampler(bsp, lightmaps),
-        };
+        return new MountedMap(Name, parts, pages, spawns, models, bounds, [.. materials.Values], owned);
     }
 
     private static bool IsLiquid(string name) => name.StartsWith('!') || name.StartsWith("water", StringComparison.OrdinalIgnoreCase);
@@ -415,113 +412,5 @@ internal sealed class MapLoader(string fullPath) : ResourceLoader<GameMount>
 
     private static byte ToByte(float v) => (byte)Math.Clamp((int)MathF.Round(v * 255f), 0, 255);
 
-    /// <summary>
-    /// The light of the floor under a point, as the game lights models (R_LightPoint): straight down to the nearest
-    /// upward facing lit face of the world, then that face's luxel there, every light style added.
-    /// </summary>
-    private sealed class LightSampler : IMapLight
-    {
-        /// <summary>How far down a floor is looked for, in game units.</summary>
-        private const float Reach = 2048f;
 
-        private readonly BspFile _bsp;
-        private readonly Lightmap[] _lightmaps;
-        private readonly List<Floor> _floors = new();
-
-        // An upward facing face of the world, flattened for the downward test.
-        private sealed class Floor
-        {
-            public int Face;
-            public Vector3 Normal;
-            public float Distance;
-            public float MinX, MinY, MaxX, MaxY;
-            public System.Numerics.Vector2[] Corners;
-        }
-
-        public LightSampler(BspFile bsp, Lightmap[] lightmaps)
-        {
-            _bsp = bsp;
-            _lightmaps = lightmaps;
-
-            BrushModel world = bsp.Models.Length > 0 ? bsp.Models[0] : default;
-            for (int f = world.FirstFace; f < world.FirstFace + world.FaceCount && f < bsp.Faces.Length; f++)
-            {
-                Face face = bsp.Faces[f];
-                if (!lightmaps[f].Has || face.EdgeCount < 3) continue;
-
-                Plane plane = bsp.Planes[face.Plane];
-                Vector3 normal = face.PlaneSide == 0 ? plane.Normal : -plane.Normal;
-                if (normal.Z < 0.1f) continue;
-
-                var floor = new Floor
-                {
-                    Face = f,
-                    Normal = normal,
-                    Distance = face.PlaneSide == 0 ? plane.Distance : -plane.Distance,
-                    Corners = new System.Numerics.Vector2[face.EdgeCount],
-                    MinX = float.MaxValue, MinY = float.MaxValue, MaxX = float.MinValue, MaxY = float.MinValue,
-                };
-                for (int i = 0; i < face.EdgeCount; i++)
-                {
-                    Vector3 p = bsp.FaceVertex(face, i);
-                    floor.Corners[i] = new System.Numerics.Vector2(p.X, p.Y);
-                    floor.MinX = MathF.Min(floor.MinX, p.X); floor.MaxX = MathF.Max(floor.MaxX, p.X);
-                    floor.MinY = MathF.Min(floor.MinY, p.Y); floor.MaxY = MathF.Max(floor.MaxY, p.Y);
-                }
-                _floors.Add(floor);
-            }
-        }
-
-        public bool TrySample(Float3 position, out Float3 light)
-        {
-            light = default;
-            var p = new Vector3(position.Z, -position.X, position.Y) / GoldSrcAssets.Scale;
-
-            Floor best = null;
-            float bestDrop = Reach;
-            foreach (Floor floor in _floors)
-            {
-                if (p.X < floor.MinX || p.X > floor.MaxX || p.Y < floor.MinY || p.Y > floor.MaxY) continue;
-
-                float z = (floor.Distance - floor.Normal.X * p.X - floor.Normal.Y * p.Y) / floor.Normal.Z;
-                float drop = p.Z - z;
-                if (drop < -4f || drop >= bestDrop || !Inside(floor.Corners, p.X, p.Y)) continue;
-                best = floor;
-                bestDrop = drop;
-            }
-            if (best == null) return false;
-
-            Face face = _bsp.Faces[best.Face];
-            TexInfo texInfo = _bsp.TexInfos[face.TexInfo];
-            Lightmap lightmap = _lightmaps[best.Face];
-            var hit = new Vector3(p.X, p.Y, p.Z - bestDrop);
-            int s = Math.Clamp((int)MathF.Round((Vector3.Dot(hit, texInfo.S) + texInfo.OffsetS - lightmap.UMin) / LuxelSize), 0, lightmap.Width - 1);
-            int t = Math.Clamp((int)MathF.Round((Vector3.Dot(hit, texInfo.T) + texInfo.OffsetT - lightmap.VMin) / LuxelSize), 0, lightmap.Height - 1);
-
-            int luxels = lightmap.Width * lightmap.Height, luxel = t * lightmap.Width + s;
-            byte[] data = _bsp.Lighting;
-            for (int style = 0; style < 4 && face.Style(style) != 255; style++)
-            {
-                int src = face.LightmapOffset + (style * luxels + luxel) * 3;
-                if (src + 2 >= data.Length) break;
-                light += new Float3(s_linear[data[src]], s_linear[data[src + 1]], s_linear[data[src + 2]]);
-            }
-            return true;
-        }
-
-        // Convex polygon, either winding: the point is on the same side of every edge.
-        private static bool Inside(System.Numerics.Vector2[] corners, float x, float y)
-        {
-            bool? sign = null;
-            for (int i = 0; i < corners.Length; i++)
-            {
-                System.Numerics.Vector2 a = corners[i], b = corners[(i + 1) % corners.Length];
-                float cross = (b.X - a.X) * (y - a.Y) - (b.Y - a.Y) * (x - a.X);
-                if (MathF.Abs(cross) < 1e-3f) continue;
-                if (sign == null) sign = cross > 0;
-                else if (sign != cross > 0) return false;
-            }
-            return true;
-        }
-    }
 }
