@@ -21,7 +21,7 @@ public sealed class Beam
         _line.StartWidth = width;
         _line.EndWidth = width;
         SetColor(color);
-        Scene.Current.Add(_go);
+        _go.MoveTo(SceneInstance.Active.ActiveSection);
     }
 
     public bool IsValid => _go.IsValid() && !_go.IsDestroyQueued;

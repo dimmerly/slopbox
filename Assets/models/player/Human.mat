@@ -1,7 +1,9 @@
 {
   "$id": 1,
   "$type": "Prowl.Runtime.Resources.Material, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-  "_shader": NULL,
+  "_shader": {
+    "$asset": "63d5be44-f531-7354-a255-717cb71004bb"
+  },
   "_parent": NULL,
   "_properties": {
     "$id": 2,
@@ -39,6 +41,10 @@
         {
           "key": "_Metallic",
           "value": 0F
+        },
+        {
+          "key": "specular_roughness",
+          "value": 0.75F
         }
       ]
     },
@@ -59,6 +65,12 @@
       "entries": [
         {
           "key": "_MainTex",
+          "value": {
+            "$asset": "ce1b697e-d686-4bda-ac86-8ce722f25555"
+          }
+        },
+        {
+          "key": "base_color_map",
           "value": {
             "$asset": "ce1b697e-d686-4bda-ac86-8ce722f25555"
           }
@@ -83,7 +95,9 @@
     "$values": [
       "_MainTex",
       "_Roughness",
-      "_Metallic"
+      "_Metallic",
+      "base_color_map",
+      "specular_roughness"
     ]
   },
   "_keywords": {

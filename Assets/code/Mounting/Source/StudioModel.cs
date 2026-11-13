@@ -198,7 +198,7 @@ internal static class StudioModel
             }
             if (!found)
             {
-                if (missing == null)
+                if (missing.IsNotValid())
                 {
                     missing = Materials.Lit(new Color(0.6f, 0.6f, 0.6f, 1f));
                     made.Add(missing);
@@ -251,7 +251,7 @@ internal static class StudioModel
         {
             int mesh = model + meshIndex + m * 116;
             int material = I32(mdl, mesh);
-            if (material >= 0 && material < skins[0].Length && skins[0][material] == null) continue;   // never drawn
+            if (material >= 0 && material < skins[0].Length && skins[0][material].IsNotValid()) continue;   // never drawn
             int meshFirstVertex = modelFirstVertex + I32(mdl, mesh + 12);
 
             int vtxMesh = lod + vtxMeshOffset + m * 9;

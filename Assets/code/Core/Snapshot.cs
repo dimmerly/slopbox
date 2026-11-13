@@ -168,7 +168,7 @@ public sealed class Snapshot
 
     private static void CaptureConstraints(Snapshot snap, Dictionary<Rigidbody3D, int> index, Float3 origin, Quaternion inverse)
     {
-        var ropes = Prowl.Runtime.Resources.Scene.Current.FindObjectsOfType<RopeVisual>()
+        var ropes = SceneInstance.Active.GetAll<RopeVisual>()
             .Where(r => r.Constraint.IsValid())
             .ToDictionary(r => r.Constraint);
         var welded = new HashSet<(Rigidbody3D, Rigidbody3D)>();
@@ -246,7 +246,7 @@ public sealed class Snapshot
             go.Transform.Position = origin + rotation * V(data.Position);
             go.Transform.Rotation = rotation * Q(data.Rotation);
             go.Transform.LocalScale = new Float3(data.Scale);
-            Prowl.Runtime.Resources.Scene.Current.Add(go);
+            go.MoveTo(SceneInstance.Active.ActiveSection);
 
             Prop prop = go.GetComponent<Prop>();
             Rigidbody3D body = go.GetComponent<Rigidbody3D>();
@@ -293,7 +293,7 @@ public sealed class Snapshot
                     draw.Constraint = rope;
                     if (c.Color != null) draw.Color = C(c.Color);
                     draw.Width = c.Width;
-                    Prowl.Runtime.Resources.Scene.Current.Add(visual);
+                    visual.MoveTo(SceneInstance.Active.ActiveSection);
                     made.Add(visual);
                     break;
             }

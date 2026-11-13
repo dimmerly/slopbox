@@ -64,7 +64,7 @@ public sealed class MaterialCatalog
             Material material = await AssetDatabase.LoadAsync<Material>(entry.Guid);
 
             // The picker draws the albedo itself, outside the material, so it has to be kept loaded too.
-            Texture2D albedo = material.IsValid() ? material._properties.GetTexture("_MainTex") : null;
+            Texture2D albedo = material.IsValid() ? material._properties.GetTexture(Materials.BaseColorMap) : null;
             if (albedo.IsValid()) AssetDatabase.Hold(albedo, entry);
             entry.Material = material;
         }

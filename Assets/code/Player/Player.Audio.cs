@@ -46,7 +46,7 @@ public sealed partial class Player
         _leftFoot = !_leftFoot;
         string surface = "grass";
         Float3 origin = Transform.Position + Float3.UnitY * 0.25f;
-        if (Scene.Current.Physics.Raycast(origin, -Float3.UnitY, out RaycastHit hit, 0.8f, QueryFilter.Default))
+        if (Scene.Physics.Raycast(origin, -Float3.UnitY, 0.8f, out RaycastHit hit, QueryFilter.Default))
         {
             Material material = MaterialSurfaces.MaterialAt(hit, origin, -Float3.UnitY);
             string surfaceProp = MaterialSurfaces.Get(material);

@@ -36,9 +36,9 @@ public sealed class MapProp : Component
     [SerializeIgnore] private MapSpawnable _source;
     [SerializeIgnore] private MountedMap _map;
     [SerializeIgnore] private GameObject _geometry;
-    [SerializeIgnore] private Scene _litScene;
+    [SerializeIgnore] private SceneSection _litSection;
 
-    /// <summary>Every map giving a scene its light, whose probes together are that scene's.</summary>
+    /// <summary>Every map giving a scene section its light, whose probes together are that section's.</summary>
     private static readonly List<MapProp> s_lit = new();
 
     /// <param name="geometry">The <see cref="MountedMap.Instantiate"/>d map under this object, which the map's models join.</param>
@@ -51,16 +51,17 @@ public sealed class MapProp : Component
 
     public override void OnEnable()
     {
-        if (_map == null || _geometry.IsNotValid() || _litScene.IsValid() || GameObject.Scene.IsNotValid()) return;
-        _litScene = GameObject.Scene;
-        _map.AddLighting(_litScene, _geometry);
+        // Lightmaps and probes belong to the section the map was loaded or spawned into.
+        if (_map == null || _geometry.IsNotValid() || _litSection != null || GameObject.Section == null) return;
+        _litSection = GameObject.Section;
+        _map.AddLighting(_litSection, _geometry);
         s_lit.Add(this);
-        UpdateProbes(_litScene);
-
         foreach (GameObject part in _geometry.Children.Take(_map.Parts.Count)) part.LayerIndex = Layer;
-        foreach (Light light in Scene.Current.FindObjectsOfType<Light>())
-            if (light.Type == LightType.Directional)
-                light.LayerMask = LayerMask.FromMask((uint)light.LayerMask.Mask & ~(1u << Layer));
+        UpdateProbes(_litSection);
+
+        TurnOffSuns();
+        UseMapSky();
+        ShowAsInGame();
     }
 
     public override void OnDisable() => RemoveLighting();
@@ -74,36 +75,132 @@ public sealed class MapProp : Component
     private void RemoveLighting()
     {
         if (!s_lit.Remove(this)) return;
-        if (_map != null && _litScene.IsValid())
+        if (_map != null && _litSection != null)
         {
-            _map.RemoveLighting(_litScene, _geometry);
-            UpdateProbes(_litScene);
+            _map.RemoveLighting(_litSection, _geometry);
+            UpdateProbes(_litSection);
         }
-        _litScene = null;
+        _litSection = null;
+        if (s_lit.Count == 0)
+        {
+            RestoreSuns();
+            RestoreSky();
+            RestoreCameras();
+        }
+    }
+
+    /// <summary>The sky the scene had before a map put its own up.</summary>
+    private static Material s_ownSky;
+    private static SceneInstance s_skyScene;
+
+    private void UseMapSky()
+    {
+        if (_map.Sky.IsNotValid()) return;
+        if (s_skyScene.IsNotValid()) { s_ownSky = Scene.Environment.SkyMaterial; s_skyScene = Scene; }
+        Scene.Environment.SkyMaterial = _map.Sky;
+    }
+
+    private static void RestoreSky()
+    {
+        if (s_skyScene.IsValid()) s_skyScene.Environment.SkyMaterial = s_ownSky;
+        s_skyScene = null;
+        s_ownSky = null;
+    }
+
+    [SerializeIgnore] private float _nextCameraCheck;
+
+    // Cameras made after the map, such as the player's, get the game's look too
+    public override void Update()
+    {
+        if (_litSection == null || Time.TimeSinceStartup < _nextCameraCheck) return;
+        _nextCameraCheck = (float)Time.TimeSinceStartup + 0.5f;
+        ShowAsInGame();
+    }
+
+    /// <summary>The scene's suns that were on before a map turned them off.</summary>
+    private static readonly List<DirectionalLight> s_suns = new();
+
+    /// <summary>
+    /// The map lights everything in it itself, its sun included (baked into its lightmaps, and into its probes for
+    /// models), so the scene's suns would only light things twice.
+    /// </summary>
+    private void TurnOffSuns()
+    {
+        foreach (DirectionalLight light in Scene.GetAll<DirectionalLight>())
+        {
+            if (!light.Enabled) continue;
+            s_suns.Add(light);
+            light.Enabled = false;
+        }
+    }
+
+    private static void RestoreSuns()
+    {
+        foreach (DirectionalLight light in s_suns)
+            if (light.IsValid()) light.Enabled = true;
+        s_suns.Clear();
+    }
+
+    /// <summary>Each camera's own tonemapper and bloom, kept while it shows a map as its game did.</summary>
+    private static readonly Dictionary<Camera, (Prowl.Runtime.Rendering.TonemappingMode Mode, float Bloom)> s_cameras = new();
+
+    /// <summary>
+    /// Shows the scene the way the map's game drew it: colour clamped and gamma encoded with no tonemapping curve,
+    /// and no bloom, so a lightmapped texture at full light shows as the texture.
+    /// </summary>
+    private void ShowAsInGame()
+    {
+        foreach (Camera camera in Scene.GetAll<Camera>(includeDisabled: true))
+        {
+            if (s_cameras.ContainsKey(camera) || camera.Profile.IsNotValid()) continue;
+            if (!camera.Profile.TryGet(out Prowl.Runtime.Rendering.Tonemapping tonemapping)) continue;
+            float bloom = camera.Profile.TryGet(out Prowl.Runtime.Rendering.Bloom b) ? b.Intensity.Value : 0f;
+            s_cameras[camera] = (tonemapping.Mode.Value, bloom);
+            tonemapping.Mode.Set(Prowl.Runtime.Rendering.TonemappingMode.None);
+            if (b != null) b.Intensity.Set(0f);
+        }
+    }
+
+    private static void RestoreCameras()
+    {
+        foreach ((Camera camera, var own) in s_cameras)
+        {
+            if (camera.IsNotValid() || camera.Profile.IsNotValid()) continue;
+            if (camera.Profile.TryGet(out Prowl.Runtime.Rendering.Tonemapping tonemapping)) tonemapping.Mode.Set(own.Mode);
+            if (camera.Profile.TryGet(out Prowl.Runtime.Rendering.Bloom bloom)) bloom.Intensity.Set(own.Bloom);
+        }
+        s_cameras.Clear();
     }
 
     /// <summary>
-    /// The scene's light probes, from every map in it, so models and players are lit like the map around them.
+    /// The section's light probes, from every map in it, so models and players are lit like the map around them.
     /// The probes are not tetrahedralised; the renderer blends the nearest ones.
     /// </summary>
-    private static void UpdateProbes(Scene scene)
+    private static void UpdateProbes(SceneSection section)
     {
         var positions = new List<Float3>();
         var sh = new List<Prowl.Runtime.Rendering.SphericalHarmonicsL2>();
         foreach (MapProp map in s_lit)
-            if (map._litScene == scene && map._geometry.IsValid())
-                map._map.AppendProbes(map._geometry.Transform, positions, sh);
+            if (map._litSection == section && map._geometry.IsValid())
+                map._map.AppendProbes(map._geometry.Transform, positions, sh, map.SeesSky);
 
-        Scene.BakedLightingData baked = scene.BakedLighting;
+        SceneLighting baked = section.Lighting;
         baked.ProbePositions = [.. positions];
         baked.ProbeSH = [.. sh];
         baked.ProbeTetrahedra = [];
         baked.ProbeTetNeighbours = [];
-        scene.InvalidateProbeVolume();
+        if (section.Instance.IsValid()) section.Instance.InvalidateProbeVolume();
     }
+
+    /// <summary>Whether the map has nothing between <paramref name="at"/> and its sky that way: its sky faces have no colliders.</summary>
+    private bool SeesSky(Float3 at, Float3 toSun)
+        => !Scene.Physics.Raycast(at, toSun, 400f, out RaycastHit _, new QueryFilter(LayerMask.FromMask(1u << Layer)));
 
     public override void Start()
     {
+        // Again now the map's colliders are in the physics world, for which probes the sun reaches
+        if (_litSection != null) UpdateProbes(_litSection);
+
         if (_map != null && _source != null && _geometry.IsValid() && _map.Models.Count > 0) PlaceModelsAsync();
     }
 
@@ -153,7 +250,7 @@ public sealed class MapProp : Component
                 if (!model.Exact && !s_floating.Contains(model.ClassName))
                 {
                     Float3 from = space.TransformPoint(local + Float3.UnitY * 0.1f);
-                    if (Scene.Current.Physics.Raycast(from, -space.Up, out RaycastHit hit, 4f, QueryFilter.Default))
+                    if (Scene.Physics.Raycast(from, -space.Up, 4f, out RaycastHit hit, QueryFilter.Default))
                         local = space.InverseTransformPoint(hit.Point);
                 }
 

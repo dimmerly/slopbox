@@ -139,7 +139,9 @@ public sealed class MapAmbience : Component
     private void UpdateZone()
     {
         if (_map.Soundscapes.Count == 0) return;
-        AudioListener listener = Scene.Current.FindObjectsOfType<AudioListener>().FirstOrDefault();
+        AudioListener listener = Scene.GetAll<AudioListener>().FirstOrDefault();
+
+        
         if (listener.IsNotValid()) return;
 
         Float3 here = _geometry.Transform.InverseTransformPoint(listener.Transform.Position);

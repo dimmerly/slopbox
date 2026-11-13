@@ -95,7 +95,7 @@ public sealed partial class Player
             return;
         }
         // Reuse the scene's camera so its effects and settings stay, else make one.
-        Camera = Scene.Current.FindObjectsOfType<Camera>()
+        Camera = Scene.GetAll<Camera>()
             .Where(c => c.Enabled && c.Target.IsNotValid())
             .OrderByDescending(c => c.Depth)
             .FirstOrDefault();
@@ -104,7 +104,7 @@ public sealed partial class Player
         {
             var go = new GameObject("Player Camera") { Tag = "Main Camera" };
             Camera = go.AddComponent<Camera>();
-            Scene.Current.Add(go);
+            go.MoveTo(Scene);
         }
 
         Camera.GameObject.SetParent(null);
@@ -114,11 +114,12 @@ public sealed partial class Player
 
         if (GameManager.Instance.DefaultCameraEffects && (Camera.Profile.IsNotValid() || Camera.Profile.Components.Count == 0))
         {
-            Camera.Profile = new VolumeProfile();
+            // The camera default profile carries the Tonemapping component an HDR camera needs.
+            Camera.Profile = VolumeProfile.CreateCameraDefault("Player Camera Profile");
             Bloom bloom = Camera.Profile.Add<Bloom>();
             bloom.Intensity.Set(0.3f);
             bloom.Threshold.Set(1.1f);
-            Camera.Tonemapping = TonemappingMode.ACES;
+            Camera.Profile.Get<Tonemapping>().Mode.Set(TonemappingMode.ACES);
             Camera.AntiAliasing = AntiAliasingMode.FXAA;
         }
 
@@ -219,7 +220,7 @@ public sealed partial class Player
             if (want > 0.01f)
             {
                 Float3 dir = offset / want;
-                if (Scene.Current.Physics.SphereCast(pivot, CameraRadius, dir, want, out ShapeCastHit hit, QueryFilter.Default) && hit.Hit)
+                if (Scene.Physics.SphereCast(pivot, CameraRadius, dir, want, out ShapeCastHit hit, QueryFilter.Default) && hit.Hit)
                     allowed = MathF.Max(0f, hit.Distance);
             }
             // Pull in at once when something blocks, ease back out when it clears.
@@ -242,7 +243,7 @@ public sealed partial class Player
         if (_thirdBlend <= 0f) return;
 
         const float Far = 1000f;
-        Float3 target = Scene.Current.Physics.Raycast(camera, look, out RaycastHit hit, Far, QueryFilter.Default) ? hit.Point : camera + look * Far;
+        Float3 target = Scene.Physics.Raycast(camera, look, Far, out RaycastHit hit, QueryFilter.Default) ? hit.Point : camera + look * Far;
         Float3 toTarget = target - EyePosition;
         float distance = Float3.Length(toTarget);
         // Anything between the camera and the head would turn the aim round, so ignore it.

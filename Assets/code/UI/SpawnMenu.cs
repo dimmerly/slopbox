@@ -574,7 +574,7 @@ public sealed class SpawnMenu : Component
                     if (query.Length > 0 && !entry.Name.Contains(query, StringComparison.OrdinalIgnoreCase)) continue;
 
                     Material material = library.Get(entry);
-                    Texture2D albedo = material.IsValid() ? material._properties.GetTexture("_MainTex") : null;
+                    Texture2D albedo = material.IsValid() ? material._properties.GetTexture(Materials.BaseColorMap) : null;
                     bool isSelected = entry == selected;
 
                     using (paper.Box("swatch", i).Width(swatch).Height(swatch)

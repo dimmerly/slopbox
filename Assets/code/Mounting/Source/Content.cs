@@ -130,7 +130,7 @@ internal sealed class PakContent : IContent
         if (_files.TryGetValue($"materials/{name}.vtf", out byte[] data))
         {
             texture = SourceAssets.Texture(name, Vtf.Decode(data));
-            if (texture != null) OwnedTextures.Add(texture);
+            if (texture.IsValid()) OwnedTextures.Add(texture);
         }
         _textures[name] = texture;
         return texture;

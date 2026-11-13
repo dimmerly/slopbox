@@ -76,8 +76,40 @@ internal struct Node
 
 internal struct Leaf
 {
+    public const int Solid = 0x1;
+
+    public int Contents;
+    /// <summary>The visibility cluster the leaf is in, or -1 for none.</summary>
+    public int Cluster;
+    /// <summary>The area the leaf is in, which separates the 3D skybox from the playable map.</summary>
+    public int Area;
     public short MinX, MinY, MinZ, MaxX, MaxY, MaxZ;
     public int FirstAmbient, AmbientCount;
+}
+
+/// <summary>A decal-like texture vbsp laid over faces (info_overlay): a quad in its own basis, drawn on those faces.</summary>
+internal struct Overlay
+{
+    public int TexInfo;
+    public int[] Faces;
+    public float U0, U1, V0, V1;
+    /// <summary>The quad's corners in the overlay's basis (x along U, y along V).</summary>
+    public Vector3[] Points;
+    public Vector3 Origin, BasisU, BasisNormal;
+}
+
+/// <summary>A light vrad baked into the map, which the game also shines on models as they move.</summary>
+internal struct WorldLight
+{
+    public const int Surface = 0, Point = 1, Spot = 2, Sky = 3, Quake = 4, SkyAmbient = 5;
+
+    public Vector3 Origin;
+    /// <summary>Linear colour, in the units of the lightmaps.</summary>
+    public Vector3 Intensity;
+    /// <summary>Which way a spot or surface light faces, or the way the sun's light travels.</summary>
+    public Vector3 Normal;
+    public int Cluster, Type, Style;
+    public float StopDot, StopDot2, Exponent, Radius, Constant, Linear, Quadratic;
 }
 
 /// <summary>One of a leaf's ambient light samples: a cube of six colours and where in the leaf it was taken.</summary>
@@ -86,6 +118,8 @@ internal struct AmbientSample
     public Vector3 Position;
     /// <summary>+X, -X, +Y, -Y, +Z, -Z, as ColorRGBExp32 offsets into the lighting lump.</summary>
     public int CubeOffset;
+    /// <summary>The leaf the sample was taken in, or -1 if no leaf lists it.</summary>
+    public int Leaf;
 }
 
 internal struct StaticProp
@@ -170,6 +204,10 @@ internal sealed class BspFile
     public AmbientSample[] Ambient = [];
     /// <summary>The leaf ambient lighting lump, which <see cref="AmbientSample.CubeOffset"/> points into.</summary>
     public byte[] AmbientLighting = [];
+    public WorldLight[] WorldLights = [];
+    public Overlay[] Overlays = [];
+    /// <summary>The visibility lump, which <see cref="Visible"/> reads.</summary>
+    private byte[] _visibility = [];
 
     private readonly byte[] _data;
 
@@ -230,6 +268,66 @@ internal sealed class BspFile
 
         ReadStaticProps();
         ReadAmbient(ldr);
+        ReadWorldLights(ldr);
+        _visibility = Bytes(LumpVisibility);
+        Overlays = Read(LumpOverlays, 352, at =>
+        {
+            int count = BitConverter.ToUInt16(_data, at + 6) & 0x3FFF;
+            var faces = new int[Math.Min(count, 64)];
+            for (int i = 0; i < faces.Length; i++) faces[i] = I(at + 8 + i * 4);
+            var points = new Vector3[4];
+            for (int i = 0; i < 4; i++) points[i] = V3(at + 280 + i * 12);
+            return new Overlay
+            {
+                TexInfo = BitConverter.ToInt16(_data, at + 4),
+                Faces = faces,
+                U0 = F(at + 264), U1 = F(at + 268), V0 = F(at + 272), V1 = F(at + 276),
+                Points = points,
+                // vbsp packs the U axis into the points' z
+                BasisU = new Vector3(points[0].Z, points[1].Z, points[2].Z),
+                Origin = V3(at + 328), BasisNormal = V3(at + 340),
+            };
+        });
+    }
+
+    private const int LumpOverlays = 45;
+
+    private const int LumpVisibility = 4, LumpWorldLights = 15, LumpWorldLightsHdr = 54;
+
+    /// <summary>The map's lights from the lump matching its lightmaps, in either layout: newer ones add a shadow offset.</summary>
+    private void ReadWorldLights(bool ldr)
+    {
+        int lump = ldr ? LumpWorldLights : LumpWorldLightsHdr;
+        int version = I(8 + lump * 16 + 8);
+        int size = version >= 1 ? 100 : 88, shift = version >= 1 ? 12 : 0;
+        WorldLights = Read(lump, size, at => new WorldLight
+        {
+            Origin = V3(at), Intensity = V3(at + 12), Normal = V3(at + 24),
+            Cluster = I(at + shift + 36), Type = I(at + shift + 40), Style = I(at + shift + 44),
+            StopDot = F(at + shift + 48), StopDot2 = F(at + shift + 52), Exponent = F(at + shift + 56), Radius = F(at + shift + 60),
+            Constant = F(at + shift + 64), Linear = F(at + shift + 68), Quadratic = F(at + shift + 72),
+        });
+    }
+
+    /// <summary>
+    /// The clusters <paramref name="cluster"/> can see, one bit each, from its run length coded row of the visibility
+    /// lump. Null when the map has no visibility, in which case everything sees everything.
+    /// </summary>
+    public byte[] Visible(int cluster)
+    {
+        if (_visibility.Length < 4 || cluster < 0) return null;
+        int clusters = BitConverter.ToInt32(_visibility, 0);
+        if (cluster >= clusters) return null;
+        int at = BitConverter.ToInt32(_visibility, 4 + cluster * 8);
+        var row = new byte[(clusters + 7) / 8];
+        for (int o = 0; o < row.Length && at < _visibility.Length;)
+        {
+            byte b = _visibility[at++];
+            if (b != 0) { row[o++] = b; continue; }
+            if (at >= _visibility.Length) break;
+            o += _visibility[at++];   // a run of zero bytes
+        }
+        return row;
     }
 
     private const int LumpNodes = 5, LumpLeafs = 10, LumpLeafAmbientIndexHdr = 51, LumpLeafAmbientIndex = 52,
@@ -250,32 +348,44 @@ internal sealed class BspFile
         int[] index = Read(indexLump, 4, at => I(at));
         Leaves = Read(LumpLeafs, 32, at => new Leaf
         {
+            Contents = I(at),
+            Cluster = BitConverter.ToInt16(_data, at + 4),
+            Area =BitConverter.ToUInt16(_data, at + 6) & 0x1FF,
             MinX = BitConverter.ToInt16(_data, at + 8), MinY = BitConverter.ToInt16(_data, at + 10), MinZ = BitConverter.ToInt16(_data, at + 12),
             MaxX = BitConverter.ToInt16(_data, at + 14), MaxY = BitConverter.ToInt16(_data, at + 16), MaxZ = BitConverter.ToInt16(_data, at + 18),
         });
+
+        // The first sample is stored in 16 bits, which big maps outgrow: vrad lists the samples leaf after leaf, so the
+        // bits lost are the ones that keep each leaf's first at or after where the previous leaf's ended.
+        int next = 0;
         for (int i = 0; i < Leaves.Length && i < index.Length; i++)
         {
-            Leaves[i].AmbientCount = index[i] & 0xFFFF;
-            Leaves[i].FirstAmbient = (index[i] >> 16) & 0xFFFF;
+            int count = index[i] & 0xFFFF;
+            int first = (index[i] >> 16) & 0xFFFF;
+            if (count > 0)
+            {
+                first |= next & ~0xFFFF;
+                if (first < next) first += 0x10000;
+                next = first + count;
+            }
+            Leaves[i].AmbientCount = count;
+            Leaves[i].FirstAmbient = first;
         }
 
         AmbientLighting = Bytes(lightingLump);
         var samples = new AmbientSample[AmbientLighting.Length / 28];
         for (int s = 0; s < samples.Length; s++)
+            samples[s] = new AmbientSample { CubeOffset = s * 28, Leaf = -1 };
+
+        for (int i = 0; i < Leaves.Length; i++)
         {
-            int at = s * 28;
-            samples[s] = new AmbientSample
-            {
-                CubeOffset = at,
-                // Fractions of the leaf's box, 0 to 255; turned into positions per leaf below.
-                Position = new Vector3(AmbientLighting[at + 24], AmbientLighting[at + 25], AmbientLighting[at + 26]),
-            };
-        }
-        foreach (Leaf leaf in Leaves)
-        {
+            Leaf leaf = Leaves[i];
             for (int s = leaf.FirstAmbient; s < leaf.FirstAmbient + leaf.AmbientCount && s < samples.Length; s++)
             {
-                Vector3 f = samples[s].Position / 255f;
+                // Where in the leaf's box, as fractions of it from 0 to 255
+                int at = s * 28;
+                Vector3 f = new Vector3(AmbientLighting[at + 24], AmbientLighting[at + 25], AmbientLighting[at + 26]) / 255f;
+                samples[s].Leaf = i;
                 samples[s].Position = new Vector3(
                     leaf.MinX + (leaf.MaxX - leaf.MinX) * f.X,
                     leaf.MinY + (leaf.MaxY - leaf.MinY) * f.Y,

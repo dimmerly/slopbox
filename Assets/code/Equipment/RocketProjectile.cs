@@ -32,13 +32,13 @@ public sealed class RocketProjectile : Component
         rocket._radius = radius;
         rocket._blastSpeed = blastSpeed;
         rocket._launchPosition = muzzle;
-        Scene.Current.Add(go);
+        go.MoveTo(SceneInstance.Active.ActiveSection);
         if (Networking.IsHost) go.Network.Spawn();
 
         // The muzzle can be beyond a nearby wall: sweep from the eye before allowing flight.
         Float3 offset = muzzle - eye;
         float distance = Float3.Length(offset);
-        if (distance > 0f && Scene.Current.Physics.SphereCast(eye, CollisionRadius, offset / distance, distance, out ShapeCastHit hit))
+        if (distance > 0f && SceneInstance.Active.Physics.SphereCast(eye, CollisionRadius, offset / distance, distance, out ShapeCastHit hit))
             rocket.Explode(eye + offset / distance * hit.Distance - hit.Normal * CollisionRadius, hit.Normal);
     }
 
@@ -87,7 +87,7 @@ public sealed class RocketProjectile : Component
         if (_exploded || IsProxy) return;
         float distance = _speed * Time.FixedDeltaTime;
         Float3 start = Transform.Position;
-        if (Scene.Current.Physics.SphereCast(start, CollisionRadius, _direction, distance, out ShapeCastHit hit))
+        if (Scene.Physics.SphereCast(start, CollisionRadius, _direction, distance, out ShapeCastHit hit))
         {
             Explode(start + _direction * hit.Distance - hit.Normal * CollisionRadius, hit.Normal);
             return;
@@ -128,7 +128,7 @@ public sealed class RocketProjectile : Component
     public static void Blast(Float3 position, float radius, float speed)
     {
         var hits = new List<ShapeCastHit>();
-        Scene.Current.Physics.OverlapSphere(position, radius, hits);
+        SceneInstance.Active.Physics.OverlapSphere(position, radius, hits);
         var affected = new HashSet<Rigidbody3D>();
         foreach (ShapeCastHit hit in hits)
         {

@@ -30,7 +30,7 @@ public sealed class LightProp : Component
         go.AddComponent<Rigidbody3D>().Mass = 1f;
         go.AddComponent<Prop>();
 
-        var light = go.AddComponent<Light>();
+        var light = go.AddComponent<PointLight>();
         light.CastShadows = false;
 
         var bulb = new GameObject("Bulb");
@@ -66,10 +66,10 @@ public sealed class LightProp : Component
 
     public void Apply()
     {
-        if (TryGetComponent(out Light light))
+        if (TryGetComponent(out PointLight light))
         {
             light.Color = Color;
-            light.Intensity = Brightness;
+            light.Intensity = Brightness * LegacyLight.Scale;
             light.Range = Range;
         }
 

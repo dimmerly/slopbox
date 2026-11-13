@@ -236,7 +236,7 @@ public sealed class PlacerTool : BaseTool
     private void Place(GameObject go, AABB bounds, Float3 cell, Quaternion facing)
     {
         float ground = cell.Y;
-        if (Scene.Current.Physics.Raycast(cell + Float3.UnitY * 20f, -Float3.UnitY, out RaycastHit hit, 60f, QueryFilter.Default))
+        if (SceneInstance.Active.Physics.Raycast(cell + Float3.UnitY * 20f, -Float3.UnitY, 60f, out RaycastHit hit, QueryFilter.Default))
             ground = hit.Point.Y;
 
         Float3 center = facing * bounds.Center;
@@ -245,6 +245,6 @@ public sealed class PlacerTool : BaseTool
 
         // Frozen before it is in the world, so a whole batch never tumbles into itself.
         if (Freeze && go.TryGetComponent(out Rigidbody3D body)) body.MotionType = MotionType.Kinematic;
-        Scene.Current.Add(go);
+        go.MoveTo(SceneInstance.Active.ActiveSection);
     }
 }

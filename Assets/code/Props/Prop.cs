@@ -49,7 +49,7 @@ public sealed class Prop : Component, INetworkEvents
     }
 
     /// <summary>Every prop in the current scene.</summary>
-    public static Prop[] All => Scene.Current.FindObjectsOfType<Prop>();
+    public static Prop[] All => SceneInstance.HasMain ? SceneInstance.Active.GetAll<Prop>() : [];
 
     protected override void OnDispose()
     {
@@ -275,8 +275,8 @@ public sealed class Prop : Component, INetworkEvents
                 }
 
                 Material clone = source.Clone();
-                Color c = source._properties.GetColor("_MainColor");
-                clone.SetColor("_MainColor", new Color(c.R * _tint.R, c.G * _tint.G, c.B * _tint.B, c.A * _tint.A));
+                Color c = source._properties.GetColor(Materials.BaseColor);
+                clone.SetColor(Materials.BaseColor, new Color(c.R * _tint.R, c.G * _tint.G, c.B * _tint.B, c.A * _tint.A));
                 state.Clones.Add(clone);
                 shown.Add(clone);
             }

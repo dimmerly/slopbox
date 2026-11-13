@@ -33,7 +33,7 @@ public sealed partial class Player
 
     internal void CaptureEquipmentInput()
     {
-        var keys = Scene.Current.FindObjectsOfType<ThrusterProp>().SelectMany(t => new[] { t.Forward, t.Back }).Distinct().OrderBy(k => k);
+        var keys = Scene.GetAll<ThrusterProp>().SelectMany(t => new[] { t.Forward, t.Back }).Distinct().OrderBy(k => k);
         string down = "," + string.Join(",,", keys.Where(Controls.Down).Select(k => (int)k)) + ",";
         string pressed = string.Join(",", keys.Where(Controls.Pressed).Select(k => $",{(int)k},"));
         EquipmentInput = new EquipmentInput

@@ -6,7 +6,7 @@ namespace Slopbox;
 /// <summary>The flashlight: a spot light riding on the camera, toggled with <see cref="Controls.Flashlight"/>.</summary>
 public sealed partial class Player
 {
-    private Light _flashlight;
+    private SpotLight _flashlight;
 
     public bool FlashlightOn => _flashlight.IsValid() && _flashlight.Enabled;
 
@@ -19,13 +19,12 @@ public sealed partial class Player
         // instead: the weapon sits behind the cone and is never lit by it.
         go.Transform.LocalPosition = new Float3(0f, 0f, 0.75f);
 
-        _flashlight = go.AddComponent<Light>();
-        _flashlight.Type = LightType.Spot;
+        _flashlight = go.AddComponent<SpotLight>();
         _flashlight.Color = new Color(1f, 0.93f, 0.8f, 1f);
-        _flashlight.Intensity = 6f;
+        _flashlight.Intensity = 6f * LegacyLight.Scale;
         _flashlight.Range = 30f;
-        _flashlight.OuterAngle = 50f;
-        _flashlight.InnerAngle = 25f;
+        _flashlight.SpotAngle = 100f;     // whole cone: twice the old 50 degree outer half angle
+        _flashlight.SpotSoftness = 0.5f;  // (outer - inner) / outer, from the old 25 degree inner angle
         _flashlight.CastShadows = false;
         _flashlight.Enabled = false;
     }

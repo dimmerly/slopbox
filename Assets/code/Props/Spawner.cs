@@ -71,7 +71,7 @@ public static class Spawner
 
         go.Transform.Position = point + normal * (lift + 0.01f);
         go.Transform.Rotation = rotation;
-        Scene.Current.Add(go);
+        go.MoveTo(SceneInstance.Active.ActiveSection);
         return go;
     }
 

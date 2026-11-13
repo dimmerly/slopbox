@@ -12,7 +12,7 @@ public sealed class RocketBlast : Component
     private float _radius, _age;
     private Float3 _normal, _tangent, _bitangent;
     private GameObject _flash;
-    private Light _light;
+    private PointLight _light;
     private Material _flashMaterial, _lineMaterial;
     private LineRenderer _ring;
     private readonly LineRenderer[] _sparks = new LineRenderer[18];
@@ -26,7 +26,7 @@ public sealed class RocketBlast : Component
         var blast = go.AddComponent<RocketBlast>();
         blast._radius = radius;
         blast._normal = Float3.LengthSquared(normal) > 0.001f ? Float3.Normalize(normal) : Float3.UnitY;
-        Scene.Current.Add(go);
+        go.MoveTo(SceneInstance.Active.ActiveSection);
     }
 
     public override void Start()
@@ -41,10 +41,10 @@ public sealed class RocketBlast : Component
         var mesh = _flash.AddComponent<MeshRenderer>();
         mesh.Mesh = Shapes.Sphere;
         mesh.Material = _flashMaterial;
-        _light = GameObject.AddComponent<Light>();
+        _light = GameObject.AddComponent<PointLight>();
         _light.Color = new Color(1f, 0.35f, 0.08f, 1f);
         _light.Range = _radius * 2f;
-        _light.Intensity = 12f;
+        _light.Intensity = 12f * LegacyLight.Scale;
         _light.CastShadows = false;
         _ring = MakeLine("Shockwave");
         _ring.Loop = true;
@@ -79,7 +79,7 @@ public sealed class RocketBlast : Component
         float fade = 1f - t;
         _flash.Enabled = _age < 0.18f;
         _flash.Transform.LocalScale = new Float3(0.4f + _age * 12f);
-        _light.Intensity = 12f * fade * fade;
+        _light.Intensity = 12f * LegacyLight.Scale * fade * fade;
         _ring.StartColor = _ring.EndColor = new Color(2f * fade, 0.7f * fade, 0.1f * fade, fade);
         _ring.StartWidth = _ring.EndWidth = 0.12f * fade;
         _ring.Points.Clear();

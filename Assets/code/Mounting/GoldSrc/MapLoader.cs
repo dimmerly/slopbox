@@ -74,7 +74,7 @@ internal sealed class MapLoader(string fullPath) : ResourceLoader<GameMount>
             LightingFlags flags = name.StartsWith('{') ? LightingFlags.Masked : 0;
             if (mode == 5) flags |= LightingFlags.Additive;
             material = GoldSrcAssets.Material(name, textures[tex], flags);
-            material.SetFloat("_Roughness", 1f);
+            material.SetFloat(Materials.Roughness, 1f);
 
             // The compiler keeps only faces seen from inside, so from outside a map would be nothing at all. Drawn
             // from both sides, it shows as a shell of its rooms.
@@ -85,7 +85,7 @@ internal sealed class MapLoader(string fullPath) : ResourceLoader<GameMount>
             if (alpha < 1f && mode != 5)
             {
                 material.Surface = new SurfaceSettings(SurfaceType.Transparent, SurfaceBlend.Alpha, SurfaceCull.Off);
-                material.SetColor("_MainColor", new Color(1f, 1f, 1f, alpha));
+                material.SeeThrough(alpha);
             }
 
             materials[(tex, mode, amount)] = material;
@@ -273,7 +273,7 @@ internal sealed class MapLoader(string fullPath) : ResourceLoader<GameMount>
             textures[i] = Host?.FindWadTexture(mip.Name)?.GetOrCreate<Texture2D>();
             if (textures[i].IsValid()) continue;
 
-            if (missing == null)
+            if (missing.IsNotValid())
             {
                 missing = GoldSrcAssets.Texture("missing", 1, 1, [128, 128, 128, 255], mipmaps: false);
                 owned.Add(missing);

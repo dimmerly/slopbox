@@ -68,7 +68,7 @@ public static class ThrusterSound
         for (int i = 0; i < loop.Length; i++) loop[i] *= scale;
 
         AudioClip clip = AudioClip.Create("thruster_" + seed, loop, 1, Rate);
-        if (clip != null) clip.ClipName = "thruster_" + seed;
+        if (clip.IsValid()) clip.ClipName = "thruster_" + seed;
         return clip;
     }
 

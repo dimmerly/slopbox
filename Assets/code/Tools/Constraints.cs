@@ -88,7 +88,7 @@ public static class Constraints
     public static List<PhysicsConstraint> On(Rigidbody3D body)
     {
         var found = new List<PhysicsConstraint>();
-        foreach (PhysicsConstraint c in Scene.Current.FindObjectsOfType<PhysicsConstraint>())
+        foreach (PhysicsConstraint c in SceneInstance.Main.GetAll<PhysicsConstraint>())
         {
             if (c.IsNotValid()) continue;
             if (c.GameObject == body.GameObject || c.ConnectedBody == body) found.Add(c);

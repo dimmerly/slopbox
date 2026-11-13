@@ -205,7 +205,7 @@ public abstract class SourceMount : BaseGameMount, IContent
     internal Texture2D Texture(string name)
     {
         name = ContentPaths.MaterialName(name);
-        if (_textures.TryGetValue(name, out Texture2D cached) && (cached == null || cached.IsValid())) return cached;
+        if (_textures.TryGetValue(name, out Texture2D cached) && (ReferenceEquals(cached, null) || cached.IsValid())) return cached;
 
         Texture2D texture = null;
         try

@@ -66,7 +66,7 @@ public sealed class RopeTool : TwoPointTool
         draw.Constraint = rope;
         draw.Color = Color;
         draw.Width = Width;
-        Prowl.Runtime.Resources.Scene.Current.Add(visual);
+        visual.MoveTo(Prowl.Runtime.Resources.SceneInstance.Active.ActiveSection);
 
         Undo.Add("Rope", rope, visual);
         return true;

@@ -49,28 +49,26 @@ internal static class GoldSrcAssets
     public static Material Material(string name, Texture2D texture, LightingFlags flags)
     {
         var material = new Material(Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
-        material.SetTexture("_MainTex", texture);
-        material.SetColor("_MainColor", Color.White);
-        material.SetFloat("_Metallic", 0f);
-        material.SetFloat("_Roughness", (flags & LightingFlags.Chrome) != 0 ? 0.35f : 0.85f);
+        material.SetTexture(Materials.BaseColorMap, texture);
+        material.SetColor(Materials.BaseColor, Color.White);
+        material.SetFloat(Materials.Roughness, (flags & LightingFlags.Chrome) != 0 ? 0.35f : 0.85f);
 
         if ((flags & LightingFlags.Additive) != 0)
         {
             material.Surface = new SurfaceSettings(SurfaceType.Transparent, SurfaceBlend.Additive, SurfaceCull.Off);
+            material.SeeThrough(1f);
         }
         else if ((flags & LightingFlags.Masked) != 0)
         {
             material.Surface = new SurfaceSettings(SurfaceType.Cutout, SurfaceBlend.Alpha, SurfaceCull.Off);
-            material.SetFloat("_AlphaCutoff", 0.5f);
+            material.SeeThrough(1f);
+            material.SetFloat(Materials.AlphaCutoff, 0.5f);
         }
 
         // Fullbright surfaces, such as screens and lamps, light themselves.
         if ((flags & LightingFlags.FullBright) != 0)
         {
-            material.SetInt("_Emission", 1);
-            material.SetTexture("_EmissionTex", texture);
-            material.SetColor("_EmissiveColor", Color.White);
-            material.SetFloat("_EmissionIntensity", 1f);
+            material.Emissive(texture, Color.White, 1f);
         }
 
         return material;

@@ -5,7 +5,7 @@ using Prowl.PaperUI;
 using Prowl.Runtime;
 using Prowl.Runtime.Resources;
 using Prowl.Runtime.Networking;
-using Prowl.Warp;
+using Prowl.Courier;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -26,8 +26,8 @@ public sealed class GameManager : Component, INetworkListener
     {
         get
         {
-            if (s_instance.IsNotValid())
-                s_instance = Scene.Current.FindObjectsOfType<GameManager>().FirstOrDefault(m => m.EnabledInHierarchy);
+            if (s_instance.IsNotValid() && SceneInstance.HasMain)
+                s_instance = SceneInstance.Active.GetAll<GameManager>().FirstOrDefault(m => m.EnabledInHierarchy);
             return s_instance;
         }
     }
@@ -143,7 +143,7 @@ public sealed class GameManager : Component, INetworkListener
     /// <summary>Pushes <see cref="Gravity"/> to the physics world and the player, so they always fall alike.</summary>
     public void ApplyGravity()
     {
-        Scene.Current.Physics.Gravity = new Float3(0f, -Gravity, 0f);
+        Scene.Physics.Gravity = new Float3(0f, -Gravity, 0f);
         if (LocalPlayer.IsValid()) LocalPlayer.Controller.Gravity = Gravity;
     }
 
@@ -175,7 +175,7 @@ public sealed class GameManager : Component, INetworkListener
         go.AddComponent<PlayerController>();
         Player player = go.AddComponent<Player>();
         go.GetComponent<PlayerController>().Gravity = Gravity;
-        Scene.Current.Add(go);
+        go.MoveTo(Scene);
         if (Networking.IsHost) go.Network.Spawn(owner);
         else go.Network.Mode = NetworkMode.Object;
         if (owner == null || owner.IsLocal) LocalPlayer = player;
@@ -186,7 +186,7 @@ public sealed class GameManager : Component, INetworkListener
     /// <summary>A random SpawnPoint's position and facing, or <see cref="DefaultSpawn"/> when there are none.</summary>
     public (Float3 Position, float Yaw) FindSpawn()
     {
-        var points = Scene.Current.FindObjectsOfType<SpawnPoint>();
+        var points = Scene.GetAll<SpawnPoint>();
         if (points.Length == 0) return (DefaultSpawn, 0f);
         Transform t = points[System.Random.Shared.Next(points.Length)].Transform;
         return (t.Position, t.EulerAngles.Y);
@@ -272,7 +272,7 @@ public sealed class GameManager : Component, INetworkListener
         if (Networking.Session != null) { _hadSession = true; return; }
         if (!_hadSession) return;
         _hadSession = false;
-        foreach (Player player in Scene.Current.FindObjectsOfType<Player>())
+        foreach (Player player in Scene.GetAll<Player>())
             if (player != GameManager.Instance.LocalPlayer) player.GameObject.Destroy();
         _players.Clear();
         // Keep the shared world when returning to single player, and restore physics.

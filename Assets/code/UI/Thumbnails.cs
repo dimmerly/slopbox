@@ -145,7 +145,7 @@ public sealed class Thumbnails : Component
         // Each shot gets its own spot, so nothing from a previous one can stray into frame.
         subject.Transform.Position = Stage + new Float3(_shots++ * 50f, 0f, 0f);
         subject.Transform.Rotation = shot.Rotation;
-        Scene.Current.Add(subject);
+        subject.MoveTo(Scene);
 
         // Frame the bounding sphere, by height or, for long subjects, by width.
         AABB local = Spawner.LocalBounds(subject);
@@ -182,7 +182,7 @@ public sealed class Thumbnails : Component
         AddLight(-(up * 1.2f - right * 0.8f + direction * 0.5f), 0.6f * shot.Lighting);
         AddLight(-(right + direction * 0.2f - up * 0.2f), 0.3f * shot.Lighting);
 
-        Scene.Current.Add(_rig);
+        _rig.MoveTo(Scene);
 
         _current = shot;
         _subject = subject;
@@ -195,10 +195,9 @@ public sealed class Thumbnails : Component
         var go = new GameObject("Thumbnail Light");
         go.SetParent(_rig, true);
         go.Transform.Rotation = Quaternion.LookRotation(Float3.Normalize(travel), Float3.UnitY);
-        var light = go.AddComponent<Light>();
-        light.Type = LightType.Directional;
+        var light = go.AddComponent<DirectionalLight>();
         light.LayerMask = LayerMask.FromMask(1u << StudioLayer);
-        light.Intensity = intensity;
+        light.Intensity = intensity * LegacyLight.Scale;
         light.CastShadows = false;
     }
 

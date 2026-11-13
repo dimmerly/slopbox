@@ -28,7 +28,7 @@ public sealed class LightTool : BaseTool
 
         GameObject go = LightProp.Create(Color, Brightness, Range);
         go.Transform.Position = tr.Point + tr.Normal * (LightProp.Radius + 0.01f);
-        Scene.Current.Add(go);
+        go.MoveTo(SceneInstance.Active.ActiveSection);
 
         if (Weld)
         {

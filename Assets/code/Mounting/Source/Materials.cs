@@ -29,6 +29,9 @@ internal sealed class SourceMaterial : IDisposable
     /// <summary>A water surface: drawn see through, and never solid.</summary>
     public bool Water;
 
+    /// <summary>Has a normal map on the Source shader, so a brush face of it reads the face's bumped lightmaps.</summary>
+    public bool Bumped;
+
     /// <summary>Textures made only for this material, freed with it.</summary>
     public List<Texture2D> OwnedTextures = new();
 
@@ -62,6 +65,81 @@ public static class SourceMaterials
     {
         "lightmappedgeneric", "worldvertextransition", "lightmappedreflective", "lightmapped_4wayblend", "worldtwotextureblend",
     };
+
+    /// <summary>
+    /// Brushes as Source draws them: the texture times the map's lightmap and nothing else. Lit's PBR (energy
+    /// conservation, diffuse roughness, Fresnel, sky reflections) moves them away from how the game looks.
+    /// </summary>
+    private const string SourceShaderSource = """
+        Shader "Slopbox/Source"
+        {
+            Properties
+            {
+                _BumpMap("Bump Map", Texture2D) = "white" {}
+                _Basis1("Bumped Lightmap 1", Texture2D) = "black" {}
+                _Basis2("Bumped Lightmap 2", Texture2D) = "black" {}
+                _Basis3("Bumped Lightmap 3", Texture2D) = "black" {}
+                _HasBasis("Has Bumped Lightmaps", Float) = 0.0
+            }
+            Surface "Unlit"
+            {
+                GLSLPROGRAM
+                #include "Graphite/Ambient.glsl"
+                uniform sampler2D _BumpMap;
+                uniform sampler2D _Basis1;
+                uniform sampler2D _Basis2;
+                uniform sampler2D _Basis3;
+                uniform float _HasBasis;
+
+                vec3 RGBM(vec4 t) { return t.rgb * (t.a * 8.0); }
+
+                void Surface(inout Unlit_Params p, Graphite_SurfaceData i)
+                {
+                #if defined(GRAPHITE_STANDARD_FORWARD) && !defined(GRAPHITE_NO_OBJECT)
+                    vec4 placement = Graphite_Object().lightmapScaleOffset;
+                    vec2 lightmapUV = i.uv1 * placement.xy + placement.zw;
+                    if (_HasBasis > 0.5 && Graphite_Object().lightmapTexture < GRAPHITE_LIGHTMAP_LOADING)
+                    {
+                        // Source's bumped lightmaps: light from three directions around the face's normal, blended by
+                        // how much the normal map faces each, squared and normalised, as LightmappedGeneric does.
+                        // The normal map was read as sRGB like every texture, so it goes back to its stored values.
+                        vec3 stored = texture(_BumpMap, i.uv).rgb;
+                        vec3 n = pow(stored, vec3(1.0 / 2.2)) * 2.0 - 1.0;
+                        vec3 dp = clamp(vec3(
+                            dot(n, vec3(0.81649658, 0.0, 0.57735027)),
+                            dot(n, vec3(-0.40824830, 0.70710678, 0.57735027)),
+                            dot(n, vec3(-0.40824830, -0.70710678, 0.57735027))), 0.0, 1.0);
+                        dp *= dp;
+                        vec3 light = dp.x * RGBM(texture(_Basis1, lightmapUV)) + dp.y * RGBM(texture(_Basis2, lightmapUV)) + dp.z * RGBM(texture(_Basis3, lightmapUV));
+                        p.baseColor *= light / max(dp.x + dp.y + dp.z, 1e-4) * Graphite_Object().lightmapScale;
+                        p.emissionLuminance = 1.0;
+                    }
+                    else
+                    {
+                        // Baked light comes pre-exposed and Unlit exposes its emission, so undo one
+                        p.baseColor *= graphite_BakedDiffuse(i.geometryNormal, lightmapUV);
+                        p.emissionLuminance = 1.0 / Graphite_Exposure();
+                    }
+                #endif
+                }
+                ENDGLSL
+            }
+        }
+        """;
+
+    [ReloadIgnore] private static Shader s_sourceShader;
+
+    private static Shader SourceShader
+    {
+        get
+        {
+            if (s_sourceShader.IsValid()) return s_sourceShader;
+            try { s_sourceShader = Shader.FromSource(SourceShaderSource, "Slopbox/Source.shader"); }
+            catch (Exception e) { Debug.LogWarning($"Could not build the map shader, using Lit: {e.Message}"); }
+            if (s_sourceShader.IsNotValid()) s_sourceShader = Shader.LoadDefault(DefaultShader.Lit);
+            return s_sourceShader;
+        }
+    }
 
     internal static SourceMaterial Build(string name, byte[] vmt, IContent content)
     {
@@ -102,30 +180,42 @@ public static class SourceMaterials
         Texture2D texture = string.IsNullOrWhiteSpace(baseName) ? null : content.Texture(baseName);
         if (texture.IsNotValid() && shader is "refract" or "eyerefract") return Hidden(result);
 
-        var material = new Material(Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
-        if (texture.IsValid()) material.SetTexture("_MainTex", texture);
+        // Brushes and models alike as Source shades them; glowing and additive ones stay on Lit for their emission
+        bool sourceShaded = !unlit && !selfIllum && !additive && shader is not ("eyerefract" or "eyes" or "teeth");
+        var material = new Material(sourceShaded ? SourceShader : Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
+        if (texture.IsValid()) material.SetTexture(Materials.BaseColorMap, texture);
+        // Self shadowed bump maps light differently; those stay flat
+        if (sourceShaded && !Flag(p, "ssbump") && p.GetValueOrDefault("bumpmap") is { Length: > 0 } bumpName && content.Texture(bumpName) is { } bump && bump.IsValid())
+        {
+            material.SetTexture("_BumpMap", bump);
+            result.Bumped = true;
+        }
 
         Color color = ParseColor(p.GetValueOrDefault("color")) ?? ParseColor(p.GetValueOrDefault("color2")) ?? Color.White;
         float alpha = float.TryParse(p.GetValueOrDefault("alpha"), NumberStyles.Float, CultureInfo.InvariantCulture, out float a) ? a : 1f;
         if (alpha < 1f) translucent = true;
-        material.SetColor("_MainColor", new Color(color.R, color.G, color.B, alpha));
-        material.SetFloat("_Metallic", 0f);
-        material.SetFloat("_Roughness", p.ContainsKey("envmap") ? 0.5f : Flag(p, "phong") ? 0.6f : 0.9f);
+        material.SetColor(Materials.BaseColor, new Color(color.R, color.G, color.B, 1f));
+        material.SetFloat(Materials.Roughness, p.ContainsKey("envmap") ? 0.5f : Flag(p, "phong") ? 0.6f : 0.9f);
+        // Source draws these as texture times light; Lit's specular adds a reflection of the sky that washes them out blue.
+        if (!p.ContainsKey("envmap")) material.SetFloat("specular_weight", 0f);
 
         SurfaceCull cull = noCull ? SurfaceCull.Off : SurfaceCull.Back;
         if (additive)
         {
             material.Surface = new SurfaceSettings(SurfaceType.Transparent, SurfaceBlend.Additive, cull);
+            material.SeeThrough(alpha);
         }
         else if (alphaTest)
         {
             material.Surface = new SurfaceSettings(SurfaceType.Cutout, SurfaceBlend.Alpha, cull);
+            material.SeeThrough(alpha);
             float reference = float.TryParse(p.GetValueOrDefault("alphatestreference"), NumberStyles.Float, CultureInfo.InvariantCulture, out float r) && r > 0f ? r : 0.5f;
-            material.SetFloat("_AlphaCutoff", reference);
+            material.SetFloat(Materials.AlphaCutoff, reference);
         }
         else if (translucent)
         {
             material.Surface = new SurfaceSettings(SurfaceType.Transparent, SurfaceBlend.Alpha, cull);
+            material.SeeThrough(alpha);
         }
         else if (noCull)
         {
@@ -139,15 +229,12 @@ public static class SourceMaterials
             if (selfIllum && !unlit)
             {
                 emission = MaskedEmission(name, baseName, content);
-                if (emission != null) result.OwnedTextures.Add(emission);
+                if (emission.IsValid()) result.OwnedTextures.Add(emission);
             }
             if (emission.IsValid())
             {
-                material.SetInt("_Emission", 1);
-                material.SetTexture("_EmissionTex", emission);
-                material.SetColor("_EmissiveColor", unlit ? new Color(color.R, color.G, color.B, 1f) : Color.White);
-                material.SetFloat("_EmissionIntensity", 1f);
-                if (unlit) material.SetColor("_MainColor", new Color(0f, 0f, 0f, alpha));
+                material.Emissive(emission, unlit ? new Color(color.R, color.G, color.B, 1f) : Color.White, 1f);
+                if (unlit) material.SetColor(Materials.BaseColor, Color.Black);
             }
         }
 
@@ -192,10 +279,10 @@ public static class SourceMaterials
     {
         Color fog = ParseColor(p.GetValueOrDefault("fogcolor")) ?? new Color(0.1f, 0.15f, 0.15f, 1f);
         var material = new Material(Shader.LoadDefault(DefaultShader.Lit)) { Name = name };
-        material.SetColor("_MainColor", new Color(fog.R, fog.G, fog.B, 0.75f));
-        material.SetFloat("_Metallic", 0f);
-        material.SetFloat("_Roughness", 0.1f);
+        material.SetColor(Materials.BaseColor, fog);
+        material.SetFloat(Materials.Roughness, 0.1f);
         material.Surface = new SurfaceSettings(SurfaceType.Transparent, SurfaceBlend.Alpha, SurfaceCull.Off);
+        material.SeeThrough(0.75f);
         return material;
     }
 

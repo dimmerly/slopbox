@@ -172,7 +172,7 @@ public sealed partial class Player : Component
 
     /// <summary>Traces along the aim. The player has no body, so nothing needs ignoring.</summary>
     public bool Trace(float distance, out RaycastHit hit)
-        => Scene.Current.Physics.Raycast(EyePosition, Forward, out hit, distance, QueryFilter.Default);
+        => Scene.Physics.Raycast(EyePosition, Forward, distance, out hit, QueryFilter.Default);
 
     /// <summary>Back to a spawn point, standing still and looking level.</summary>
     public void Respawn()

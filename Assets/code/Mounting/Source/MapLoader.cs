@@ -88,7 +88,7 @@ internal static class SourceMapBuilder
             materials[i] = content.Material(bsp.TextureNames[i]);
             if (materials[i] != null) continue;
             missingNames.Add(bsp.TextureNames[i]);
-            if (missing == null)
+            if (missing.IsNotValid())
             {
                 missing = Materials.Lit(new Color(0.5f, 0.5f, 0.5f, 1f), 0f, 1f);
                 owned.Add(missing);
@@ -96,7 +96,24 @@ internal static class SourceMapBuilder
             materials[i] = new SourceMaterial { Name = bsp.TextureNames[i], Material = missing };
         }
 
-        (Lightmap[] lightmaps, List<Texture2D> pages) = PackLightmaps(bsp);
+        (Lightmap[] lightmaps, List<Texture2D> pages, List<Texture2D>[] bumpPages) = PackLightmaps(bsp);
+        var ownedTexturesExtra = new List<Texture2D>(bumpPages.SelectMany(b => b));
+
+        // A bumped material on a page reads that page's directional lightmaps: one copy of it per page
+        var bumpVariants = new Dictionary<(Material, int), Material>();
+        Material BumpVariant(SourceMaterial material, int page)
+        {
+            if (!material.Bumped || page < 0) return material.Material;
+            if (bumpVariants.TryGetValue((material.Material, page), out Material variant)) return variant;
+            variant = material.Material.Clone();
+            variant.Name = material.Material.Name + $" (page {page})";
+            variant.SetTexture("_Basis1", bumpPages[0][page]);
+            variant.SetTexture("_Basis2", bumpPages[1][page]);
+            variant.SetTexture("_Basis3", bumpPages[2][page]);
+            variant.SetFloat("_HasBasis", 1f);
+            owned.Add(variant);
+            return bumpVariants[(material.Material, page)] = variant;
+        }
 
         var parts = new List<MountedMap.Part>();
         var spawns = new List<MountedMap.SpawnPoint>();
@@ -156,8 +173,11 @@ internal static class SourceMapBuilder
 
             bool solid = !s_nonSolid.Contains(className);
             var transform = new EntityTransform(entity.GetVector("origin"), modelIndex == 0 ? Vector3.Zero : entity.GetVector("angles"));
-            BuildBrushModel(bsp, bsp.Models[modelIndex], transform, materials, lightmaps, $"{className} {e}", solid, parts, ref min, ref max);
+            BuildBrushModel(bsp, bsp.Models[modelIndex], transform, materials, lightmaps, BumpVariant, $"{className} {e}", solid, parts, ref min, ref max);
         }
+
+        BuildOverlays(bsp, materials, lightmaps, parts);
+        Material skyMaterial = SkyMaterial(bsp, content, owned);
 
         foreach (StaticProp prop in bsp.StaticProps)
         {
@@ -181,6 +201,7 @@ internal static class SourceMapBuilder
         var audio = new SourceMapAudio(content, scripts, pak.Read($"scripts/soundscapes_{name}.txt"));
 
         var ownedTextures = new List<Texture2D>(pak.OwnedTextures);
+        ownedTextures.AddRange(ownedTexturesExtra);
         foreach (SourceMaterial material in pak.OwnedMaterials)
         {
             if (material.Material.IsValid()) owned.Add(material.Material);
@@ -195,6 +216,8 @@ internal static class SourceMapBuilder
         return new MountedMap(name, parts, pages, spawns, models, bounds, owned, ownedTextures)
         {
             Probes = Probes(bsp),
+            Sun = Sun(bsp),
+            Sky = skyMaterial,
             Sounds = sounds,
             Soundscapes = soundscapes,
             Audio = audio,
@@ -256,7 +279,7 @@ internal static class SourceMapBuilder
     }
 
     private static void BuildBrushModel(BspFile bsp, BrushModel model, EntityTransform transform, SourceMaterial[] materials,
-        Lightmap[] lightmaps, string name, bool solid, List<MountedMap.Part> parts, ref Float3 min, ref Float3 max)
+        Lightmap[] lightmaps, Func<SourceMaterial, int, Material> variant, string name, bool solid, List<MountedMap.Part> parts, ref Float3 min, ref Float3 max)
     {
         var groups = new Dictionary<(int Page, bool Solid), Dictionary<Material, Geometry>>();
         Float3 low = min, high = max;   // ref parameters cannot be captured below
@@ -278,7 +301,9 @@ internal static class SourceMapBuilder
             bool faceSolid = solid && !material.Water;
 
             if (!groups.TryGetValue((page, faceSolid), out var byMaterial)) groups[(page, faceSolid)] = byMaterial = new();
-            if (!byMaterial.TryGetValue(material.Material, out Geometry geometry)) byMaterial[material.Material] = geometry = new Geometry();
+            bool bumpLit = (texInfo.Flags & TexInfo.BumpLight) != 0;
+            Material drawn = bumpLit ? variant(material, page) : material.Material;
+            if (!byMaterial.TryGetValue(drawn, out Geometry geometry)) byMaterial[drawn] = geometry = new Geometry();
 
             TexData texData = bsp.TexDatas[texInfo.TexData];
             float texWidth = Math.Max(1, texData.Width), texHeight = Math.Max(1, texData.Height);
@@ -378,6 +403,143 @@ internal static class SourceMapBuilder
 
             parts.Add(new MountedMap.Part(name, mesh, [.. partMaterials], page, faceSolid));
         }
+    }
+
+    /// <summary>
+    /// The map's overlays (info_overlay: road markings, signs, grime) as quads lifted just off the faces they lie on,
+    /// lit by the first such face's lightmap. Not clipped to the faces, which is close enough for flat ones.
+    /// </summary>
+    private static void BuildOverlays(BspFile bsp, SourceMaterial[] materials, Lightmap[] lightmaps, List<MountedMap.Part> parts)
+    {
+        var groups = new Dictionary<(int Page, Material Material), Geometry>();
+        foreach (Overlay overlay in bsp.Overlays)
+        {
+            if (overlay.TexInfo < 0 || overlay.TexInfo >= bsp.TexInfos.Length || overlay.Faces.Length == 0) continue;
+            int texData = bsp.TexInfos[overlay.TexInfo].TexData;
+            if (texData < 0 || texData >= materials.Length) continue;
+            SourceMaterial material = materials[texData];
+            if (material == null || material.NoDraw || material.Material.IsNotValid()) continue;
+
+            int f = overlay.Faces[0];
+            if (f < 0 || f >= bsp.Faces.Length) continue;
+            Face face = bsp.Faces[f];
+            Lightmap lightmap = lightmaps[f];
+            TexInfo faceInfo = bsp.TexInfos[face.TexInfo];
+
+            Vector3 normal = Vector3.Normalize(overlay.BasisNormal);
+            Vector3 u = Vector3.Normalize(overlay.BasisU);
+            Vector3 v = Vector3.Cross(normal, u);
+            int page = lightmap.Has ? lightmap.Page : -1;
+            if (!groups.TryGetValue((page, material.Material), out Geometry geometry)) groups[(page, material.Material)] = geometry = new Geometry();
+
+            Float2[] uvs = [new(overlay.U0, overlay.V0), new(overlay.U0, overlay.V1), new(overlay.U1, overlay.V1), new(overlay.U1, overlay.V0)];
+            int first = geometry.Positions.Count;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 p = overlay.Origin + u * overlay.Points[i].X + v * overlay.Points[i].Y + normal * 0.25f;
+                geometry.Positions.Add(GoldSrcAssets.Position(p));
+                geometry.Normals.Add(GoldSrcAssets.Direction(normal));
+                geometry.UV.Add(uvs[i]);
+                if (lightmap.Has)
+                {
+                    float s = Math.Clamp(Vector3.Dot(p, faceInfo.LightS) + faceInfo.LightOffsetS - face.LightMinS, 0f, lightmap.Width - 1);
+                    float t = Math.Clamp(Vector3.Dot(p, faceInfo.LightT) + faceInfo.LightOffsetT - face.LightMinT, 0f, lightmap.Height - 1);
+                    geometry.UV2.Add(new Float2((lightmap.X + 1 + s + 0.5f) / PageSize, (lightmap.Y + 1 + t + 0.5f) / PageSize));
+                }
+                else geometry.UV2.Add(Float2.Zero);
+            }
+            geometry.Indices.AddRange([(uint)first, (uint)first + 1, (uint)first + 2, (uint)first, (uint)first + 2, (uint)first + 3]);
+        }
+
+        foreach (((int page, Material material), Geometry geometry) in groups)
+        {
+            var mesh = new Mesh
+            {
+                Name = "overlays",
+                IndexFormat = geometry.Positions.Count > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16,
+                Vertices = [.. geometry.Positions],
+                Normals = [.. geometry.Normals],
+                UV = [.. geometry.UV],
+                UV2 = [.. geometry.UV2],
+                Indices = [.. geometry.Indices],
+            };
+            mesh.RecalculateBounds();
+            parts.Add(new MountedMap.Part("overlays", mesh, [material], page, false));
+        }
+    }
+
+    [Prowl.Ember.ReloadIgnore] private static Shader s_skyShader;
+
+    /// <summary>
+    /// A Source 2D skybox: the faces Quake laid out and Source kept, rt +X, lf -X, bk +Y, ft -Y, up and dn, each
+    /// facing in with its own s and t, in Source's axes (Prowl's direction (x, y, z) is Source's (z, -x, y)).
+    /// </summary>
+    private const string SkyShaderSource = """
+        Shader "Slopbox/SourceSky"
+        {
+            Properties
+            {
+                _rt("rt", Texture2D) = "white" {}
+                _lf("lf", Texture2D) = "white" {}
+                _bk("bk", Texture2D) = "white" {}
+                _ft("ft", Texture2D) = "white" {}
+                _up("up", Texture2D) = "white" {}
+                _dn("dn", Texture2D) = "white" {}
+                intensity("Intensity", Float) = 19660.8
+            }
+            Surface "Sky"
+            {
+                GLSLPROGRAM
+                uniform sampler2D _rt;
+                uniform sampler2D _lf;
+                uniform sampler2D _bk;
+                uniform sampler2D _ft;
+                uniform sampler2D _up;
+                uniform sampler2D _dn;
+                uniform float intensity;
+
+                vec3 Face(sampler2D face, float s, float t)
+                {
+                    vec2 uv = clamp(vec2(s + 1.0, 1.0 - t) * 0.5, vec2(0.002), vec2(0.998));
+                    return texture(face, uv).rgb;
+                }
+
+                vec3 Sky(vec3 direction)
+                {
+                    vec3 d = vec3(direction.z, -direction.x, direction.y);
+                    vec3 a = abs(d);
+                    vec3 c;
+                    if (a.x >= a.y && a.x >= a.z)
+                        c = d.x > 0.0 ? Face(_rt, -d.y / a.x, d.z / a.x) : Face(_lf, d.y / a.x, d.z / a.x);
+                    else if (a.y >= a.z)
+                        c = d.y > 0.0 ? Face(_bk, d.x / a.y, d.z / a.y) : Face(_ft, -d.x / a.y, d.z / a.y);
+                    else
+                        c = d.z > 0.0 ? Face(_up, -d.y / a.z, -d.x / a.z) : Face(_dn, -d.y / a.z, d.x / a.z);
+                    return c * intensity;
+                }
+                ENDGLSL
+            }
+        }
+        """;
+
+    /// <summary>The map's 2D skybox (worldspawn's skyname), at the brightness its game shows it.</summary>
+    private static Material SkyMaterial(BspFile bsp, IContent content, List<Material> owned)
+    {
+        string sky = bsp.Entities.FirstOrDefault(e => e.ClassName.Equals("worldspawn", StringComparison.OrdinalIgnoreCase))?.Get("skyname");
+        if (string.IsNullOrWhiteSpace(sky)) return null;
+        Texture2D Face(string side) => content.Texture($"skybox/{sky}{side}");
+        if (s_skyShader.IsNotValid()) s_skyShader = Shader.FromSource(SkyShaderSource, "Slopbox/SourceSky.shader");
+        var material = new Material(s_skyShader) { Name = $"sky {sky}" };
+        int found = 0;
+        foreach (string side in new[] { "rt", "lf", "bk", "ft", "up", "dn" })
+        {
+            Texture2D texture = Face(side);
+            if (texture.IsValid()) { material.SetTexture("_" + side, texture); found++; }
+        }
+        if (found == 0) return null;
+        material.SetFloat("intensity", MountedMap.LightScale);
+        owned.Add(material);
+        return material;
     }
 
     /// <summary>
@@ -491,7 +653,11 @@ internal static class SourceMapBuilder
         return (texInfo.Flags & (TexInfo.NoLight | TexInfo.Sky | TexInfo.Sky2D | TexInfo.NoDraw)) == 0;
     }
 
-    private static (Lightmap[] Lightmaps, List<Texture2D> Pages) PackLightmaps(BspFile bsp)
+    /// <summary>
+    /// The faces' lightmaps packed into pages, and for bumped faces their three directional lightmaps in pages of
+    /// their own laid out the same, so one lightmap UV reads all four.
+    /// </summary>
+    private static (Lightmap[] Lightmaps, List<Texture2D> Pages, List<Texture2D>[] BumpPages) PackLightmaps(BspFile bsp)
     {
         var lightmaps = new Lightmap[bsp.Faces.Length];
         for (int f = 0; f < bsp.Faces.Length; f++)
@@ -507,6 +673,7 @@ internal static class SourceMapBuilder
             .OrderByDescending(f => lightmaps[f].Height).ThenByDescending(f => lightmaps[f].Width).ToList();
 
         var pageData = new List<byte[]>();
+        var bumpData = new[] { new List<byte[]>(), new List<byte[]>(), new List<byte[]>() };
         int page = -1, x = 0, y = 0, shelf = 0;
         foreach (int f in order)
         {
@@ -520,6 +687,7 @@ internal static class SourceMapBuilder
             if (page < 0 || y + h > PageSize)
             {
                 pageData.Add(new byte[PageSize * PageSize * 4]);
+                foreach (List<byte[]> basis in bumpData) basis.Add(new byte[PageSize * PageSize * 4]);
                 page++;
                 x = y = shelf = 0;
             }
@@ -528,6 +696,7 @@ internal static class SourceMapBuilder
             lightmaps[f].X = x;
             lightmaps[f].Y = y;
             WriteLuxels(bsp, bsp.Faces[f], lightmaps[f], pageData[page]);
+            for (int b = 0; b < 3; b++) WriteLuxels(bsp, bsp.Faces[f], lightmaps[f], bumpData[b][page], b + 1);
 
             x += w;
             shelf = Math.Max(shelf, h);
@@ -540,42 +709,224 @@ internal static class SourceMapBuilder
             texture.SetData(new Memory<byte>(pageData[p]));
             pages.Add(texture);
         }
-        return (lightmaps, pages);
+        var bumpPages = new List<Texture2D>[3];
+        for (int b = 0; b < 3; b++)
+        {
+            bumpPages[b] = new List<Texture2D>(pageData.Count);
+            for (int p = 0; p < pageData.Count; p++)
+            {
+                var texture = new Texture2D(PageSize, PageSize, TextureFormat.RGBA8, mipmaps: false, srgb: false) { Name = $"Bumped Lightmap {p}.{b + 1}" };
+                texture.SetData(new Memory<byte>(bumpData[b][p]));
+                bumpPages[b].Add(texture);
+            }
+        }
+        return (lightmaps, pages, bumpPages);
     }
 
     /// <summary>
-    /// The map's leaf ambient samples as probes: the light the game gives a model there from each side, which vrad
-    /// computed for exactly that. Maps compiled without them give none.
+    /// The map's leaf ambient samples as probes, with the map's point, spot and surface lights added: the light the
+    /// game gives a model there from each side. The game lights models from the ambient cube under them plus the
+    /// world lights their leaf can see, worked out as they move; here those lights are added once per probe, which is
+    /// what the game does with all but the few strongest. Maps compiled without samples give none. The 3D skybox's are
+    /// left out: it is drawn around the map from far away, and nothing moves in it.
     /// </summary>
+    /// <summary>The most probes a map gets.</summary>
+    private const int ProbeBudget = 1000;
+
     private static List<MountedMap.Probe> Probes(BspFile bsp)
     {
-        var probes = new List<MountedMap.Probe>(bsp.Ambient.Length);
+        var positions = new List<Vector3>(bsp.Ambient.Length);
+        var lights = new List<Vector3>(bsp.Ambient.Length * 6);
         byte[] light = bsp.AmbientLighting;
         float brightest = 0f;
+        int skyArea = SkyboxArea(bsp);
+        var lightsSeen = new Dictionary<int, int[]>();
+        Span<Vector3> sides = stackalloc Vector3[6];
         foreach (AmbientSample sample in bsp.Ambient)
         {
-            // Stored +X, -X, +Y, -Y, +Z, -Z in Source's axes; Prowl's +X is Source's -Y, +Y its +Z and +Z its +X.
-            var source = new Float3[6];
+            if (sample.Leaf < 0) continue;
+            Leaf leaf = bsp.Leaves[sample.Leaf];
+            if ((leaf.Contents & Leaf.Solid) != 0 || leaf.Area == skyArea) continue;
+
+            // Stored +X, -X, +Y, -Y, +Z, -Z in Source's axes. Unlike luxels, the cube is not stored over 255.
             for (int side = 0; side < 6; side++)
             {
                 int src = sample.CubeOffset + side * 4;
-                float scale = MathF.Pow(2f, (sbyte)light[src + 3]) / 255f;
-                source[side] = new Float3(Curve(light[src] * scale), Curve(light[src + 1] * scale), Curve(light[src + 2] * scale));
-                brightest = MathF.Max(brightest, MathF.Max(source[side].X, MathF.Max(source[side].Y, source[side].Z)));
+                float scale = MathF.Pow(2f, (sbyte)light[src + 3]);
+                sides[side] = new Vector3(light[src], light[src + 1], light[src + 2]) * scale;
+                brightest = MathF.Max(brightest, MathF.Max(sides[side].X, MathF.Max(sides[side].Y, sides[side].Z)));
             }
-            probes.Add(new MountedMap.Probe(GoldSrcAssets.Position(sample.Position),
-                [source[3], source[2], source[4], source[5], source[0], source[1]]));
+
+            if (!lightsSeen.TryGetValue(leaf.Cluster, out int[] seen))
+                lightsSeen[leaf.Cluster] = seen = LightsSeenFrom(bsp, leaf.Cluster);
+            foreach (int l in seen)
+                AddWorldLight(bsp.WorldLights[l], sample.Position, sides);
+
+            positions.Add(sample.Position);
+            for (int i = 0; i < 6; i++)
+                lights.Add(new Vector3(Curve(sides[i].X), Curve(sides[i].Y), Curve(sides[i].Z)));
         }
 
         // Decompiled and rebuilt maps keep the lump but leave it black.
-        return brightest < 0.01f ? [] : probes;
+        if (brightest < 0.01f || positions.Count == 0) return [];
+
+        var probes = new List<MountedMap.Probe>(ProbeBudget);
+        ReadOnlySpan<int> order = [3, 2, 4, 5, 0, 1];
+        foreach (int[] group in SplitByLight(positions, lights, ProbeBudget))
+        {
+            Vector3 position = Vector3.Zero;
+            var summed = new Vector3[6];
+            foreach (int i in group)
+            {
+                position += positions[i];
+                for (int side = 0; side < 6; side++) summed[side] += lights[i * 6 + side];
+            }
+            // Prowl's +X is Source's -Y, +Y its +Z and +Z its +X.
+            var prowl = new Float3[6];
+            for (int side = 0; side < 6; side++)
+            {
+                Vector3 c = summed[order[side]] / group.Length;
+                prowl[side] = new Float3(c.X, c.Y, c.Z);
+            }
+            probes.Add(new MountedMap.Probe(GoldSrcAssets.Position(position / group.Length), prowl));
+        }
+        return probes;
+    }
+
+    /// <summary>
+    /// Groups the samples into at most <paramref name="budget"/> boxes, each standing for one probe: the box whose
+    /// samples' light strays furthest from their average is halved along its longest side, again and again. Evenly
+    /// lit space ends up in a few big boxes; doorways, shade edges and the lit sides of walls keep their detail.
+    /// </summary>
+    private static List<int[]> SplitByLight(List<Vector3> positions, List<Vector3> lights, int budget)
+    {
+        float Error(int[] group)
+        {
+            Span<Vector3> mean = stackalloc Vector3[6];
+            foreach (int i in group)
+                for (int s = 0; s < 6; s++) mean[s] += lights[i * 6 + s];
+            for (int s = 0; s < 6; s++) mean[s] /= group.Length;
+            float error = 0f;
+            foreach (int i in group)
+                for (int s = 0; s < 6; s++) error += (lights[i * 6 + s] - mean[s]).LengthSquared();
+            return error;
+        }
+
+        var queue = new PriorityQueue<int[], float>();
+        int[] all = Enumerable.Range(0, positions.Count).ToArray();
+        queue.Enqueue(all, -Error(all));
+        var done = new List<int[]>();
+        while (queue.Count > 0 && queue.Count + done.Count < budget)
+        {
+            int[] group = queue.Dequeue();
+            if (group.Length < 2) { done.Add(group); continue; }
+
+            Vector3 min = new(float.MaxValue), max = new(float.MinValue);
+            foreach (int i in group) { min = Vector3.Min(min, positions[i]); max = Vector3.Max(max, positions[i]); }
+            Vector3 size = max - min;
+            int axis = size.X >= size.Y && size.X >= size.Z ? 0 : size.Y >= size.Z ? 1 : 2;
+            float Along(int i) => axis == 0 ? positions[i].X : axis == 1 ? positions[i].Y : positions[i].Z;
+            float middle = axis == 0 ? (min.X + max.X) / 2 : axis == 1 ? (min.Y + max.Y) / 2 : (min.Z + max.Z) / 2;
+
+            int[] low = group.Where(i => Along(i) < middle).ToArray();
+            int[] high = group.Where(i => Along(i) >= middle).ToArray();
+            if (low.Length == 0 || high.Length == 0) { done.Add(group); continue; }
+            queue.Enqueue(low, -Error(low));
+            queue.Enqueue(high, -Error(high));
+        }
+        while (queue.Count > 0) done.Add(queue.Dequeue());
+        return done;
+    }
+
+    /// <summary>The point, spot and surface lights in clusters that <paramref name="cluster"/> can see, as the game picks them.</summary>
+    private static int[] LightsSeenFrom(BspFile bsp, int cluster)
+    {
+        byte[] visible = bsp.Visible(cluster);
+        var seen = new List<int>();
+        for (int i = 0; i < bsp.WorldLights.Length; i++)
+        {
+            WorldLight wl = bsp.WorldLights[i];
+            if (wl.Type is not (WorldLight.Point or WorldLight.Spot or WorldLight.Surface)) continue;
+            if (visible != null && wl.Cluster >= 0 && (wl.Cluster >> 3 >= visible.Length || (visible[wl.Cluster >> 3] & (1 << (wl.Cluster & 7))) == 0)) continue;
+            seen.Add(i);
+        }
+        return [.. seen];
+    }
+
+    private static readonly Vector3[] s_axes = [Vector3.UnitX, -Vector3.UnitX, Vector3.UnitY, -Vector3.UnitY, Vector3.UnitZ, -Vector3.UnitZ];
+
+    /// <summary>
+    /// A world light's light at a point, onto the sides facing it, falling off as the game's does: by its constant,
+    /// linear and quadratic terms to its radius, a spot's between its cones, and a surface light's by distance squared
+    /// and the angle it is seen at.
+    /// </summary>
+    private static void AddWorldLight(in WorldLight wl, Vector3 point, Span<Vector3> sides)
+    {
+        Vector3 toLight = wl.Origin - point;
+        float distance = toLight.Length();
+        if (distance < 1f) distance = 1f;
+        if (wl.Radius > 0f && distance > wl.Radius) return;
+        Vector3 direction = toLight / distance;
+
+        float ratio;
+        if (wl.Type == WorldLight.Surface)
+        {
+            float facing = -Vector3.Dot(direction, wl.Normal);
+            if (facing <= 0f) return;
+            ratio = facing / (distance * distance);
+        }
+        else
+        {
+            float falloff = wl.Constant + wl.Linear * distance + wl.Quadratic * distance * distance;
+            if (falloff <= 0f) return;
+            ratio = 1f / falloff;
+            if (wl.Type == WorldLight.Spot)
+            {
+                float dot = -Vector3.Dot(direction, wl.Normal);
+                if (dot <= wl.StopDot2) return;
+                if (dot <= wl.StopDot) ratio *= (dot - wl.StopDot2) / (wl.StopDot - wl.StopDot2);
+                if (wl.Exponent > 0f && wl.Exponent != 1f) ratio *= MathF.Pow(dot, wl.Exponent);
+            }
+        }
+
+        Vector3 light = wl.Intensity * ratio;
+        if (MathF.Max(light.X, MathF.Max(light.Y, light.Z)) < 1e-4f) return;
+        for (int i = 0; i < 6; i++)
+        {
+            float d = Vector3.Dot(direction, s_axes[i]);
+            if (d > 0f) sides[i] += light * d;
+        }
+    }
+
+    /// <summary>The map's sun, from its sky light: the way its light travels in the map's space and its colour, or null.</summary>
+    private static (Float3 Direction, Float3 Light)? Sun(BspFile bsp)
+    {
+        foreach (WorldLight wl in bsp.WorldLights)
+        {
+            if (wl.Type != WorldLight.Sky) continue;
+            return (GoldSrcAssets.Direction(wl.Normal), new Float3(wl.Intensity.X, wl.Intensity.Y, wl.Intensity.Z));
+        }
+        return null;
+    }
+
+    /// <summary>The area the sky_camera is in, which is the 3D skybox's, or -1 if the map has none.</summary>
+    private static int SkyboxArea(BspFile bsp)
+    {
+        foreach (Entity entity in bsp.Entities)
+        {
+            if (!entity.ClassName.Equals("sky_camera", StringComparison.OrdinalIgnoreCase)) continue;
+            int leaf = bsp.LeafAt(entity.GetVector("origin"));
+            return leaf >= 0 && leaf < bsp.Leaves.Length ? bsp.Leaves[leaf].Area : -1;
+        }
+        return -1;
     }
 
     /// <summary>
     /// A luxel's light, every style added so switchable lights show on. Faces lit for bump mapping keep four
     /// lightmaps per style, the first being the plain one.
     /// </summary>
-    private static Float3 Luxel(BspFile bsp, in Face face, int luxel, int luxels)
+    /// <param name="basis">0 for the plain lightmap, 1 to 3 for a bumped face's directional ones (the plain one otherwise).</param>
+    private static Float3 Luxel(BspFile bsp, in Face face, int luxel, int luxels, int basis = 0)
     {
         byte[] light = bsp.Lighting;
         bool bumped = (bsp.TexInfos[face.TexInfo].Flags & TexInfo.BumpLight) != 0;
@@ -584,7 +935,7 @@ internal static class SourceMapBuilder
         for (int s = 0; s < 4; s++)
         {
             if (face.Style(s) == 255) break;
-            int src = face.LightOffset + (s * perStyle * luxels + luxel) * 4;
+            int src = face.LightOffset + ((s * perStyle + (bumped ? basis : 0)) * luxels + luxel) * 4;
             if (src + 3 >= light.Length) break;
             float scale = MathF.Pow(2f, (sbyte)light[src + 3]) / 255f;
             sum += new Float3(light[src] * scale, light[src + 1] * scale, light[src + 2] * scale);
@@ -594,7 +945,7 @@ internal static class SourceMapBuilder
 
     private static float Curve(float light) => Math.Clamp(light, 0f, s_maxLight);
 
-    private static void WriteLuxels(BspFile bsp, in Face face, in Lightmap lightmap, byte[] page)
+    private static void WriteLuxels(BspFile bsp, in Face face, in Lightmap lightmap, byte[] page, int basis = 0)
     {
         int luxels = lightmap.Width * lightmap.Height;
         for (int ly = -1; ly <= lightmap.Height; ly++)
@@ -603,7 +954,7 @@ internal static class SourceMapBuilder
             {
                 // The border repeats the nearest edge luxel, so filtering never reaches a neighbour.
                 int sx = Math.Clamp(lx, 0, lightmap.Width - 1), sy = Math.Clamp(ly, 0, lightmap.Height - 1);
-                Float3 c = Luxel(bsp, face, sy * lightmap.Width + sx, luxels);
+                Float3 c = Luxel(bsp, face, sy * lightmap.Width + sx, luxels, basis);
 
                 // RGBM: colour times alpha times 8.
                 float m = Math.Clamp(MathF.Max(c.X, MathF.Max(c.Y, c.Z)) / 8f, 1f / 255f, 1f);

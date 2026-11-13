@@ -34,7 +34,7 @@ internal static class SourceAudio
         if (Encoding.ASCII.GetString(data, 0, 4) == "RIFF" && Encoding.ASCII.GetString(data, 8, 4) == "WAVE")
         {
             AudioClip decoded = DecodeWav(name, data);
-            if (decoded != null) return decoded;
+            if (decoded.IsValid()) return decoded;
         }
 
         return new AudioClip(data, isUnique: true) { ClipName = name };
@@ -96,7 +96,7 @@ internal static class SourceAudio
         if (samples == null || samples.Length < channels) return null;
 
         AudioClip clip = AudioClip.Create(name, samples, channels, rate);
-        if (clip != null) clip.ClipName = name;
+        if (clip.IsValid()) clip.ClipName = name;
         return clip;
     }
 
@@ -313,7 +313,7 @@ internal sealed class SourceMapAudio : IMapAudio, IDisposable
             if (entry == null) continue;
             string wave = entry.Waves[Random.Shared.Next(entry.Waves.Count)];
             AudioClip clip = Clip(SourceAudio.CleanName(wave));
-            if (clip == null) return null;
+            if (clip.IsNotValid()) return null;
             return new MapSoundClip(clip, Between(entry.MinVolume, entry.MaxVolume), Between(entry.MinPitch, entry.MaxPitch));
         }
         return null;
