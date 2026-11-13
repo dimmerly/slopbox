@@ -1,0 +1,42 @@
+Levels:
+  $id: 2
+  $values:
+    - Name: "Low"
+      PbrTier: 1
+      RenderScale: 0.8
+      ShadowDistance: 30
+      ShadowCascades: 1
+      MaxShadowResolution: 512
+      LightCutoff: 0.01
+      MaxProbeResolution: 64
+      $id: 3
+    - Name: "Medium"
+      PbrTier: 1
+      RenderScale: 1
+      ShadowDistance: 50
+      ShadowCascades: 2
+      MaxShadowResolution: 1024
+      LightCutoff: 0.01
+      MaxProbeResolution: 128
+      $id: 4
+    - Name: "High"
+      PbrTier: 0
+      RenderScale: 1
+      ShadowDistance: 80
+      ShadowCascades: 4
+      MaxShadowResolution: 2048
+      LightCutoff: 0.01
+      MaxProbeResolution: 256
+      $id: 5
+    - Name: "Ultra"
+      PbrTier: 0
+      RenderScale: 1
+      ShadowDistance: 150
+      ShadowCascades: 4
+      MaxShadowResolution: 4096
+      LightCutoff: 0.01
+      MaxProbeResolution: 512
+      $id: 6
+Active: 2
+$id: 1
+$type: "Prowl.Editor.Projects.Settings.QualitySettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

@@ -1,6 +1,15 @@
 CompanyName: "DefaultCompany"
 ProductName: "My Game"
 Version: "0.1.0"
-LastScenePath: "scenes/flatgrass.scene"
+LastSetup:
+  $id: 2
+  $values:
+    - Asset: "51863a84-84e2-455b-ae5b-6eadb787bc57"
+      Path: "scenes/flatgrass.scene"
+      IsLoaded: true
+      IsActive: true
+HiddenScenes:
+  $id: 3
+  $values: []
 $id: 1
 $type: "Prowl.Editor.Projects.Settings.GeneralSettings, Prowl.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

@@ -26,21 +26,23 @@ Every command addresses things the same way:
 | `@selection` | The selected GameObject, or all selected ones where a list is accepted |
 | `Models/Gun.fbx` | Asset path, relative to the Assets folder |
 | `Models/Gun.fbx#Fire` | Sub asset inside a file, such as an animation clip or mesh in a model |
+| `scene:Level2:/Player` | Look in one open scene only, before any scene ref, such as `scene:Level2:#3f2a...` |
 
-Results describe objects as `{id, path, name}`, components as `{id, ref, type}`, assets as `{guid, path, type}`. Reuse the `path` or `id` from a result in the next command.
+Results describe objects as `{id, path, name}`, plus `scene` when more than one scene is open, components as `{id, ref, type}`, assets as `{guid, path, type}`. Reuse the `path` or `id` from a result in the next command.
 
 ## Workflow
 
 1. Orient: `status`, `tree --depth 2`, `logs --level warning`.
 2. Look up the API before writing code: `api --search Rigidbody`, `api --type CharacterController`, `api --type Transform --member Rotate`, `--inherited` to include base classes. Prowl is not Unity, so do not guess signatures.
 3. Write scripts as `.cs` files under `Assets` (or `script Scripts/Gun --template Component`), then `compile`. It waits for the hot reload and returns errors with file, line and column. Fix them and compile again until `ok` is true.
-4. Build the scene with the commands below, then `scene --action save` (or `scene --action saveas --path Scenes/Level.scene`).
+4. Build the scene with the commands below, then `scene --action save`, which saves every changed scene (or `scene --action saveas --path Scenes/Level.scene` for the active one).
 5. Check your work: `play --action start`, `input`, `play --action wait --seconds 2`, read state with `get`, `logs --level error`, `screenshot`, then `play --action stop`.
 
-Scene, component, field, material, prefab and graph edits are one undo step each, and `undo` and `undo --redo` step through them outside play mode. File operations (`asset create`, `move`, `delete`, `import`, `importer`, `script`) and `eval` are not undoable, and `asset delete` is permanent.
+Scene, component, field, material, prefab and graph edits are one undo step each, and `undo` and `undo --redo` step through them outside play mode. File operations (`asset create`, `copy`, `move`, `delete`, `import`, `importer`, `script`) and `eval` are not undoable, and `asset delete` is permanent.
 
 ## Scenes and objects
 
+- `scene` lists the open scenes with whether each is loaded, active and dirty. Several can be open at once: `scene --action openadditive --path Scenes/Lighting.scene` adds one, then `load`, `unload`, `remove` and `setactive` take `--scene <name>`. New objects go into the active scene, or into the scene of their parent, or `go create --scene <name>`. `tree` groups roots under their scene. A reference field never points into another scene: moving an object to another scene clears such references.
 - `scene --action new` makes a scene with a Main Camera (no post processing profile), a Directional Light, and Floor, Cube and Cube (1), none of which have colliders. Delete what you do not need.
 - `go create --name Gun --parent /Player --position '[0,1,0]' --components Rigidbody3D,BoxCollider`. Quote JSON arrays, unquoted brackets are a shell glob.
 - `go create --prefab Models/Gun.fbx --parent /Player/Hand` instantiates a prefab or model
@@ -58,7 +60,8 @@ Scene, component, field, material, prefab and graph edits are one undo step each
 
 - `asset find --type AnimationClip --query Run`, `asset info --path Models/Gun.fbx` (shows sub assets and dependencies)
 - `asset create --path Materials/Metal --type Material` (`asset types` lists creatable types, plus `Folder`)
-- After writing or copying files into Assets yourself: `asset import --path <file>` or `asset refresh`
+- After writing files into Assets yourself: `asset import --path <file>` or `asset refresh`
+- `asset copy --path Materials/Metal.mat --to Materials/Red.mat` copies a file, folder or sub asset (`Models/Gun.fbx#Metal`) under a fresh GUID with the same import settings. Use it rather than copying a file together with its `.meta`, which reuses the original's GUID.
 - `asset move --path A.mat --to B.mat`, `asset delete --path A.mat --confirm`, `asset reimport --path ...`
 - `material Materials/Metal.mat` lists shader properties. `--values '{"_MainColor": [1, 0, 0], "_Roughness": 0.3, "_MainTex": "Textures/Metal.png"}'` sets them. `--shader <ref>` swaps the shader.
 - `importer Models/Gun.fbx` shows import settings and sub assets. `--values` merges keys (dots for nested keys) and reimports. Values keep their JSON type, so pass numbers as numbers: `--values '{"rigType": 2}'` (0 none, 1 generic, 2 humanoid). Animation import settings are in the prowl-animation skill.
@@ -93,18 +96,19 @@ EditorRegistries.SaveSettings();
 ```
 
 ```csharp
-// prowl eval: add the open scene to the build scene list
+// prowl eval: add the open scenes to the build scene list
+using Prowl.Editor.GUI.SceneView;
 using Prowl.Editor.Projects.Settings;
 var build = EditorRegistries.GetSettings<BuildSettings>();
-var entry = EditorAssetBackend.Instance!.GetEntry(Prowl.Editor.GUI.SceneView.EditorSceneManager.CurrentScenePath!)!;
-if (!build.Scenes.Exists(s => s.SceneGuid == entry.Guid))
-    build.Scenes.Add(new SceneBuildEntry { Path = entry.Path, SceneGuid = entry.Guid });
+foreach (OpenScene open in EditorSceneManager.OpenScenes)
+    if (open.Scene.IsValid() && open.Path is { } path && !build.Scenes.Exists(s => s.SceneGuid == open.Scene.AssetID))
+        build.Scenes.Add(new SceneBuildEntry { Path = path, SceneGuid = open.Scene.AssetID });
 EditorRegistries.SaveSettings();
 ```
 
 ```csharp
 // prowl eval: bake the first nav mesh surface in the scene
-var surface = Scene.Current.FindObjectsOfType<NavMeshSurface>()[0]!;
+var surface = SceneInstance.Main.GetAll<NavMeshSurface>(includeDisabled: true)[0]!;
 return Prowl.Editor.Navigation.NavMeshBakeService.Instance.Start(surface);
 ```
 
@@ -112,8 +116,8 @@ return Prowl.Editor.Navigation.NavMeshBakeService.Instance.Start(surface);
 
 - Scene changes made in play mode are lost when play stops, and the CLI warns once per play session. Asset edits (`material`, `set` on an asset, `graph`, `importer`, `asset`) are saved to disk at once and stay. Stop play mode before making lasting scene edits.
 - Entering or leaving play mode, every `compile`, and opening or creating a scene clear the undo history.
-- `scene --action open` refuses to drop unsaved changes unless `--force`. Save first.
+- `scene --action open`, `new`, `unload` and `remove` refuse to drop unsaved changes unless `--force`. Save first. The last loaded scene cannot be unloaded or removed, only replaced with `open`.
 - A new script type exists only after `compile` succeeds. Add the component after that.
 - Shell quoting: in bash wrap JSON in single quotes. Windows PowerShell 5.1 strips double quotes from arguments, so escape each one as \" inside single quotes, for example `--values '{\"Height\": 1.8}'`, or pipe a here string into `eval -`. PowerShell 7.3 and later pass single quoted JSON unchanged.
 
-<!-- prowl:generated a5f399e56c76b295 Remove this line to stop the Prowl editor updating this file. -->
+<!-- prowl:generated 1e5dbad9102f5c3d Remove this line to stop the Prowl editor updating this file. -->
