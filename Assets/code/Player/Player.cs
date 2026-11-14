@@ -26,6 +26,9 @@ public sealed partial class Player : Component
     /// <summary>Set by equipment each frame to take the mouse for itself (the physgun's rotate mode).</summary>
     [SerializeIgnore] public bool LookLocked;
 
+    /// <summary>Holds the local player still, view and all, until cleared. A loaded bench sets it, so every run measures the same frame.</summary>
+    [SerializeIgnore] public bool Frozen;
+
     private bool _menuWasOpen;
 
     // A player spawned from another component's Start gets that frame's LateUpdate before its own
@@ -33,7 +36,7 @@ public sealed partial class Player : Component
     private bool _ready;
 
     /// <summary>False while a menu is open: equipment should ignore attacks.</summary>
-    public bool InputEnabled => IsLocalPlayer ? !GameManager.Instance.IsMenuOpen : EquipmentInput.Enabled && CanUseEquipment;
+    public bool InputEnabled => IsLocalPlayer ? !GameManager.Instance.IsMenuOpen && !Frozen : EquipmentInput.Enabled && CanUseEquipment;
 
     public Float3 EyePosition => Controller.EyePosition;
     public Quaternion EyeRotation => Quaternion.FromEuler(Pitch, Yaw, 0f);
@@ -96,13 +99,13 @@ public sealed partial class Player : Component
         GameManager game = GameManager.Instance;
 
         // The frame a menu closes the cursor jumps back to the centre, which reads as one huge mouse move.
-        _freeHeld = !game.IsMenuOpen && Input.GetMouseButton(Controls.FreeLook);
-        if (!game.IsMenuOpen && !_menuWasOpen && !LookLocked) UpdateLook();
+        _freeHeld = !game.IsMenuOpen && !Frozen && Input.GetMouseButton(Controls.FreeLook);
+        if (!game.IsMenuOpen && !_menuWasOpen && !LookLocked && !Frozen) UpdateLook();
         _menuWasOpen = game.IsMenuOpen;
         LookLocked = false;
 
-        if (!game.IsMenuOpen && Controls.Pressed(Controls.Noclip)) Controller.ToggleNoclip();
-        if (!game.IsMenuOpen && Controls.Pressed(Controls.ThirdPerson)) ToggleThirdPerson();
+        if (!game.IsMenuOpen && !Frozen && Controls.Pressed(Controls.Noclip)) Controller.ToggleNoclip();
+        if (!game.IsMenuOpen && !Frozen && Controls.Pressed(Controls.ThirdPerson)) ToggleThirdPerson();
         UpdateFlashlight();
 
         Controller.Simulate(ReadMoveInput(), dt);
@@ -150,7 +153,7 @@ public sealed partial class Player : Component
         // Walking keeps working while a menu is open, like gmod. Nothing else reaches the game.
         GameManager game = GameManager.Instance;
         bool typing = game.Paper != null && game.Paper.WantsCaptureKeyboard;
-        if (typing) return input;
+        if (typing || Frozen) return input;
 
         if (Controls.Down(Controls.Forward)) input.Move.Y += 1f;
         if (Controls.Down(Controls.Back)) input.Move.Y -= 1f;

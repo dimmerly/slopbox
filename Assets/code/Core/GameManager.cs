@@ -160,7 +160,8 @@ public sealed class GameManager : Component, INetworkListener
 
     private void UpdateCursor()
     {
-        bool wantLocked = !IsMenuOpen;
+        // A frozen player has no use for the mouse, so it is left free.
+        bool wantLocked = !IsMenuOpen && !(LocalPlayer.IsValid() && LocalPlayer.Frozen);
         if (wantLocked && !Input.CursorLocked) Input.LockCursor();
         else if (!wantLocked && Input.CursorLocked) Input.UnlockCursor();
     }

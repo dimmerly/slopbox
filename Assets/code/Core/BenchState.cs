@@ -17,7 +17,8 @@ namespace Slopbox;
 /// <summary>
 /// Testing only, editor only: SAVE, LOAD and CLEAR buttons, top right while the cursor is free. SAVE stores
 /// every prop and the player's position and view in <c>Library/bench.json</c>; while it exists, play loads it
-/// automatically, so each recompile measures the same scene from the same spot. CLEAR deletes it.
+/// automatically, so each recompile measures the same scene from the same spot. CLEAR deletes it. A load also
+/// locks the player's movement and view, so nothing nudges the frame being measured, until LOCK is unticked.
 /// </summary>
 public sealed class BenchState : Component
 {
@@ -64,6 +65,9 @@ public sealed class BenchState : Component
             Button(paper, "SAVE", Save, true);
             Button(paper, "LOAD", Load, stored);
             Button(paper, "CLEAR", Clear, stored);
+            Player player = game.LocalPlayer;
+            if (player.IsValid())
+                Button(paper, player.Frozen ? "[X] LOCK" : "[  ] LOCK", () => player.Frozen = !player.Frozen, true);
         }
         paper.PopID();
     }
@@ -157,6 +161,7 @@ public sealed class BenchState : Component
         if (data.Noclip) player.Controller.SetMode(player.Controller.Noclip);
         player.Yaw = data.Yaw;
         player.Pitch = data.Pitch;
+        player.Frozen = true;
 
         Notify.Info($"Bench loaded ({data.World.Count} props)");
     }
