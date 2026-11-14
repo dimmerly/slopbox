@@ -34,6 +34,13 @@ public sealed class Prop : Component, INetworkEvents
 
     [SerializeIgnore] private readonly List<RendererState> _renderers = new();
 
+    /// <summary>Follows a renderer swapped for another showing the same thing, as a model gaining its skeleton does.</summary>
+    internal void ReplaceRenderer(IMaterialRenderer from, IMaterialRenderer to)
+    {
+        foreach (RendererState state in _renderers)
+            if (ReferenceEquals(state.Renderer, from)) state.Renderer = to;
+    }
+
     public Rigidbody3D Body => GetComponent<Rigidbody3D>();
     public Color Tint => _tint;
 

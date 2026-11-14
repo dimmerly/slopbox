@@ -7,7 +7,8 @@ namespace Slopbox.Mounting;
 
 /// <summary>
 /// Plays a <see cref="MountedModel"/>'s sequences by moving its bones. Starts in the model's resting sequence.
-/// Looping sequences repeat; the rest play once and hold their last frame.
+/// Looping sequences repeat; the rest play once and hold their last frame. Bound without bones it sleeps, the
+/// model standing as it was built, until the first <see cref="Play"/> gives the model its skeleton.
 /// </summary>
 [AddComponentMenu("Slopbox/Model Animator")]
 public sealed class ModelAnimator : Component
@@ -32,11 +33,28 @@ public sealed class ModelAnimator : Component
     internal void Bind(MountedModel model, Transform[] bones)
     {
         _model = model;
-        _bones = bones;
-        _positions = new Float3[bones.Length];
-        _rotations = new Quaternion[bones.Length];
         _sequence = model.Animation.DefaultSequence;
         _time = 0f;
+        SetBones(bones);
+    }
+
+    /// <summary>Whether the model still stands unskinned, nothing having played on it yet.</summary>
+    public bool Asleep => _bones == null;
+
+    private void SetBones(Transform[] bones)
+    {
+        _bones = bones;
+        if (bones == null) return;
+        _positions = new Float3[bones.Length];
+        _rotations = new Quaternion[bones.Length];
+    }
+
+    // Skins the model the first time something plays on it, the prop it belongs to keeping track of its renderers
+    private void Wake()
+    {
+        if (_bones != null || _model == null) return;
+        Prop prop = GetComponentInParent<Prop>();
+        SetBones(_model.Skin(GameObject, prop.IsValid() ? prop.ReplaceRenderer : null));
     }
 
     /// <summary>Plays a sequence from its start. Out of range indices wrap round.</summary>
@@ -46,10 +64,15 @@ public sealed class ModelAnimator : Component
         int count = Animation.Sequences.Count;
         _sequence = ((sequence % count) + count) % count;
         _time = 0f;
+        Wake();
     }
 
-    /// <summary>Back to the resting sequence.</summary>
-    public void Rest() => Play(Animation?.DefaultSequence ?? 0);
+    /// <summary>Back to the resting sequence. Nothing to do for a model nothing has played on.</summary>
+    public void Rest()
+    {
+        if (Asleep) return;
+        Play(Animation?.DefaultSequence ?? 0);
+    }
 
     public override void Update()
     {

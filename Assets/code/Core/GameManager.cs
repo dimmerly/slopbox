@@ -118,6 +118,10 @@ public sealed class GameManager : Component, INetworkListener
         if (GetComponent<Hud>().IsNotValid()) GameObject.AddComponent<Hud>();
         if (GetComponent<SpawnMenu>().IsNotValid()) GameObject.AddComponent<SpawnMenu>();
         if (GetComponent<PauseMenu>().IsNotValid()) GameObject.AddComponent<PauseMenu>();
+#if PROWL_EDITOR
+        // After the menus, so it draws over their backdrops.
+        if (GetComponent<BenchState>().IsNotValid()) GameObject.AddComponent<BenchState>();
+#endif
 
         if (!Networking.IsClient) SpawnPlayer();
     }

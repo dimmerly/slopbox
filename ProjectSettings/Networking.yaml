@@ -6,6 +6,11 @@ Configuration:
   Execution: 0
   FastResend: 2
   InterpolationMilliseconds: 100
+  InterestMode: 0
+  InterestRadius: 100
+  InterestUpdateTicks: 6
+  InterestHysteresis: 0.15
+  InterestLingerSeconds: 1
   JitterMilliseconds: 0
   JoinTimeoutSeconds: 10
   LatencyMilliseconds: 0

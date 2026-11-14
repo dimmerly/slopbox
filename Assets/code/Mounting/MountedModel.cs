@@ -101,30 +101,17 @@ public sealed class MountedModel : IDisposable
     /// under a "Skeleton" child and a <see cref="ModelAnimator"/> playing its resting sequence. Bones in a
     /// <see cref="HasHierarchy"/> skeleton keep their own names and hang from their parents, for an
     /// <see cref="Animator"/> to bind by name.
+    /// <para>
+    /// With <paramref name="skinned"/> off the copy stands in the pose its meshes were built in, drawn by plain
+    /// mesh renderers with no skeleton, which costs nothing while it stands still. Its animator sleeps until it
+    /// is first asked to play a sequence, when <see cref="Skin"/> gives the copy its bones.
+    /// </para>
     /// </summary>
-    public GameObject Instantiate()
+    public GameObject Instantiate(bool skinned = true)
     {
         var root = new GameObject(Name);
 
-        Transform[] bones = null;
-        if (Bones.Count > 0)
-        {
-            var skeleton = new GameObject("Skeleton");
-            skeleton.SetParent(root, false);
-            bones = new Transform[Bones.Count];
-            bool hierarchy = HasHierarchy;
-            for (int i = 0; i < Bones.Count; i++)
-            {
-                Bone source = Bones[i];
-                // Numbered when flat, so two bones of one name still resolve to their own paths.
-                var bone = new GameObject(hierarchy ? source.Name : $"{i} {source.Name}");
-                bone.SetParent(hierarchy && source.Parent >= 0 ? bones[source.Parent].GameObject : skeleton, false);
-                // Placed relative to the model; the parents are already in place.
-                bone.Transform.Position = root.Transform.TransformPoint(source.Position);
-                bone.Transform.Rotation = root.Transform.Rotation * source.Rotation;
-                bones[i] = bone.Transform;
-            }
-        }
+        Transform[] bones = skinned && Bones.Count > 0 ? BuildSkeleton(root) : null;
 
         foreach (Part part in Parts)
         {
@@ -133,10 +120,10 @@ public sealed class MountedModel : IDisposable
 
             if (bones != null)
             {
-                var skinned = child.AddComponent<SkinnedMeshRenderer>();
-                skinned.SharedMesh = part.Mesh;
-                skinned.Materials = [.. part.Materials];
-                skinned.SetBones(bones, bones[0]);
+                var skin = child.AddComponent<SkinnedMeshRenderer>();
+                skin.SharedMesh = part.Mesh;
+                skin.Materials = [.. part.Materials];
+                skin.SetBones(bones, bones[0]);
             }
             else
             {
@@ -146,10 +133,70 @@ public sealed class MountedModel : IDisposable
             }
         }
 
-        if (bones != null && Animation != null)
+        if (Bones.Count > 0 && Animation != null)
             root.AddComponent<ModelAnimator>().Bind(this, bones);
 
         return root;
+    }
+
+    // The model's bones under a "Skeleton" child of root, in their rest pose
+    private Transform[] BuildSkeleton(GameObject root)
+    {
+        var skeleton = new GameObject("Skeleton");
+        // Only ever a local visual, as the parts are
+        skeleton.Network.Mode = Prowl.Runtime.Networking.NetworkMode.Never;
+        skeleton.SetParent(root, false);
+        var bones = new Transform[Bones.Count];
+        bool hierarchy = HasHierarchy;
+        for (int i = 0; i < Bones.Count; i++)
+        {
+            Bone source = Bones[i];
+            // Numbered when flat, so two bones of one name still resolve to their own paths.
+            var bone = new GameObject(hierarchy ? source.Name : $"{i} {source.Name}");
+            bone.SetParent(hierarchy && source.Parent >= 0 ? bones[source.Parent].GameObject : skeleton, false);
+            // Placed relative to the model; the parents are already in place.
+            bone.Transform.Position = root.Transform.TransformPoint(source.Position);
+            bone.Transform.Rotation = root.Transform.Rotation * source.Rotation;
+            bones[i] = bone.Transform;
+        }
+        return bones;
+    }
+
+    /// <summary>
+    /// Gives a copy made without a skeleton its bones, and swaps the mesh renderers of its parts for skinned ones
+    /// showing what they showed. <paramref name="replaced"/> hears of each swap before the old renderer goes.
+    /// Returns the bones, or null when the model has none.
+    /// </summary>
+    internal Transform[] Skin(GameObject root, Action<IMaterialRenderer, IMaterialRenderer> replaced = null)
+    {
+        if (Bones.Count == 0 || root.IsNotValid()) return null;
+
+        var renderers = new List<MeshRenderer>();
+        foreach (GameObject child in root.Children)
+        {
+            if (child.GetComponent<MeshRenderer>() is not { } renderer) continue;
+            foreach (Part part in Parts)
+            {
+                if (part.Mesh != renderer.Mesh) continue;
+                renderers.Add(renderer);
+                break;
+            }
+        }
+
+        Transform[] bones = BuildSkeleton(root);
+        foreach (MeshRenderer renderer in renderers)
+        {
+            GameObject child = renderer.GameObject;
+            var skinned = child.AddComponent<SkinnedMeshRenderer>();
+            skinned.SharedMesh = renderer.Mesh;
+            skinned.Materials = [.. renderer.Materials];
+            skinned.ShadowCasting = renderer.ShadowCasting;
+            skinned.ReceiveShadows = renderer.ReceiveShadows;
+            skinned.SetBones(bones, bones[0]);
+            replaced?.Invoke(renderer, skinned);
+            child.RemoveComponent(renderer);
+        }
+        return bones;
     }
 
     public void Dispose()

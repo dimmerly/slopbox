@@ -161,7 +161,7 @@ public sealed class MountSpawnable : Spawnable
         var model = Loader.GetOrCreate<MountedModel>();
         if (model == null || model.Parts.Count == 0) return null;
 
-        GameObject go = model.Instantiate();
+        GameObject go = model.Instantiate(skinned: false);
         go.Name = Name;
         ModelSpawnable.AddBoxPhysics(go, Id);
         return go;
