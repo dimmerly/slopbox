@@ -18,6 +18,8 @@ public static class Controls
     public static KeyCode Sprint = KeyCode.ShiftLeft;
     public static KeyCode Walk = KeyCode.AltLeft;
     public static KeyCode Noclip = KeyCode.V;
+    public static KeyCode NoclipFaster = KeyCode.Up;
+    public static KeyCode NoclipSlower = KeyCode.Down;
     public static KeyCode ThirdPerson = KeyCode.C;
 
     // Actions

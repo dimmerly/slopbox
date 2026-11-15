@@ -105,6 +105,11 @@ public sealed partial class Player : Component
         LookLocked = false;
 
         if (!game.IsMenuOpen && !Frozen && Controls.Pressed(Controls.Noclip)) Controller.ToggleNoclip();
+        if (!game.IsMenuOpen && !Frozen && Controller.Mode == Controller.Noclip)
+        {
+            if (Controls.Pressed(Controls.NoclipFaster)) Controller.StepNoclipScale(1);
+            if (Controls.Pressed(Controls.NoclipSlower)) Controller.StepNoclipScale(-1);
+        }
         if (!game.IsMenuOpen && !Frozen && Controls.Pressed(Controls.ThirdPerson)) ToggleThirdPerson();
         UpdateFlashlight();
 

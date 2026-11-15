@@ -32,7 +32,7 @@ public sealed class NoclipMode : MoveMode
         Float3 wish = forward * input.Move.Y + YawRight(input.Yaw) * input.Move.X + Float3.UnitY * input.Vertical;
         if (Float3.LengthSquared(wish) > 1f) wish = Float3.Normalize(wish);
 
-        float speed = input.Sprint ? c.NoclipFastSpeed : input.Walk ? c.NoclipSlowSpeed : c.NoclipSpeed;
+        float speed = (input.Sprint ? c.NoclipFastSpeed : input.Walk ? c.NoclipSlowSpeed : c.NoclipSpeed) * c.NoclipScale;
         c.Velocity += (wish * speed - c.Velocity) * MathF.Min(1f, Accel * dt);
         c.Transform.Position += c.Velocity * dt;
     }

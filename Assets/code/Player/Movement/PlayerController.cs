@@ -51,6 +51,11 @@ public sealed class PlayerController : Component
     public float NoclipFastSpeed = 30f;
     public float NoclipSlowSpeed = 3f;
 
+    /// <summary>Multiplies every noclip speed, changed in play with <see cref="StepNoclipScale"/>.</summary>
+    public float NoclipScale { get; private set; } = 1f;
+
+    private const float NoclipScaleStep = 1.25f, NoclipScaleMin = 0.1f, NoclipScaleMax = 50f;
+
     [Header("Props")]
     [Tooltip("Force in newtons used to shove dynamic bodies the player walks into.")]
     public float PushForce = 500f;
@@ -115,6 +120,15 @@ public sealed class PlayerController : Component
     {
         SetMode(Mode == Noclip ? Walk : Noclip);
         GameAudio.Play("mode", 0.3f, Mode == Noclip ? 1.3f : 0.9f);
+    }
+
+    /// <summary>Scales the noclip speeds one step up or down, by a quarter each.</summary>
+    public void StepNoclipScale(int steps)
+    {
+        float scale = Math.Clamp(NoclipScale * MathF.Pow(NoclipScaleStep, steps), NoclipScaleMin, NoclipScaleMax);
+        if (scale == NoclipScale) return;
+        NoclipScale = scale;
+        GameAudio.Play("mode", 0.2f, steps > 0 ? 1.5f : 1.1f);
     }
 
     /// <summary>Runs one frame of movement for <paramref name="input"/>.</summary>

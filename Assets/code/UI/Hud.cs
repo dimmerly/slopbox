@@ -298,7 +298,7 @@ public sealed class Hud : Component
             using (paper.Column("text").Width(UnitValue.Auto).Height(UnitValue.Auto).Enter())
             {
                 paper.Box("label").Width(UnitValue.Auto).Height(Px(16f))
-                    .Text("NOCLIP", font).FontSize(Px(12f)).LetterSpacing(Px(0.6f)).TextColor(Theme.White(0.5f))
+                    .Text($"NOCLIP  x{c.NoclipScale:0.##}", font).FontSize(Px(12f)).LetterSpacing(Px(0.6f)).TextColor(Theme.White(0.5f))
                     .Alignment(TextAlignment.MiddleLeft);
                 paper.Box("value").Width(UnitValue.Auto).Height(Px(26f))
                     .Text($"{Float3.Length(c.Velocity):0.0} m/s", font).FontSize(Px(20f)).TextColor(Theme.Accent)
