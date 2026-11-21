@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Vector;
 
 namespace Slopbox;
@@ -42,6 +43,43 @@ public abstract class Equipment
     /// mounting, so equipment can use a mounted game's model and build its own parts without one.
     /// </summary>
     public virtual void BuildViewModel(ViewModel vm) { }
+
+    /// <summary>
+    /// True for equipment a client also runs for its own player, to move the props it drives itself without
+    /// waiting on the host. The host runs it too, from the client's input, for everything else.
+    /// </summary>
+    public virtual bool RunsOnClient => false;
+
+    private GameObject _requested;
+    private double _nextRequest;
+
+    /// <summary>
+    /// Whether this peer moves <paramref name="body"/> itself. A client does for props it owns, and asks the host
+    /// for any other spawned prop, which hands it over unless it has joints; the host then moves it instead. The
+    /// host leaves a remote player's props to that player, and moves everything else.
+    /// </summary>
+    protected bool Drives(Rigidbody3D body)
+    {
+        if (body.IsNotValid()) return false;
+        if (Networking.IsHost)
+        {
+            if (!Owner.IsLocalPlayer && Prop.ClientMayDrive(body)) return false;
+            Prop.Reclaim(body);
+            return true;
+        }
+        if (!Networking.IsClient) return true;
+
+        GameObject go = body.GameObject;
+        if (!Prop.IsNetworkedRoot(go)) return false;
+        if (go.Network.HasControl) return true;
+        if (_requested != go || Time.TimeSinceStartup >= _nextRequest)
+        {
+            _requested = go;
+            _nextRequest = Time.TimeSinceStartup + 0.5;
+            Owner.RequestControl(go);
+        }
+        return false;
+    }
 
     /// <summary>Every frame while out, after movement.</summary>
     public virtual void Update() { }

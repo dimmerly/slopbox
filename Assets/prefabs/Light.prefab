@@ -1,0 +1,169 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Light",
+  "Identifier": "259113c1-8c09-4bd4-ba22-e02a6b53f92a",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Prowl.Runtime.SphereCollider, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "radius": 0.12F,
+      "center": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "rotation": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "_identifier": "1159ac49-4fd1-42fb-8639-0247191281d2",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewSphereCollider"
+    },
+    {
+      "$id": 4,
+      "$type": "Prowl.Runtime.Rigidbody3D, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "motionType": 0L,
+      "isSpeculative": false,
+      "useGravity": true,
+      "enableGyroscopicForces": false,
+      "mass": 1F,
+      "overrideInertia": false,
+      "inertiaOverride": {
+        "X": 1F,
+        "Y": 1F,
+        "Z": 1F
+      },
+      "overrideCenterOfMass": false,
+      "centerOfMassOverride": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "linearDamping": 0F,
+      "angularDamping": 0F,
+      "friction": 0.2F,
+      "restitution": 0F,
+      "deactivationTime": 1F,
+      "linearSleepThreshold": 0.1F,
+      "angularSleepThreshold": 0.1F,
+      "interpolation": 1L,
+      "constraints": 0L,
+      "_identifier": "06454b1f-9937-448e-b4d8-0462a36670d0",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewRigidbody3D"
+    },
+    {
+      "$id": 5,
+      "$type": "Slopbox.Prop, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_identifier": "7837af1e-26b6-4712-b9cf-8a2ebae0030b",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewProp"
+    },
+    {
+      "$id": 6,
+      "$type": "Prowl.Runtime.PointLight, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "sourceRadius": 0F,
+      "cookie": NULL,
+      "iesProfile": NULL,
+      "overrideRange": false,
+      "range": 10F,
+      "color": {
+        "R": 1F,
+        "G": 1F,
+        "B": 1F,
+        "A": 1F
+      },
+      "useTemperature": true,
+      "temperature": 2700F,
+      "intensity": 63.661976F,
+      "layerMask": {
+        "mask": 4294967295U
+      },
+      "castShadows": false,
+      "shadowStrength": 1F,
+      "shadowResolution": 1024L,
+      "shadowFilter": 1L,
+      "depthBias": 1F,
+      "normalBias": 1F,
+      "bakeMode": 0L,
+      "_identifier": "6ca1e755-5996-4ae3-93c8-a36805196e08",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewPointLight"
+    },
+    {
+      "$id": 7,
+      "$type": "Slopbox.LightProp, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_identifier": "db75381c-07dd-4f2b-b5df-687a6a9efc86",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewLightProp"
+    },
+    {
+      "$id": 8,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": true,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "1f82cf88-4e76-4b53-b854-567c4633e805",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 9,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "259113c1-8c09-4bd4-ba22-e02a6b53f92a",
+    "Overrides": {
+      "$id": 10,
+      "$values": [
+
+      ]
+    }
+  }
+}

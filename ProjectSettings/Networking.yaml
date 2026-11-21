@@ -3,6 +3,8 @@ Configuration:
   BatchMessages: true
   CongestionControl: false
   ConnectTimeoutSeconds: 5
+  Encryption: false
+  TrustedHostKey: ""
   Execution: 0
   FastResend: 2
   InterpolationMilliseconds: 100
@@ -16,11 +18,12 @@ Configuration:
   LatencyMilliseconds: 0
   LocalAddress: "host"
   MaxMessageSize: 16777216
+  MaxClientMessageSize: 262144
+  MaxClientMessagesPerSecond: 1000
+  JoinSpawnBytesPerTick: 262144
   MaxPeers: 64
   MaxRetransmits: 40
-  MaxSnapshotDecompressedBytes: 67108864
-  MaxSnapshotDepth: 128
-  MaxSnapshotNodes: 250000
+  MaxSendRate: 0
   Mtu: 1200
   NoDelay: true
   PacketLossPercent: 0
@@ -32,6 +35,7 @@ Configuration:
   SendWindow: 4096
   SimulateNetwork: false
   TickRate: 30
+  PositionPrecision: 0.01
   TransformPositionThreshold: 0.001
   TransformRotationThresholdDegrees: 0.1
   TransformScaleThreshold: 0.0001

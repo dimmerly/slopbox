@@ -29,12 +29,20 @@ public sealed class Physgun : Equipment
     private Beam _beam;
     private Material _bodyMat, _darkMat, _glowMat;
 
+    // Client: a prop clicked before this peer drove it, grabbed as it was clicked once the host hands it over.
+    private Rigidbody3D _pending;
+    private Float3 _pendingAnchor;
+    private float _pendingDistance;
+    private Quaternion _pendingRotation;
+
     public override string Name => "Physics Gun";
     public override string Description => "Pick up, move, rotate and freeze physics objects.";
     public override Color Tint => new(0.35f, 0.75f, 1f, 1f);
     public override bool CapturesScroll => IsHolding;
+    public override bool RunsOnClient => true;
     public bool IsHolding => _hold.IsHolding || (Networking.IsClient && Owner.NetworkHolding);
     internal Float3 HoldPoint => _hold.IsHolding ? _hold.WorldAnchor : Float3.Zero;
+    internal PhysicsHold Hold => _hold;
 
     public override IEnumerable<InputHint> Hints => _hold.IsHolding
         ? [new("RMB", "Freeze"), new("Wheel", "Push / pull"), new("E + Mouse", "Rotate"), new("Shift", "Snap rotation")]
@@ -84,7 +92,9 @@ public sealed class Physgun : Equipment
         if (!_hold.IsHolding)
         {
             if (Attack1Pressed) TryGrab();
-            if (ReloadPressed) Unfreeze();
+            else if (_pending.IsValid()) GrabPending();
+            // Freezing is the host's, which takes the prop back to do it.
+            if (ReloadPressed && !Networking.IsClient) Unfreeze();
             return;
         }
 
@@ -153,10 +163,41 @@ public sealed class Physgun : Equipment
         if (!Owner.Trace(Range, out RaycastHit hit) || hit.Rigidbody.IsNotValid())
             return;
         Rigidbody3D body = hit.Rigidbody;
+        float distance = MathF.Max(hit.Distance, MinDistance);
+        Quaternion relative = Quaternion.Inverse(YawRotation) * body.Rotation;
+        if (Drives(body))
+        {
+            Grab(body, hit.Point, distance, relative);
+            return;
+        }
 
-        _hold.Grab(body, hit.Point);
-        _distance = MathF.Max(hit.Distance, MinDistance);
-        _relativeRotation = Quaternion.Inverse(YawRotation) * body.Rotation;
+        // A client waits for the host to hand the prop over. Should the host keep it, the host holds it instead.
+        if (!Networking.IsClient) return;
+        _pending = body;
+        _pendingAnchor = Quaternion.Inverse(body.Rotation) * (hit.Point - body.Position);
+        _pendingDistance = distance;
+        _pendingRotation = relative;
+    }
+
+    private void GrabPending()
+    {
+        Rigidbody3D body = _pending;
+        if (!Attack1Down || Owner.NetworkHolding)
+        {
+            _pending = null;
+            return;
+        }
+        if (!body.GameObject.Network.HasControl) return;
+
+        _pending = null;
+        Grab(body, body.Position + body.Rotation * _pendingAnchor, _pendingDistance, _pendingRotation);
+    }
+
+    private void Grab(Rigidbody3D body, Float3 point, float distance, Quaternion relative)
+    {
+        _hold.Grab(body, point);
+        _distance = distance;
+        _relativeRotation = relative;
     }
 
     private void Drop()

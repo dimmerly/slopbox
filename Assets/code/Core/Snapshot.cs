@@ -240,13 +240,9 @@ public sealed class Snapshot
         for (int i = 0; i < Props.Count; i++)
         {
             PropData data = Props[i];
-            GameObject go = Build(game, data);
+            GameObject go = Build(game, data, origin + rotation * V(data.Position), rotation * Q(data.Rotation));
             if (go.IsNotValid()) continue;
-
-            go.Transform.Position = origin + rotation * V(data.Position);
-            go.Transform.Rotation = rotation * Q(data.Rotation);
             go.Transform.LocalScale = new Float3(data.Scale);
-            go.MoveTo(SceneInstance.Active.ActiveSection);
 
             Prop prop = go.GetComponent<Prop>();
             Rigidbody3D body = go.GetComponent<Rigidbody3D>();
@@ -256,8 +252,11 @@ public sealed class Snapshot
                 if (material.IsValid()) prop.SetMaterial(material);
             }
             if (data.Tint != null) prop.SetTint(C(data.Tint));
-            if (data.Mass > 0f) body.Mass = data.Mass;
-            body.AffectedByGravity = data.Gravity;
+            if (body.IsValid())
+            {
+                if (data.Mass > 0f) body.Mass = data.Mass;
+                body.AffectedByGravity = data.Gravity;
+            }
             prop.SetFrozen(data.Frozen);
 
             bodies[i] = body;
@@ -288,13 +287,8 @@ public sealed class Snapshot
                 case "rope":
                     Float3 worldB = b.IsValid() ? b.Transform.TransformPoint(V(c.AnchorB)) : origin + rotation * V(c.AnchorB);
                     DistanceLimitConstraint rope = Slopbox.Constraints.Rope(a, a.Transform.TransformPoint(V(c.AnchorA)), b, worldB, c.Length);
-                    var visual = new GameObject("Rope");
-                    RopeVisual draw = visual.AddComponent<RopeVisual>();
-                    draw.Constraint = rope;
-                    if (c.Color != null) draw.Color = C(c.Color);
-                    draw.Width = c.Width;
-                    visual.MoveTo(SceneInstance.Active.ActiveSection);
-                    made.Add(visual);
+                    RopeVisual draw = RopeVisual.Create(rope, c.Color != null ? C(c.Color) : null, c.Width);
+                    made.Add(draw.GameObject);
                     break;
             }
         }
@@ -302,24 +296,19 @@ public sealed class Snapshot
         return made;
     }
 
-    internal static GameObject Build(GameManager game, PropData data)
+    /// <summary>Spawns the networked prop <paramref name="data"/> describes at a pose, or null if it can't be made.</summary>
+    internal static GameObject Build(GameManager game, PropData data, Float3 position, Quaternion rotation)
     {
         if (data.Light != null)
-            return LightProp.Create(C(data.Light.Color), data.Light.Brightness, data.Light.Range);
+            return LightProp.Spawn(position, C(data.Light.Color), data.Light.Brightness, data.Light.Range).GameObject;
         if (data.Thruster != null)
-            return ThrusterProp.Create(data.Thruster.Force, data.Thruster.Forward, data.Thruster.Back, data.Thruster.Toggle);
+            return ThrusterProp.Spawn(position, rotation, data.Thruster.Force, data.Thruster.Forward, data.Thruster.Back,
+                data.Thruster.Toggle).GameObject;
 
         Spawnable source = game.Catalog.Find(data.Spawn);
         if (source == null) return null;
-        try
-        {
-            return source.Create();
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-            return null;
-        }
+        Prop prop = Prop.Spawn(source, position, rotation);
+        return prop.IsValid() ? prop.GameObject : null;
     }
 
     // ----------------------------------------------------------------

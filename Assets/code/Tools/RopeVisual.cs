@@ -19,10 +19,22 @@ public sealed class RopeVisual : Component
     [Sync] public float RopeWidth { get; set; }
     private LineRenderer _line;
 
-    public override void OnEnable()
+    /// <summary>A rope drawn for <paramref name="constraint"/>, networked so clients see it too.</summary>
+    public static RopeVisual Create(DistanceLimitConstraint constraint, Color? color = null, float width = 0.03f)
     {
+        GameObject go = Networking.SpawnPrefab(GameManager.Instance.RopePrefab, Float3.Zero, Quaternion.Identity);
+        RopeVisual rope = go.GetComponent<RopeVisual>();
+        rope.Constraint = constraint;
+        if (color.HasValue) rope.Color = color.Value;
+        rope.Width = width;
+        return rope;
+    }
+
+    // Made once running rather than stored in the prefab, as its material is made in code.
+    private void EnsureLine()
+    {
+        if (_line.IsValid()) return;
         var visual = new GameObject("Rope Visual");
-        visual.Network.Mode = NetworkMode.Never;
         visual.SetParent(GameObject, false);
         _line = visual.AddComponent<LineRenderer>();
         _line.Material = Materials.Line();
@@ -48,8 +60,8 @@ public sealed class RopeVisual : Component
             EndpointA = c.Transform.TransformPoint(c.Anchor);
             EndpointB = c.ConnectedBody.IsValid() ? c.ConnectedBody.Transform.TransformPoint(c.ConnectedAnchor) : c.ConnectedAnchor;
             RopeLength = c.MaxDistance; RopeColor = Color; RopeWidth = Width;
-            if (Networking.IsHost && !Network.Active) Network.Spawn();
         }
+        EnsureLine();
         Float3 a = EndpointA, b = EndpointB;
 
         // A parabola whose depth matches the slack, roughly where a real rope would hang.

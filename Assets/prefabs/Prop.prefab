@@ -1,0 +1,107 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Prop",
+  "Identifier": "4b1ce5f1-38a4-4c6c-a27b-122f05b42bef",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Slopbox.Prop, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_identifier": "ca3eef15-0155-4f3d-b34e-265562b53720",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewProp"
+    },
+    {
+      "$id": 4,
+      "$type": "Prowl.Runtime.Rigidbody3D, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "motionType": 0L,
+      "isSpeculative": false,
+      "useGravity": true,
+      "enableGyroscopicForces": false,
+      "mass": 1F,
+      "overrideInertia": false,
+      "inertiaOverride": {
+        "X": 1F,
+        "Y": 1F,
+        "Z": 1F
+      },
+      "overrideCenterOfMass": false,
+      "centerOfMassOverride": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "linearDamping": 0F,
+      "angularDamping": 0F,
+      "friction": 0.2F,
+      "restitution": 0F,
+      "deactivationTime": 1F,
+      "linearSleepThreshold": 0.1F,
+      "angularSleepThreshold": 0.1F,
+      "interpolation": 1L,
+      "constraints": 0L,
+      "_identifier": "3049631d-2bd3-40fc-b431-2c1fc656e1bd",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewRigidbody3D"
+    },
+    {
+      "$id": 5,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": true,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "8036f1d9-91fc-4a74-b9c6-3d6cf4bf9cb8",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 6,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "4b1ce5f1-38a4-4c6c-a27b-122f05b42bef",
+    "Overrides": {
+      "$id": 7,
+      "$values": [
+
+      ]
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Thruster",
+  "Identifier": "b6ec4107-b4f1-477e-b17f-01b67a7a569d",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Prowl.Runtime.CylinderCollider, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "radius": 0.12F,
+      "height": 0.2F,
+      "center": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "rotation": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "_identifier": "aea987c8-a5e3-497c-877c-3030abad215e",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewCylinderCollider"
+    },
+    {
+      "$id": 4,
+      "$type": "Prowl.Runtime.Rigidbody3D, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "motionType": 0L,
+      "isSpeculative": false,
+      "useGravity": true,
+      "enableGyroscopicForces": false,
+      "mass": 1F,
+      "overrideInertia": false,
+      "inertiaOverride": {
+        "X": 1F,
+        "Y": 1F,
+        "Z": 1F
+      },
+      "overrideCenterOfMass": false,
+      "centerOfMassOverride": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "linearDamping": 0F,
+      "angularDamping": 0F,
+      "friction": 0.2F,
+      "restitution": 0F,
+      "deactivationTime": 1F,
+      "linearSleepThreshold": 0.1F,
+      "angularSleepThreshold": 0.1F,
+      "interpolation": 1L,
+      "constraints": 0L,
+      "_identifier": "9839f3c4-0cf9-48a8-930c-97d5eead8e5e",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewRigidbody3D"
+    },
+    {
+      "$id": 5,
+      "$type": "Slopbox.Prop, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_identifier": "b40bfc8f-b757-4b2e-8389-2a2e8fbc7d98",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewProp"
+    },
+    {
+      "$id": 6,
+      "$type": "Slopbox.ThrusterProp, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "Forward": 328L,
+      "Back": 322L,
+      "Toggle": false,
+      "Controller": NULL,
+      "_identifier": "d3b24f2c-6ce5-4c0d-b64b-6e4335f4d54d",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewThrusterProp"
+    },
+    {
+      "$id": 7,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": true,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "4fd834d4-f66d-4d98-b832-a51f1816454a",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 8,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "b6ec4107-b4f1-477e-b17f-01b67a7a569d",
+    "Overrides": {
+      "$id": 9,
+      "$values": [
+
+      ]
+    }
+  }
+}

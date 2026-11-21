@@ -5,7 +5,7 @@ using Prowl.Vector;
 
 namespace Slopbox;
 
-/// <summary>Creating and removing the joints the constraint tools make.</summary>
+/// <summary>Creating and removing the joints the constraint tools make. Joined bodies go back to the host, which alone has joints.</summary>
 public static class Constraints
 {
     /// <summary>
@@ -14,6 +14,8 @@ public static class Constraints
     /// </summary>
     public static PhysicsConstraint[] Weld(Rigidbody3D a, Rigidbody3D b, bool noCollide)
     {
+        Prop.Reclaim(a);
+        Prop.Reclaim(b);
         var socket = a.GameObject.AddComponent<BallSocketConstraint>();
         socket.Anchor = Float3.Zero;
         socket.ConnectedBody = b;
@@ -30,6 +32,8 @@ public static class Constraints
 
     public static BallSocketConstraint BallSocket(Rigidbody3D a, Float3 worldPoint, Rigidbody3D b, bool noCollide)
     {
+        Prop.Reclaim(a);
+        Prop.Reclaim(b);
         var socket = a.GameObject.AddComponent<BallSocketConstraint>();
         socket.Anchor = a.Transform.InverseTransformPoint(worldPoint);
         socket.ConnectedBody = b;
@@ -43,6 +47,8 @@ public static class Constraints
         bool noCollide, float minAngle = -180f, float maxAngle = 180f,
         bool motor = false, float motorSpeed = 0f, float motorTorque = 100f)
     {
+        Prop.Reclaim(a);
+        Prop.Reclaim(b);
         var joint = a.GameObject.AddComponent<HingeJoint>();
         joint.Enabled = false;
         joint.Anchor = a.Transform.InverseTransformPoint(worldPoint);
@@ -61,6 +67,8 @@ public static class Constraints
     /// <summary>A rope that stops the two points getting further apart than <paramref name="length"/>, but lets them come closer.</summary>
     public static DistanceLimitConstraint Rope(Rigidbody3D a, Float3 worldA, Rigidbody3D b, Float3 worldB, float length)
     {
+        Prop.Reclaim(a);
+        Prop.Reclaim(b);
         var rope = a.GameObject.AddComponent<DistanceLimitConstraint>();
         rope.Anchor = a.Transform.InverseTransformPoint(worldA);
         // The connected anchor is local to b, or a world position when there is no b.

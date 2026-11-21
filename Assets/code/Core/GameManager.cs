@@ -45,6 +45,28 @@ public sealed class GameManager : Component, INetworkListener
     [Tooltip("Animation graph that drives the player's body from its movement and aim.")]
     public AnimationGraph PlayerAnimation;
 
+    [Header("Networked prefabs")]
+    [Tooltip("A player: CharacterController, PlayerController, Player, NetworkAnimator and NetworkTransform.")]
+    public PrefabAsset PlayerPrefab;
+
+    [Tooltip("The networked shell of a spawned prop: Prop, Rigidbody3D and NetworkTransform. Each peer builds the model under it.")]
+    public PrefabAsset PropPrefab;
+
+    [Tooltip("The shell of a spawned map: Prop and NetworkTransform, no rigidbody.")]
+    public PrefabAsset MapPrefab;
+
+    [Tooltip("A light prop: SphereCollider, Rigidbody3D, Prop, PointLight, LightProp and NetworkTransform.")]
+    public PrefabAsset LightPrefab;
+
+    [Tooltip("A thruster prop: CylinderCollider, Rigidbody3D, Prop, ThrusterProp and NetworkTransform.")]
+    public PrefabAsset ThrusterPrefab;
+
+    [Tooltip("A rope's drawing: RopeVisual.")]
+    public PrefabAsset RopePrefab;
+
+    [Tooltip("A rocket: RocketProjectile and NetworkTransform.")]
+    public PrefabAsset RocketPrefab;
+
     [Header("Content")]
     [Tooltip("The game's own sounds, played by clip name, e.g. \"click\" or \"step_grass_2\". From Assets/sounds.")]
     public List<AudioClip> Sounds = new();
@@ -86,7 +108,8 @@ public sealed class GameManager : Component, INetworkListener
 
     public override void OnEnable()
     {
-        if (s_instance.IsValid() && s_instance != this && s_instance.EnabledInHierarchy)
+        // One left from another world, such as the editor's scene while playing, doesn't count.
+        if (s_instance.IsValid() && s_instance != this && s_instance.EnabledInHierarchy && s_instance.Scene == Scene)
         {
             Debug.LogWarning("A second GameManager was enabled, it will be ignored.");
             return;
@@ -141,7 +164,8 @@ public sealed class GameManager : Component, INetworkListener
 
     public override void OnValidate()
     {
-        if (Instance == this) ApplyGravity();
+        // Not through Instance: in the editor that would cache the edited scene's manager for play mode.
+        if (s_instance == this) ApplyGravity();
     }
 
     /// <summary>Pushes <see cref="Gravity"/> to the physics world and the player, so they always fall alike.</summary>
@@ -173,16 +197,10 @@ public sealed class GameManager : Component, INetworkListener
     public Player SpawnPlayer(NetPeer owner = null)
     {
         (Float3 position, float yaw) = FindSpawn();
-        var go = new GameObject(owner == null ? "Player" : owner.Name);
-        go.Transform.Position = position;
-        go.Transform.Rotation = Quaternion.FromEuler(0f, yaw, 0f);
-        go.AddComponent<CharacterController>();
-        go.AddComponent<PlayerController>();
-        Player player = go.AddComponent<Player>();
+        GameObject go = Networking.SpawnPrefab(PlayerPrefab, position, Quaternion.FromEuler(0f, yaw, 0f), owner);
+        go.Name = owner == null ? "Player" : owner.Name;
+        Player player = go.GetComponent<Player>();
         go.GetComponent<PlayerController>().Gravity = Gravity;
-        go.MoveTo(Scene);
-        if (Networking.IsHost) go.Network.Spawn(owner);
-        else go.Network.Mode = NetworkMode.Object;
         if (owner == null || owner.IsLocal) LocalPlayer = player;
         ApplyGravity();
         return player;
@@ -230,12 +248,8 @@ public sealed class GameManager : Component, INetworkListener
     {
         try
         {
-            LocalPlayer.GameObject.Network.Mode = NetworkMode.Object;
-            foreach (Prop prop in Prop.All)
-                if (prop.SpawnId.Length > 0 || Snapshot.CanCapture(prop)) prop.SpawnNetwork();
+            // Prefab instances made before this, the world's props and players, spawn with the session.
             Networking.Host(string.IsNullOrWhiteSpace(name) ? "Host" : name.Trim());
-            GameManager game = GameManager.Instance;
-            game.LocalPlayer.GameObject.Network.Spawn();
             NetworkStatus = $"Hosting on port {Networking.LocalPort}";
         }
         catch (Exception e) { NetworkStatus = e.Message; Notify.Error(NetworkStatus); }
@@ -280,20 +294,7 @@ public sealed class GameManager : Component, INetworkListener
         foreach (Player player in Scene.GetAll<Player>())
             if (player != GameManager.Instance.LocalPlayer) player.GameObject.Destroy();
         _players.Clear();
-        // Keep the shared world when returning to single player, and restore physics.
-        foreach (Prop prop in Prop.All) prop.RestoreSimulation();
         if (GameManager.Instance.LocalPlayer.IsNotValid()) GameManager.Instance.SpawnPlayer();
         NetworkStatus = "Disconnected — single player";
-    }
-
-    public override void LateUpdate()
-    {
-        if (!Networking.IsHost) return;
-        foreach (Prop prop in Prop.All)
-        {
-            if (prop.GameObject.IsDestroyQueued || prop.Network.Active) continue;
-            if (prop.SpawnId.Length == 0 && !Snapshot.CanCapture(prop)) continue;
-            prop.SpawnNetwork();
-        }
     }
 }

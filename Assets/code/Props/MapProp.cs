@@ -227,13 +227,13 @@ public sealed class MapProp : Component
                     continue;
                 }
 
-                GameObject go = spawnable.Create();
+                GameObject go = spawnable.CreateModel(out _);
                 if (go.IsNotValid()) continue;
 
-                // Part of the map: its rigidbody and prop marker go. Solid ones keep the box around them as a
-                // static collider; the rest lose their colliders too.
-                foreach (Component c in go.GetComponentsInChildren<Component>(true, true).ToList())
-                    if (c is Rigidbody3D or Prop || (c is Collider && !model.Solid)) c.GameObject.RemoveComponent(c);
+                // Part of the map: solid ones keep the box around them as a static collider, the rest lose theirs.
+                if (!model.Solid)
+                    foreach (Component c in go.GetComponentsInChildren<Component>(true, true).ToList())
+                        if (c is Collider) c.GameObject.RemoveComponent(c);
                 if (model.Solid && !go.TryGetComponent(out Collider _))
                 {
                     AABB bounds = Spawner.LocalBounds(go);

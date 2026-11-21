@@ -174,7 +174,7 @@ public sealed class PlacerTool : BaseTool
                 var row = new List<(GameObject Go, AABB Bounds)>(columns);
                 for (int i = rowStart; i < Math.Min(batch.Count, rowStart + columns); i++)
                 {
-                    GameObject go = Build(batch[i]);
+                    GameObject go = Build(batch[i], origin, facing);
                     if (go.IsValid()) row.Add((go, Spawner.LocalBounds(go)));
                     if (++built % BuildsPerFrame == 0) await GameTask.NextFrame(GameTask.SessionToken);
                 }
@@ -219,11 +219,15 @@ public sealed class PlacerTool : BaseTool
         if (placed.Count < batch.Count) Notify.Error($"Placed {placed.Count} of {batch.Count}; the rest could not be made");
     }
 
-    private static GameObject Build(Spawnable spawnable)
+    /// <summary>Spawns a model held still out of sight until <see cref="Place"/> puts it in its cell.</summary>
+    private static GameObject Build(Spawnable spawnable, Float3 origin, Quaternion facing)
     {
         try
         {
-            return spawnable.Create();
+            Prop prop = Prop.Spawn(spawnable, origin - Float3.UnitY * 1000f, facing);
+            if (prop.IsNotValid()) return null;
+            if (prop.Body.IsValid()) prop.Body.MotionType = MotionType.Kinematic;
+            return prop.GameObject;
         }
         catch (Exception e)
         {
@@ -240,11 +244,9 @@ public sealed class PlacerTool : BaseTool
             ground = hit.Point.Y;
 
         Float3 center = facing * bounds.Center;
-        go.Transform.Rotation = facing;
-        go.Transform.Position = new Float3(cell.X - center.X, ground - bounds.Min.Y + 0.01f, cell.Z - center.Z);
+        go.Network.Teleport(new Float3(cell.X - center.X, ground - bounds.Min.Y + 0.01f, cell.Z - center.Z), facing);
 
-        // Frozen before it is in the world, so a whole batch never tumbles into itself.
-        if (Freeze && go.TryGetComponent(out Rigidbody3D body)) body.MotionType = MotionType.Kinematic;
-        go.MoveTo(SceneInstance.Active.ActiveSection);
+        // Held until now, and still frozen if asked, so a whole batch never tumbles into itself.
+        if (go.TryGetComponent(out Rigidbody3D body)) body.MotionType = Freeze ? MotionType.Kinematic : MotionType.Dynamic;
     }
 }

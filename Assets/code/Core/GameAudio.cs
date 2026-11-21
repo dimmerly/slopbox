@@ -58,7 +58,6 @@ public sealed class GameAudio : Component
     private AudioSource MakeSource(string name)
     {
         var go = new GameObject(name);
-        go.Network.Mode = NetworkMode.Never;
         go.SetParent(GameObject, false);
         var source = go.AddComponent<AudioSource>();
         source.PlayOnStart = false;

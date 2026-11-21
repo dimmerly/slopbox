@@ -72,7 +72,6 @@ public sealed partial class Player
 
         // The model keeps its own root name, which the rig binds by. The holder is what turns and moves.
         _body = new GameObject("Body");
-        _body.Network.Mode = NetworkMode.Never;
         _body.SetParent(GameObject, false);
         GameObject model = citizen != null ? citizen.Instantiate() : GameObject.Instantiate(prefab);
         model.SetParent(_body, false);

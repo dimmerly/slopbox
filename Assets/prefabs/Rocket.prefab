@@ -1,0 +1,85 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Rocket",
+  "Identifier": "ed27aeef-1465-4711-bcda-7245307f52f8",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Slopbox.RocketProjectile, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_direction": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "_speed": 0F,
+      "_radius": 0F,
+      "_blastSpeed": 0F,
+      "_launchPosition": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "_identifier": "a7a03089-7957-4169-af4d-f492e472cc43",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewRocketProjectile"
+    },
+    {
+      "$id": 4,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": false,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "0c301402-bc17-4498-8dc1-9cd02bf7eec9",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 5,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "ed27aeef-1465-4711-bcda-7245307f52f8",
+    "Overrides": {
+      "$id": 6,
+      "$values": [
+
+      ]
+    }
+  }
+}

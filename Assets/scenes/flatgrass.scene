@@ -1,156 +1,6 @@
 {
   "$id": 1,
-  "$type": "Prowl.Runtime.Resources.SceneContent, Prowl.Runtime",
-  "Environment": {
-    "$id": 24,
-    "SkyMaterial": {
-      "$id": 25,
-      "_shader": {
-        "$asset": "73295c5c-0e55-4550-ae74-f13cd62796d2"
-      },
-      "_parent": NULL,
-      "_properties": {
-        "$id": 26,
-        "_colors": {
-          "$id": 27,
-          "entries": [
-
-          ]
-        },
-        "_vectors2": {
-          "$id": 28,
-          "entries": [
-
-          ]
-        },
-        "_vectors3": {
-          "$id": 29,
-          "entries": [
-
-          ]
-        },
-        "_vectors4": {
-          "$id": 30,
-          "entries": [
-
-          ]
-        },
-        "_floats": {
-          "$id": 31,
-          "entries": [
-
-          ]
-        },
-        "_ints": {
-          "$id": 32,
-          "entries": [
-
-          ]
-        },
-        "_matrices": {
-          "$id": 33,
-          "entries": [
-
-          ]
-        },
-        "_textures": {
-          "$id": 34,
-          "entries": [
-
-          ]
-        },
-        "_textures3D": {
-          "$id": 35,
-          "entries": [
-
-          ]
-        },
-        "_texturesCube": {
-          "$id": 36,
-          "entries": [
-
-          ]
-        }
-      },
-      "_overrides": {
-        "$id": 37,
-        "$values": [
-
-        ]
-      },
-      "_keywords": {
-        "$id": 38,
-        "entries": [
-
-        ]
-      },
-      "_renderQueue": -1,
-      "_castShadows": true,
-      "_surface": NULL,
-      "Name": "Procedural Sky"
-    },
-    "SkyColor": {
-      "R": 0.2F,
-      "G": 0.3F,
-      "B": 0.5F,
-      "A": 1F
-    },
-    "Ambient": {
-      "Mode": 0L,
-      "Intensity": 19660.8F,
-      "Color": {
-        "R": 0.43F,
-        "G": 0.55F,
-        "B": 0.65F,
-        "A": 1F
-      },
-      "SkyColor": {
-        "R": 0.3F,
-        "G": 0.3F,
-        "B": 0.4F,
-        "A": 1F
-      },
-      "GroundColor": {
-        "R": 0.2F,
-        "G": 0.2F,
-        "B": 0.2F,
-        "A": 1F
-      }
-    },
-    "Fog": {
-      "Mode": 0L,
-      "Color": {
-        "R": 0.5F,
-        "G": 0.5F,
-        "B": 0.5F,
-        "A": 1F
-      },
-      "Density": 0.01F,
-      "Start": 20F,
-      "End": 100F,
-      "UseSky": false,
-      "Intensity": 19660.8F
-    },
-    "SkyCapture": {
-      "Mode": 0L,
-      "Resolution": 128,
-      "Interval": 2
-    }
-  },
-  "LightmapBake": {
-    "$id": 45,
-    "AtlasSize": 1024,
-    "TexelsPerUnit": 20F,
-    "DilatePixels": 2,
-    "Bounces": 2,
-    "Samples": 64,
-    "ProbeSamples": 256,
-    "DoBackfaceCull": false,
-    "SparseStride": 1,
-    "BakeSkyLighting": false,
-    "IgnoreAlbedo": false
-  },
-  "Name": "flatgrass",
+  "$type": "Prowl.Runtime.Resources.SceneContent, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
   "Objects": {
     "$id": 2,
     "array": [
@@ -199,6 +49,27 @@
             },
             "PlayerAnimation": {
               "$asset": "da382ae0-b73b-40d3-a8e7-984e277a8ff6"
+            },
+            "PlayerPrefab": {
+              "$asset": "2708f655-c160-44e1-8879-dfdd1e011549"
+            },
+            "PropPrefab": {
+              "$asset": "96b7c6cc-7131-48c9-b586-4595a0aae4d7"
+            },
+            "MapPrefab": {
+              "$asset": "fa060922-c0cc-4e63-a111-d7b2ae36caf8"
+            },
+            "LightPrefab": {
+              "$asset": "d35e28a5-9543-4c0e-8643-e9bc89289c56"
+            },
+            "ThrusterPrefab": {
+              "$asset": "4d4cbdcf-1215-4d9d-bde5-8a4b17c3663c"
+            },
+            "RopePrefab": {
+              "$asset": "d1f5b36a-4526-48ec-8413-9203314cec68"
+            },
+            "RocketPrefab": {
+              "$asset": "181a3647-94fc-4424-9c99-3397fc29a578"
             },
             "Sounds": {
               "$id": 6,
@@ -477,19 +348,23 @@
             "$type": "Prowl.Runtime.Camera, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "PostProcessing": true,
             "Profile": {
-              "Name": "Camera Profile",
+              "$id": 13,
               "Components": {
+                "$id": 14,
                 "$values": [
                   {
-                    "$type": "Prowl.Runtime.Rendering.Tonemapping, Prowl.Runtime",
+                    "$id": 15,
+                    "$type": "Prowl.Runtime.Rendering.Tonemapping, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
                     "Mode": {
+                      "$id": 16,
                       "Value": 3L,
                       "Override": true
                     },
                     "Active": true
                   }
                 ]
-              }
+              },
+              "Name": "Camera Profile"
             },
             "VolumeMask": {
               "mask": 4294967295U
@@ -497,17 +372,17 @@
             "VolumeTrigger": NULL,
             "AntiAliasing": 0L,
             "Fxaa": {
-              "$id": 13,
+              "$id": 17,
               "EdgeThresholdMax": 0.0625F,
               "EdgeThresholdMin": 0.0312F,
               "SubpixelQuality": 0.75F
             },
             "Smaa": {
-              "$id": 14,
+              "$id": 18,
               "EdgeThreshold": 0.1F
             },
             "Taa": {
-              "$id": 15,
+              "$id": 19,
               "BlendFactor": 0.95F,
               "MotionBlendFactor": 0.85F,
               "MotionScale": 2F,
@@ -515,6 +390,7 @@
               "JitterSpread": 8
             },
             "HDR": true,
+            "background": 0L,
             "BackgroundColor": {
               "R": 0F,
               "G": 0F,
@@ -535,16 +411,16 @@
               "Z": 1F,
               "W": 1F
             },
+            "depth": -1,
+            "target": NULL,
             "RenderScale": 1F,
+            "EV100": 14F,
             "StereoTargetEye": 3L,
             "_identifier": "9f382385-63bd-46c4-8d8f-388f75f4c1b8",
             "_enabled": true,
             "_enabledInHierarchy": true,
             "HideFlags": 0L,
-            "Name": "NewCamera",
-            "background": 0L,
-            "depth": -1,
-            "target": NULL
+            "Name": "NewCamera"
           }
         ],
         "Children": [
@@ -552,7 +428,7 @@
         ]
       },
       {
-        "$id": 16,
+        "$id": 20,
         "Name": "Directional Light",
         "Identifier": "ed9f8ece-5cba-4c9b-b61d-61958adee992",
         "Static": 0B,
@@ -562,7 +438,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 17,
+          "$id": 21,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -583,14 +459,18 @@
         },
         "Components": [
           {
-            "$id": 18,
-            "$type": "Prowl.Runtime.DirectionalLight, Prowl.Runtime",
+            "$id": 22,
+            "$type": "Prowl.Runtime.DirectionalLight, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "angularRadius": 0.27F,
+            "cascadeBlend": 0.1F,
             "color": {
               "R": 1F,
               "G": 1F,
               "B": 1F,
               "A": 1F
             },
+            "useTemperature": false,
+            "temperature": 2700F,
             "intensity": 94371.84F,
             "layerMask": {
               "mask": 4294967295U
@@ -601,18 +481,12 @@
             "shadowFilter": 1L,
             "depthBias": 1F,
             "normalBias": 1F,
-            "cascades": 2L,
-            "shadowDistance": 50F,
             "bakeMode": 0L,
             "_identifier": "348e6aa8-cd76-4393-a5bc-9c2be9779bc7",
             "_enabled": true,
             "_enabledInHierarchy": true,
             "HideFlags": 0L,
-            "Name": "NewDirectionalLight",
-            "useTemperature": false,
-            "angularRadius": 0.27F,
-            "cascadeBlend": 0.1F,
-            "temperature": 2700F
+            "Name": "NewDirectionalLight"
           }
         ],
         "Children": [
@@ -620,7 +494,7 @@
         ]
       },
       {
-        "$id": 19,
+        "$id": 23,
         "Name": "Floor",
         "Identifier": "59664926-be8a-4758-928e-0bdb3046d3e2",
         "Static": 0B,
@@ -630,7 +504,7 @@
         "LayerIndex": 0,
         "HideFlags": 0,
         "Transform": {
-          "$id": 20,
+          "$id": 24,
           "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
           "_localPosition": {
             "X": 0F,
@@ -651,13 +525,13 @@
         },
         "Components": [
           {
-            "$id": 21,
+            "$id": 25,
             "$type": "Prowl.Runtime.MeshRenderer, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "mesh": {
               "$asset": "38151a92-9ae6-525d-b9cd-13fbcd700c8a"
             },
             "materials": {
-              "$id": 22,
+              "$id": 26,
               "$values": [
                 {
                   "$asset": "d7009b28-9353-6559-8847-62e877cec576"
@@ -673,7 +547,7 @@
             "Name": "NewMeshRenderer"
           },
           {
-            "$id": 23,
+            "$id": 27,
             "$type": "Prowl.Runtime.BoxCollider, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
             "size": {
               "X": 10F,
@@ -703,41 +577,253 @@
       }
     ]
   },
+  "Environment": {
+    "$id": 28,
+    "SkyMaterial": {
+      "$id": 29,
+      "_shader": {
+        "$asset": "73295c5c-0e55-4550-ae74-f13cd62796d2"
+      },
+      "_parent": NULL,
+      "_properties": {
+        "$id": 30,
+        "_colors": {
+          "$id": 31,
+          "entries": [
+
+          ]
+        },
+        "_vectors2": {
+          "$id": 32,
+          "entries": [
+
+          ]
+        },
+        "_vectors3": {
+          "$id": 33,
+          "entries": [
+
+          ]
+        },
+        "_vectors4": {
+          "$id": 34,
+          "entries": [
+
+          ]
+        },
+        "_floats": {
+          "$id": 35,
+          "entries": [
+
+          ]
+        },
+        "_ints": {
+          "$id": 36,
+          "entries": [
+
+          ]
+        },
+        "_matrices": {
+          "$id": 37,
+          "entries": [
+
+          ]
+        },
+        "_textures": {
+          "$id": 38,
+          "entries": [
+
+          ]
+        },
+        "_textures3D": {
+          "$id": 39,
+          "entries": [
+
+          ]
+        },
+        "_texturesCube": {
+          "$id": 40,
+          "entries": [
+
+          ]
+        }
+      },
+      "_overrides": {
+        "$id": 41,
+        "$values": [
+
+        ]
+      },
+      "_keywords": {
+        "$id": 42,
+        "entries": [
+
+        ]
+      },
+      "_renderQueue": -1,
+      "_castShadows": true,
+      "_surface": NULL,
+      "Name": "Procedural Sky"
+    },
+    "SkyColor": {
+      "R": 0.2F,
+      "G": 0.3F,
+      "B": 0.5F,
+      "A": 1F
+    },
+    "Ambient": {
+      "Mode": 0L,
+      "Intensity": 19660.8F,
+      "Color": {
+        "R": 0.43F,
+        "G": 0.55F,
+        "B": 0.65F,
+        "A": 1F
+      },
+      "SkyColor": {
+        "R": 0.3F,
+        "G": 0.3F,
+        "B": 0.4F,
+        "A": 1F
+      },
+      "GroundColor": {
+        "R": 0.2F,
+        "G": 0.2F,
+        "B": 0.2F,
+        "A": 1F
+      }
+    },
+    "Fog": {
+      "Mode": 0L,
+      "Color": {
+        "R": 0.5F,
+        "G": 0.5F,
+        "B": 0.5F,
+        "A": 1F
+      },
+      "Intensity": 19660.8F,
+      "Density": 0.01F,
+      "Start": 20F,
+      "End": 100F,
+      "UseSky": false
+    },
+    "VolumetricFog": {
+      "Enabled": false,
+      "Density": 0.02F,
+      "BaseHeight": 0F,
+      "HeightFalloff": 0.1F,
+      "Albedo": {
+        "R": 1F,
+        "G": 1F,
+        "B": 1F,
+        "A": 1F
+      },
+      "Anisotropy": 0.6F,
+      "AmbientScale": 1F,
+      "Distance": 128F,
+      "Slices": 128,
+      "TemporalBlend": 0.9F
+    },
+    "VolumetricClouds": {
+      "$id": 43,
+      "Enabled": false,
+      "Altitude": 1500F,
+      "Thickness": 4000F,
+      "BottomStrength": 0.45F,
+      "TopStrength": 0.2F,
+      "DomeStrength": 2F,
+      "GapMultiplier": 0.4F,
+      "BottomCoverage": 1.1F,
+      "TopCoverage": 0.9F,
+      "Lobes": 0.25F,
+      "LobeScale": 2000F,
+      "FormationChangeSpeed": 0.002F,
+      "Coverage": 0.69F,
+      "Density": 1F,
+      "PatternScale": 12000F,
+      "Erosion": 1F,
+      "DetailScale": 600F,
+      "Wisps": 0.5F,
+      "WispScale": 140F,
+      "WindSpeed": 15F,
+      "WindDirection": 30F,
+      "Albedo": {
+        "R": 1F,
+        "G": 1F,
+        "B": 1F,
+        "A": 1F
+      },
+      "SunBrightness": 2F,
+      "AmbientBrightness": 2F,
+      "AmbientSaturation": 1F,
+      "SilverLining": 0.6F,
+      "MultipleScattering": 0.4F,
+      "MultipleScatteringOcclusion": 0.2F,
+      "HorizonFade": 32000F,
+      "Resolution": 1L,
+      "Temporal": true,
+      "ShadowResolution": 512,
+      "PlanetRadius": 6371000F,
+      "Noise": NULL,
+      "HighLayer": false,
+      "HighLayerAltitude": 8000F,
+      "HighLayerOpacity": 0.35F,
+      "HighLayerScale": 20000F
+    },
+    "SkyCapture": {
+      "Mode": 0L,
+      "Resolution": 128,
+      "Interval": 2
+    }
+  },
   "Lighting": {
-    "$id": 39,
+    "$id": 44,
     "Lightmaps": {
-      "$id": 40,
+      "$id": 45,
       "$values": [
 
       ]
     },
+    "LightmapScale": 19660.8F,
     "Placements": {
-      "$id": 41,
+      "$id": 46,
       "entries": [
 
       ]
     },
     "ProbePositions": {
-      "$id": 42,
+      "$id": 47,
       "array": [
 
       ]
     },
     "ProbeSH": {
-      "$id": 43,
+      "$id": 48,
       "array": [
 
       ]
     },
     "ProbeTetrahedra": {
-      "$id": 44,
+      "$id": 49,
       "array": [
 
       ]
     },
     "ProbeTetNeighbours": {
-      "$id": 44
-    },
-    "LightmapScale": 19660.8F
+      "$id": 49
+    }
+  },
+  "LightmapBake": {
+    "$id": 50,
+    "AtlasSize": 1024,
+    "TexelsPerUnit": 20F,
+    "DilatePixels": 2,
+    "Bounces": 2,
+    "Samples": 64,
+    "ProbeSamples": 256,
+    "DoBackfaceCull": false,
+    "SparseStride": 1,
+    "BakeSkyLighting": false,
+    "IgnoreAlbedo": false
   }
 }

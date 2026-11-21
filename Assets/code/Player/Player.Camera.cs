@@ -78,7 +78,6 @@ public sealed partial class Player
         if (!IsLocalPlayer)
         {
             var rig = new GameObject("Remote view");
-            rig.Network.Mode = NetworkMode.Never;
             rig.SetParent(GameObject, false);
             Camera = rig.AddComponent<Camera>();
             Camera.Enabled = false;
@@ -86,7 +85,6 @@ public sealed partial class Player
             ViewModel.Owner = this;
             ViewModel.Visible = false;
             var model = new GameObject("World Model");
-            model.Network.Mode = NetworkMode.Never;
             model.SetParent(GameObject, false);
             WorldModel = model.AddComponent<ViewModel>();
             WorldModel.Owner = this;
@@ -108,7 +106,6 @@ public sealed partial class Player
         }
 
         Camera.GameObject.SetParent(null);
-        Camera.GameObject.Network.Mode = NetworkMode.Never;
         Camera.NearClipPlane = 0.03f;
         Camera.FarClipPlane = MathF.Max(Camera.FarClipPlane, 1000f);
 
@@ -133,7 +130,6 @@ public sealed partial class Player
         ViewModel.Shadows = ShadowCasting.Off;
 
         var world = new GameObject("World Model");
-        world.Network.Mode = NetworkMode.Never;
         world.SetParent(GameObject, false);
         WorldModel = world.AddComponent<ViewModel>();
         WorldModel.Owner = this;

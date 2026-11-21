@@ -62,7 +62,7 @@ public sealed class Thumbnails : Component
 
     /// <summary>A spawn menu thumbnail: three quarter view from above, square and transparent.</summary>
     public Texture2D Get(Spawnable spawnable) => Get(new Shot(
-        SpawnId(spawnable), spawnable.Create,
+        SpawnId(spawnable), () => spawnable.CreateModel(out _),
         new Float3(0f, 0.55f, -1f), Quaternion.FromEuler(0f, 210f, 0f),
         SpawnIconSize, SpawnIconSize, Lighting: spawnable.ThumbnailLighting));
 
@@ -160,7 +160,6 @@ public sealed class Thumbnails : Component
         _target = new RenderTexture(shot.Width, shot.Height, true, [TextureFormat.RGBA8]);
 
         _rig = new GameObject("Thumbnail Camera");
-        _rig.Network.Mode = NetworkMode.Never;
         _rig.Transform.Position = center + direction * distance;
         _rig.Transform.LookAt(center);
         Camera camera = _rig.AddComponent<Camera>();

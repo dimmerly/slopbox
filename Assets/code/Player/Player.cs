@@ -122,7 +122,7 @@ public sealed partial class Player : Component
 
     public override void FixedUpdate()
     {
-        if (_ready && (!Networking.IsClient || !IsLocalPlayer)) FixedUpdateInventory();
+        if (_ready && (!Networking.IsClient || !IsLocalPlayer || ActiveEquipment is { RunsOnClient: true })) FixedUpdateInventory();
     }
 
     public override void LateUpdate()

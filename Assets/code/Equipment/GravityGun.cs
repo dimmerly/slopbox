@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jitter2.Dynamics;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
@@ -23,15 +24,22 @@ public sealed class GravityGun : Equipment
     private Quaternion _relativeRotation = Quaternion.Identity;
     private float _holdDistance;
     private Rigidbody3D _pulling;
+
+    // Client: a punt aimed at a prop before this peer drove it, thrown once the host hands it over.
+    private Rigidbody3D _pendingPunt;
+    private Float3 _pendingPuntAt;
+    private double _pendingPuntUntil;
     private float _sincePunt = 10f;
     private Material _bodyMat, _clawMat, _coreMat;
 
     internal bool IsHolding => _hold.IsHolding;
     internal Float3 HoldPoint => _hold.IsHolding ? _hold.WorldAnchor : Float3.Zero;
+    internal PhysicsHold Hold => _hold;
 
     public override string Name => "Gravity Gun";
     public override string Description => "Pull, carry and launch physics objects.";
     public override Color Tint => new(1f, 0.55f, 0.1f, 1f);
+    public override bool RunsOnClient => true;
 
     public override IEnumerable<InputHint> Hints => _hold.IsHolding
         ? [new("LMB", "Launch"), new("RMB", "Drop")]
@@ -98,7 +106,8 @@ public sealed class GravityGun : Equipment
             return;
         }
 
-        if (Attack2Pressed && (!Owner.Trace(PullRange, out RaycastHit pullHit) || !CanMove(pullHit.Rigidbody)))
+        if (_pendingPunt.IsValid()) PuntPending();
+        if (Attack2Pressed && !Networking.IsClient && (!Owner.Trace(PullRange, out RaycastHit pullHit) || !CanMove(pullHit.Rigidbody)))
             GameAudio.Play("error", 0.2f, 0.6f);
         if (Attack1Pressed) Punt();
         else if (Attack2Down && _sincePunt > 0.3f) Pull();
@@ -124,11 +133,13 @@ public sealed class GravityGun : Equipment
 
     // ----------------------------------------------------------------
 
-    private bool CanMove(Rigidbody3D body) => body.IsValid() && body.MotionType == MotionType.Dynamic && body.Mass <= MaxMass;
+    // A prop driven elsewhere is kinematic here, so its synced frozen state says whether it can move.
+    private bool CanMove(Rigidbody3D body) => body.IsValid() && body.Mass <= MaxMass
+        && (body.GameObject.Network.IsProxy && body.GameObject.TryGetComponent(out Prop prop) ? !prop.Frozen : body.MotionType == MotionType.Dynamic);
 
     private void Pull()
     {
-        if (!Owner.Trace(PullRange, out RaycastHit hit) || !CanMove(hit.Rigidbody)) return;
+        if (!Owner.Trace(PullRange, out RaycastHit hit) || !CanMove(hit.Rigidbody) || !Drives(hit.Rigidbody)) return;
         Rigidbody3D body = hit.Rigidbody;
 
         if (hit.Distance > 2.5f)
@@ -156,10 +167,36 @@ public sealed class GravityGun : Equipment
     {
         if (!Owner.Trace(PuntRange, out RaycastHit hit) || !CanMove(hit.Rigidbody))
         {
-            GameAudio.Play("error", 0.2f, 0.6f);
+            if (!Networking.IsClient) GameAudio.Play("error", 0.2f, 0.6f);
             return;
         }
-        Throw(hit.Rigidbody, hit.Point);
+
+        Rigidbody3D body = hit.Rigidbody;
+        if (Drives(body))
+        {
+            Throw(body, hit.Point);
+            return;
+        }
+
+        // A client throws it once the host hands it over, if that is soon.
+        if (!Networking.IsClient) return;
+        _pendingPunt = body;
+        _pendingPuntAt = Quaternion.Inverse(body.Rotation) * (hit.Point - body.Position);
+        _pendingPuntUntil = Time.TimeSinceStartup + 0.5;
+    }
+
+    private void PuntPending()
+    {
+        Rigidbody3D body = _pendingPunt;
+        if (Time.TimeSinceStartup > _pendingPuntUntil)
+        {
+            _pendingPunt = null;
+            return;
+        }
+        if (!body.GameObject.Network.HasControl) return;
+
+        _pendingPunt = null;
+        Throw(body, body.Position + body.Rotation * _pendingPuntAt);
     }
 
     private void Throw(Rigidbody3D body, Float3 at)

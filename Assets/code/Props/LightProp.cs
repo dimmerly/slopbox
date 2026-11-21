@@ -1,14 +1,15 @@
 using Prowl.Echo;
 using Prowl.Runtime;
+using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
 using Prowl.Vector;
 
 namespace Slopbox;
 
 /// <summary>
-/// A placed light: a small physical bulb with a point light in it. Its colour, brightness and range are
-/// saved fields, and <see cref="Apply"/> pushes them to the light and the bulb's glow. Made by the
-/// <see cref="LightTool"/>.
+/// A placed light: a small physical bulb with a point light in it. A networked prop from
+/// <see cref="GameManager.LightPrefab"/>: its colour, brightness and range are synced, and every peer pushes them
+/// to its light and the bulb's glow, a bulb each builds for itself. Made by the <see cref="LightTool"/>.
 /// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Light Prop")]
@@ -16,36 +17,41 @@ public sealed class LightProp : Component
 {
     public const float Radius = 0.12f;
 
-    public Color Color = new(1f, 0.85f, 0.6f, 1f);
-    public float Brightness = 4f;
-    public float Range = 8f;
+    [Sync] public Color Color { get; set; } = new(1f, 0.85f, 0.6f, 1f);
+    [Sync] public float Brightness { get; set; } = 4f;
+    [Sync] public float Range { get; set; } = 8f;
 
     [SerializeIgnore] private Material _material;
 
-    /// <summary>Builds a light, detached from the scene, ready to be positioned and added.</summary>
-    public static GameObject Create(Color color, float brightness, float range)
+    private (Color, float, float) _applied;
+
+    /// <summary>Host: spawns a light at <paramref name="position"/>. Outside a session it spawns once this peer hosts.</summary>
+    public static LightProp Spawn(Float3 position, Color color, float brightness, float range)
     {
-        var go = new GameObject("Light");
-        go.AddComponent<SphereCollider>().Radius = Radius;
-        go.AddComponent<Rigidbody3D>().Mass = 1f;
-        go.AddComponent<Prop>();
-
-        var light = go.AddComponent<PointLight>();
-        light.CastShadows = false;
-
-        var bulb = new GameObject("Bulb");
-        bulb.SetParent(go, false);
-        bulb.Transform.LocalScale = new Float3(Radius * 2f);
-        bulb.AddComponent<MeshRenderer>().Mesh = Shapes.Sphere;
-
-        var prop = go.AddComponent<LightProp>();
-        prop.Color = color;
-        prop.Brightness = brightness;
-        prop.Range = range;
-        return go;
+        GameObject go = Networking.SpawnPrefab(GameManager.Instance.LightPrefab, position, Quaternion.Identity);
+        var light = go.GetComponent<LightProp>();
+        light.Set(color, brightness, range);
+        return light;
     }
 
-    public override void OnEnable() => Apply();
+    public override void OnEnable()
+    {
+        // The bulb is built here rather than stored in the prefab, as its mesh is made in code.
+        if (GetComponentInChildren<MeshRenderer>().IsNotValid())
+        {
+            var bulb = new GameObject("Bulb");
+            bulb.SetParent(GameObject, false);
+            bulb.Transform.LocalScale = new Float3(Radius * 2f);
+            bulb.AddComponent<MeshRenderer>().Mesh = Shapes.Sphere;
+        }
+        Apply();
+    }
+
+    // A proxy's values arrive with the host's updates.
+    public override void Update()
+    {
+        if (_applied != (Color, Brightness, Range)) Apply();
+    }
 
     public override void OnValidate() => Apply();
 
@@ -66,6 +72,7 @@ public sealed class LightProp : Component
 
     public void Apply()
     {
+        _applied = (Color, Brightness, Range);
         if (TryGetComponent(out PointLight light))
         {
             light.Color = Color;

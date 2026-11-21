@@ -23,17 +23,14 @@ public sealed class RocketProjectile : Component
 
     public static void Launch(Float3 eye, Float3 muzzle, Float3 direction, float speed, float radius, float blastSpeed)
     {
-        var go = new GameObject("Rocket");
-        go.Transform.Position = muzzle;
+        GameObject go = Networking.SpawnPrefab(GameManager.Instance.RocketPrefab, muzzle, Quaternion.Identity);
         go.Transform.LookAt(muzzle + direction);
-        var rocket = go.AddComponent<RocketProjectile>();
+        var rocket = go.GetComponent<RocketProjectile>();
         rocket._direction = direction;
         rocket._speed = speed;
         rocket._radius = radius;
         rocket._blastSpeed = blastSpeed;
         rocket._launchPosition = muzzle;
-        go.MoveTo(SceneInstance.Active.ActiveSection);
-        if (Networking.IsHost) go.Network.Spawn();
 
         // The muzzle can be beyond a nearby wall: sweep from the eye before allowing flight.
         Float3 offset = muzzle - eye;
@@ -57,7 +54,6 @@ public sealed class RocketProjectile : Component
                 new Float3(0.12f, 0.02f, 0.14f), new Float3(0f, 0f, i * 90f));
         }
         var trail = new GameObject("Rocket Exhaust");
-        trail.Network.Mode = NetworkMode.Never;
         trail.SetParent(GameObject, false);
         _trail = trail.AddComponent<LineRenderer>();
         _trailMaterial = Materials.Line();
@@ -72,7 +68,6 @@ public sealed class RocketProjectile : Component
     private void AddPart(Mesh mesh, Material material, Float3 position, Float3 scale, Float3 rotation = default)
     {
         var go = new GameObject("Rocket Part");
-        go.Network.Mode = NetworkMode.Never;
         go.SetParent(GameObject, false);
         go.Transform.LocalPosition = position;
         go.Transform.LocalScale = scale;
@@ -120,7 +115,7 @@ public sealed class RocketProjectile : Component
         GameObject.Destroy();
     }
 
-    [Rpc.Broadcast(RpcFlags.HostOnly)]
+    [Rpc.Broadcast]
     private void ShowExplosion(Float3 position, float radius, Float3 normal)
         => RocketBlast.Create(position, radius, normal);
 

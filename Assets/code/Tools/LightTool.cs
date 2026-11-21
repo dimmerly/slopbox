@@ -26,9 +26,7 @@ public sealed class LightTool : BaseTool
         // Clicking an existing light updates it rather than stacking another on top.
         if (LightOf(tr).IsValid()) return Secondary(tr);
 
-        GameObject go = LightProp.Create(Color, Brightness, Range);
-        go.Transform.Position = tr.Point + tr.Normal * (LightProp.Radius + 0.01f);
-        go.MoveTo(SceneInstance.Active.ActiveSection);
+        GameObject go = LightProp.Spawn(tr.Point + tr.Normal * (LightProp.Radius + 0.01f), Color, Brightness, Range).GameObject;
 
         if (Weld)
         {

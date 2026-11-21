@@ -10,18 +10,36 @@ using Prowl.Vector;
 namespace Slopbox;
 
 /// <summary>
-/// Marks a physics object the player spawned or may modify: what it was spawned from (for the
-/// duplicator), whether it is frozen, and its colour. Tools find it from a trace hit with <see cref="Of"/>.
+/// A physics object the player spawned or may modify. A spawned prop is a networked shell, the same on every
+/// peer: this, its rigidbody and a NetworkTransform, from <see cref="GameManager.PropPrefab"/>. Its model is
+/// built under it on each peer from <see cref="SpawnId"/> with that peer's own content, so what each has
+/// mounted never changes the networked tree. Tools find it from a trace hit with <see cref="Of"/>.
 /// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Prop")]
-public sealed class Prop : Component, INetworkEvents
+public sealed class Prop : Component
 {
-    /// <summary>The <see cref="Spawnable.Id"/> this came from, empty for props placed in the editor.</summary>
-    public string SpawnId = "";
+    /// <summary>The <see cref="Spawnable.Id"/> its model is built from, empty for props placed in the editor.</summary>
+    [Sync] public string SpawnId { get; set; } = "";
 
-    [SerializeField] private Color _tint = Color.White;
-    [SerializeField] private Material _material;
+    /// <summary>Multiplied into every material's colour. White leaves the model's own.</summary>
+    [Sync] public Color Tint { get; set; } = Color.White;
+
+    /// <summary>The asset id of the material painted over every surface, or empty for the model's own.</summary>
+    [Sync] public string MaterialId { get; set; } = "";
+
+    /// <summary>Whether it is held in place, written by whoever drives it. Proxies are always kinematic, so they read this instead.</summary>
+    [Sync(SyncFlags.FromOwner)] public bool Frozen { get; set; }
+
+    /// <summary>The body's settings, written by whoever drives it, so a client that takes it over simulates the same body.</summary>
+    [Sync(SyncFlags.FromOwner)] public float BodyMass { get; set; }
+    [Sync(SyncFlags.FromOwner)] public bool BodyGravity { get; set; } = true;
+    [Sync(SyncFlags.FromOwner)] public float BodyFriction { get; set; }
+    [Sync(SyncFlags.FromOwner)] public float BodyRestitution { get; set; }
+
+    /// <summary>The model's animation, played by its <see cref="Mounting.ModelAnimator"/> on every peer.</summary>
+    [Sync] public int Sequence { get; set; }
+    [Sync] public float AnimationSpeed { get; set; } = 1f;
 
     /// <summary>What each renderer had before any override, and the copies made for tinting.</summary>
     private sealed class RendererState
@@ -42,125 +60,152 @@ public sealed class Prop : Component, INetworkEvents
     }
 
     public Rigidbody3D Body => GetComponent<Rigidbody3D>();
-    public Color Tint => _tint;
 
     /// <summary>The material painted over every surface by the material tool, or null for the model's own.</summary>
-    public Material MaterialOverride => _material;
+    public Material MaterialOverride => Guid.TryParse(MaterialId, out Guid id) ? AssetDatabase.Get<Material>(id) : null;
 
-    private bool _receivedFrozen;
-    public bool IsFrozen => Body.IsValid() && (IsProxy ? _receivedFrozen : Body.MotionType != MotionType.Dynamic);
-
-    public override void OnEnable()
-    {
-        if (_tint != Color.White || _material.IsValid()) Refresh();
-    }
+    public bool IsFrozen => Body.IsValid() && (IsProxy ? Frozen : Body.MotionType != MotionType.Dynamic);
 
     /// <summary>Every prop in the current scene.</summary>
     public static Prop[] All => SceneInstance.HasMain ? SceneInstance.Active.GetAll<Prop>() : [];
 
-    protected override void OnDispose()
+    [SerializeIgnore] private GameObject _model;
+    private string _modelId = "";
+    private double _nextModelTry;
+    private bool _warnedMissing;
+    private Color _appliedTint = Color.White;
+    private string _appliedMaterial = "";
+
+    // ----------------------------------------------------------------
+    //  Who drives it
+    // ----------------------------------------------------------------
+
+    /// <summary>
+    /// Host: whether a client may take <paramref name="body"/> over and move it itself, with no delay: a spawned
+    /// prop's own body, free of joints, which exist only on the host. It keeps it until the host takes it back.
+    /// </summary>
+    public static bool ClientMayDrive(Rigidbody3D body)
+        => body.IsValid() && body.GameObject.TryGetComponent(out Prop _) && IsNetworkedRoot(body.GameObject)
+           && Constraints.On(body).Count == 0;
+
+    /// <summary>A spawned networked object itself, as opposed to a part of one or a local object.</summary>
+    internal static bool IsNetworkedRoot(GameObject go) => go.Network.Active && go.Network.Root == go;
+
+    /// <summary>Host: takes <paramref name="body"/> back from the client driving it, before changing how it moves.</summary>
+    public static void Reclaim(Rigidbody3D body)
     {
-        _tint = Color.White;
-        _material = null;
-        Refresh();
-        base.OnDispose();
+        if (body.IsNotValid() || !Networking.IsHost) return;
+        GameObject go = body.GameObject;
+        if (go.Network.Active && go.Network.Owner != null) go.Network.RemoveOwnership();
     }
 
-    [Sync] public string Description { get; set; } = "";
-    [Sync] public int Sequence { get; set; }
-    [Sync] public float AnimationSpeed { get; set; } = 1f;
-    [Sync] public int Thrust { get; set; }
-    private string _appliedDescription;
-    private bool _hasVisuals;
-    private double _nextCapture, _nextRetry;
+    // ----------------------------------------------------------------
+    //  Spawning
+    // ----------------------------------------------------------------
 
-    internal void SpawnNetwork()
+    /// <summary>
+    /// Host: spawns a networked prop of <paramref name="spawnable"/> at a pose, its model built at once so it can be
+    /// placed by its bounds. Outside a session it spawns once this peer hosts. Returns null if there is no model.
+    /// </summary>
+    public static Prop Spawn(Spawnable spawnable, Float3 position, Quaternion rotation)
     {
-        // Runtime geometry is rebuilt locally. Colliders and simulation remain on this actual prop.
-        var renderer = GetComponent<MeshRenderer>();
-        if (renderer.IsValid())
+        PrefabAsset shell = spawnable.Shell(GameManager.Instance);
+        GameObject go = Networking.SpawnPrefab(shell, position, rotation);
+        Prop prop = go.GetComponent<Prop>();
+        prop.SpawnId = spawnable.Id;
+        if (prop.BuildModel()) return prop;
+
+        go.Destroy();
+        return null;
+    }
+
+    /// <summary>Builds the model for <see cref="SpawnId"/> under this, replacing any built before. False if this peer can't.</summary>
+    private bool BuildModel()
+    {
+        if (_model.IsValid()) _model.Destroy();
+        _model = null;
+        RestoreMaterials();
+
+        GameManager game = GameManager.Instance;
+        Spawnable spawnable = game.IsValid() ? game.Catalog?.Find(SpawnId) : null;
+        GameObject model = null;
+        float mass = 0f;
+        try
         {
-            var visual = new GameObject("Visual");
-            visual.SetParent(GameObject, false);
-            var copy = visual.AddComponent<MeshRenderer>();
-            copy.Mesh = renderer.Mesh;
-            for (int i = 0; i < ((IMaterialRenderer)renderer).MaterialSlotCount; i++) ((IMaterialRenderer)copy).SetMaterial(i, ((IMaterialRenderer)renderer).GetMaterial(i));
-            foreach (RendererState state in _renderers)
-                if (ReferenceEquals(state.Renderer, renderer)) state.Renderer = copy;
-            GameObject.RemoveComponent(renderer);
+            if (spawnable != null) model = spawnable.CreateModel(out mass);
         }
-        foreach (GameObject child in GameObject.Children) child.Network.Mode = NetworkMode.Never;
-        CaptureNetworkState();
-        Network.Spawn();
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        if (model.IsNotValid()) return false;
+
+        model.SetParent(GameObject, false);
+        model.Transform.LocalPosition = Float3.Zero;
+        model.Transform.LocalRotation = Quaternion.Identity;
+        model.Transform.LocalScale = Float3.One;
+        _model = model;
+        _modelId = SpawnId;
+        if (!IsProxy && mass > 0f && Body.IsValid()) Body.Mass = mass;
+
+        // The look applies to the renderers just made.
+        _appliedTint = Color.White;
+        _appliedMaterial = "";
+        return true;
     }
 
-    private void CaptureNetworkState()
+    public override void Update()
     {
-        var snapshot = new Snapshot();
-        var data = Snapshot.CaptureProp(this, Float3.Zero, Quaternion.Identity);
-        snapshot.Props.Add(data);
-        data.Position = [0, 0, 0]; data.Rotation = [0, 0, 0, 1]; data.Scale = 1;
-        Description = snapshot.ToJson();
-        var animator = GetComponentInChildren<Slopbox.Mounting.ModelAnimator>();
-        if (animator.IsValid()) { Sequence = animator.Sequence; AnimationSpeed = animator.Speed; }
-        if (TryGetComponent(out ThrusterProp thruster)) Thrust = thruster.Thrust;
-    }
+        // A proxy's model comes once its id arrives, and again whenever this peer's content allows.
+        if (SpawnId.Length > 0 && _modelId != SpawnId && Time.TimeSinceStartup >= _nextModelTry && !BuildModel())
+        {
+            _nextModelTry = Time.TimeSinceStartup + 1;
+            if (!_warnedMissing && IsProxy)
+                Debug.LogWarning($"Missing shared content: {SpawnId}. Install the same mounted game as the host.");
+            _warnedMissing = true;
+        }
 
-    public void OnNetworkSpawn() { if (IsProxy) _hasVisuals = false; }
+        if (Tint != _appliedTint || MaterialId != _appliedMaterial) Refresh();
+
+        var animator = _model.IsValid() ? _model.GetComponentInChildren<Mounting.ModelAnimator>() : null;
+        if (animator.IsNotValid()) return;
+        if (IsProxy)
+        {
+            animator.Speed = AnimationSpeed;
+            if (animator.Sequence != Sequence) animator.Play(Sequence);
+        }
+        else
+        {
+            Sequence = animator.Sequence;
+            AnimationSpeed = animator.Speed;
+        }
+    }
 
     public override void LateUpdate()
     {
-        if (!Network.Active) return;
-        if (Networking.IsHost)
+        Rigidbody3D body = Body;
+        if (body.IsNotValid()) return;
+        if (!IsProxy)
         {
-            if (Time.TimeSinceStartup >= _nextCapture)
-            {
-                _nextCapture = Time.TimeSinceStartup + 0.2;
-                CaptureNetworkState();
-            }
-            return;
+            Frozen = body.MotionType != MotionType.Dynamic;
+            BodyMass = body.Mass;
+            BodyGravity = body.AffectedByGravity;
+            BodyFriction = body.Friction;
+            BodyRestitution = body.Restitution;
         }
-        if (Description.Length == 0) return;
-        if (_appliedDescription != Description && Time.TimeSinceStartup >= _nextRetry)
+        else if (BodyMass > 0f)
         {
-            _nextRetry = Time.TimeSinceStartup + 1;
-            var data = Snapshot.FromJson(Description).Props[0];
-            if (!_hasVisuals)
-            {
-                var staleAnimator = GetComponent<Slopbox.Mounting.ModelAnimator>();
-                if (staleAnimator.IsValid()) GameObject.RemoveComponent(staleAnimator);
-                var staleMap = GetComponent<MapProp>();
-                if (staleMap.IsValid()) GameObject.RemoveComponent(staleMap);
-                GameObject visual = Snapshot.Build(GameManager.Instance, data);
-                if (visual.IsNotValid())
-                {
-                    Debug.LogWarning($"Missing shared content: {data.Spawn}. Install the same mounted game as the host.");
-                    return;
-                }
-                foreach (Component c in visual.GetComponents<Component>())
-                    if (c is Prop or Rigidbody3D or Collider or Light or LightProp or ThrusterProp)
-                        visual.RemoveComponent(c);
-                visual.Network.Mode = NetworkMode.Never;
-                visual.SetParent(GameObject, false);
-                _hasVisuals = true;
-            }
-            ApplyAppearance(data);
-            _appliedDescription = Description;
-            _nextRetry = 0;
+            if (body.Mass != BodyMass) body.Mass = BodyMass;
+            if (body.AffectedByGravity != BodyGravity) body.AffectedByGravity = BodyGravity;
+            if (body.Friction != BodyFriction) body.Friction = BodyFriction;
+            if (body.Restitution != BodyRestitution) body.Restitution = BodyRestitution;
         }
-        var animation = GetComponentInChildren<Slopbox.Mounting.ModelAnimator>();
-        if (animation.IsValid())
-        {
-            animation.Speed = AnimationSpeed;
-            if (animation.Sequence != Sequence) animation.Play(Sequence);
-        }
-        if (TryGetComponent(out ThrusterProp flame)) flame.Thrust = Thrust;
     }
 
-    internal void RestoreSimulation()
+    protected override void OnDispose()
     {
-        if (Body.IsNotValid() || Description.Length == 0) return;
-        Body.MotionType = Snapshot.FromJson(Description).Props[0].Frozen ? MotionType.Kinematic : MotionType.Dynamic;
+        RestoreMaterials();
+        base.OnDispose();
     }
 
     /// <summary>The prop a trace hit belongs to, adding a Prop to any plain rigidbody so tools work on scene objects too.</summary>
@@ -181,6 +226,7 @@ public sealed class Prop : Component, INetworkEvents
 
     public void SetFrozen(bool frozen)
     {
+        Reclaim(Body);
         Rigidbody3D body = Body;
         if (body.IsNotValid() || frozen == IsFrozen) return;
 
@@ -197,6 +243,7 @@ public sealed class Prop : Component, INetworkEvents
     /// <summary>Resizes uniformly, keeping the lowest point where it was so the prop does not sink into the floor.</summary>
     public void SetScale(float scale)
     {
+        Reclaim(Body);
         float old = Scale;
 
         // Lowest point of the rotated bounds per unit of scale.
@@ -216,29 +263,16 @@ public sealed class Prop : Component, INetworkEvents
     //  Look: material override and colour
     // ----------------------------------------------------------------
 
-    internal void ApplyAppearance(Snapshot.PropData data)
-    {
-        _receivedFrozen = data.Frozen;
-        if (Body.IsValid()) { Body.Mass = data.Mass > 0 ? data.Mass : Body.Mass; Body.AffectedByGravity = data.Gravity; }
-        _tint = data.Tint is { Length: 4 } c ? new Color(c[0], c[1], c[2], c[3]) : Color.White;
-        _material = Guid.TryParse(data.Material, out Guid id) ? AssetDatabase.Get<Material>(id) : null;
-        Refresh();
-        if (TryGetComponent(out ThrusterProp thruster) && data.Thruster != null)
-            thruster.Set(data.Thruster.Force, data.Thruster.Forward, data.Thruster.Back, data.Thruster.Toggle);
-        if (TryGetComponent(out LightProp light) && data.Light != null)
-            light.Set(new Color(data.Light.Color[0], data.Light.Color[1], data.Light.Color[2], data.Light.Color[3]), data.Light.Brightness, data.Light.Range);
-    }
-
     public void SetTint(Color tint)
     {
-        _tint = tint;
+        Tint = tint;
         Refresh();
     }
 
     /// <summary>Paints every surface with <paramref name="material"/>, or restores the model's own with null.</summary>
     public void SetMaterial(Material material)
     {
-        _material = material;
+        MaterialId = material.IsValid() ? material.AssetID.ToString() : "";
         Refresh();
     }
 
@@ -249,10 +283,19 @@ public sealed class Prop : Component, INetworkEvents
     /// </summary>
     private void Refresh()
     {
-        bool overridden = _material.IsValid();
-        bool tinted = _tint != Color.White;
+        _appliedTint = Tint;
+        _appliedMaterial = MaterialId;
+        Material material = MaterialOverride;
+        bool overridden = material.IsValid();
+        bool tinted = Tint != Color.White;
+        if (!overridden && !tinted)
+        {
+            // Back to the model's own look: forget the snapshot so a later change takes a fresh one.
+            RestoreMaterials();
+            return;
+        }
 
-        if (_renderers.Count == 0 && (overridden || tinted))
+        if (_renderers.Count == 0)
         {
             foreach (Component component in GetComponentsInChildren<Component>())
             {
@@ -263,18 +306,16 @@ public sealed class Prop : Component, INetworkEvents
             }
         }
 
+        Color tint = Tint;
         foreach (RendererState state in _renderers)
         {
-            foreach (Material clone in state.Clones)
-                if (clone.IsValid()) clone.Dispose();
-            state.Clones.Clear();
-
+            DisposeClones(state);
             if (state.Renderer is not Component component || component.IsNotValid()) continue;
 
             var shown = new List<Material>(state.Original.Count);
             foreach (Material original in state.Original)
             {
-                Material source = overridden ? _material : original;
+                Material source = overridden ? material : original;
                 if (!tinted || source.IsNotValid())
                 {
                     shown.Add(source);
@@ -283,14 +324,30 @@ public sealed class Prop : Component, INetworkEvents
 
                 Material clone = source.Clone();
                 Color c = source._properties.GetColor(Materials.BaseColor);
-                clone.SetColor(Materials.BaseColor, new Color(c.R * _tint.R, c.G * _tint.G, c.B * _tint.B, c.A * _tint.A));
+                clone.SetColor(Materials.BaseColor, new Color(c.R * tint.R, c.G * tint.G, c.B * tint.B, c.A * tint.A));
                 state.Clones.Add(clone);
                 shown.Add(clone);
             }
             for (int i = 0; i < shown.Count; i++) state.Renderer.SetMaterial(i, shown[i]);
         }
+    }
 
-        // Back to the model's own look: forget the snapshot so a later change takes a fresh one.
-        if (!overridden && !tinted) _renderers.Clear();
+    /// <summary>Puts every renderer's own materials back and frees the tinted copies.</summary>
+    private void RestoreMaterials()
+    {
+        foreach (RendererState state in _renderers)
+        {
+            DisposeClones(state);
+            if (state.Renderer is not Component component || component.IsNotValid()) continue;
+            for (int i = 0; i < state.Original.Count; i++) state.Renderer.SetMaterial(i, state.Original[i]);
+        }
+        _renderers.Clear();
+    }
+
+    private static void DisposeClones(RendererState state)
+    {
+        foreach (Material clone in state.Clones)
+            if (clone.IsValid()) clone.Dispose();
+        state.Clones.Clear();
     }
 }

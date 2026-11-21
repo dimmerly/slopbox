@@ -1,0 +1,72 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Map",
+  "Identifier": "6a7cfdb6-cd64-48d9-b7e3-b37b4b722b88",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Slopbox.Prop, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "_identifier": "91b6d13d-4092-40ee-b6e6-e9fc3c7f1010",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewProp"
+    },
+    {
+      "$id": 4,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": true,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "8d836899-b9c9-48e0-88b3-8ce0f6dd3c5d",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 5,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "6a7cfdb6-cd64-48d9-b7e3-b37b4b722b88",
+    "Overrides": {
+      "$id": 6,
+      "$values": [
+
+      ]
+    }
+  }
+}

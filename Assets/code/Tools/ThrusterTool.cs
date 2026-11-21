@@ -28,11 +28,8 @@ public sealed class ThrusterTool : BaseTool
         if (ThrusterOf(tr).IsValid()) return Secondary(tr);
 
         // The exhaust faces out of the surface, so firing pushes the prop the other way.
-        GameObject go = ThrusterProp.Create(Force, Forward, Back, Toggle);
-        go.Transform.Position = tr.Point + tr.Normal * (ThrusterProp.Height * 0.5f + 0.01f);
-        go.Transform.Rotation = Quaternion.FromToRotation(Float3.UnitY, tr.Normal);
-        go.GetComponent<ThrusterProp>().Controller = Owner;
-        go.MoveTo(SceneInstance.Active.ActiveSection);
+        GameObject go = ThrusterProp.Spawn(tr.Point + tr.Normal * (ThrusterProp.Height * 0.5f + 0.01f),
+            Quaternion.FromToRotation(Float3.UnitY, tr.Normal), Force, Forward, Back, Toggle, Owner).GameObject;
 
         if (Weld)
         {

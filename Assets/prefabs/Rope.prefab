@@ -1,0 +1,65 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Rope",
+  "Identifier": "56c00844-7968-451e-8be0-e6dc43f291ed",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Slopbox.RopeVisual, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "Constraint": NULL,
+      "Color": {
+        "R": 0.15F,
+        "G": 0.1F,
+        "B": 0.06F,
+        "A": 1F
+      },
+      "Width": 0.03F,
+      "_identifier": "1533d90c-1206-461f-8d0d-f3d43d0463ed",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewRopeVisual"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 4,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "56c00844-7968-451e-8be0-e6dc43f291ed",
+    "Overrides": {
+      "$id": 5,
+      "$values": [
+
+      ]
+    }
+  }
+}

@@ -15,7 +15,6 @@ public sealed class Beam
     public Beam(string name, Color color, float width)
     {
         _go = new GameObject(name);
-        _go.Network.Mode = NetworkMode.Never;
         _line = _go.AddComponent<LineRenderer>();
         _line.Material = Materials.Line();
         _line.StartWidth = width;

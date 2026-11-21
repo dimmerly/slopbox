@@ -9,7 +9,8 @@ namespace Slopbox;
 /// <summary>
 /// A placed thruster: a small nozzle that, while its key is held, pushes whatever it is welded to away
 /// from the side its exhaust points. The exhaust is the thruster's local +Y, so the push is along -Y.
-/// Made by the <see cref="ThrusterTool"/>.
+/// A networked prop from <see cref="GameManager.ThrusterPrefab"/>: the host fires it and syncs
+/// <see cref="Thrust"/>, which every peer shows on a nozzle it builds for itself. Made by the <see cref="ThrusterTool"/>.
 /// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("Slopbox/Thruster Prop")]
@@ -18,8 +19,8 @@ public sealed class ThrusterProp : Component
     public const float Radius = 0.12f;
     public const float Height = 0.2f;
 
-    /// <summary>Newtons.</summary>
-    public float Force = 1000f;
+    /// <summary>Newtons. Synced so every peer's exhaust sounds as big as it is.</summary>
+    [Sync] public float Force { get; set; } = 1000f;
     /// <summary>Unknown when unbound.</summary>
     public KeyCode Forward = KeyCode.Keypad8;
     public KeyCode Back = KeyCode.Keypad2;
@@ -29,45 +30,50 @@ public sealed class ThrusterProp : Component
     private int _inputRevision;
 
     /// <summary>+1 pushing, -1 pulling, 0 off.</summary>
-    [SerializeIgnore] private int _thrust;
+    [Sync] public int Thrust { get; set; }
+
     [SerializeIgnore] private MeshRenderer _flame;
     [SerializeIgnore] private float _soundForce;
 
     private static Material s_body, s_flame;
-    internal int Thrust { get => _thrust; set => _thrust = value; }
 
-    /// <summary>Builds a thruster, detached from the scene, ready to be positioned and added.</summary>
-    public static GameObject Create(float force, KeyCode forward, KeyCode back, bool toggle)
+    /// <summary>
+    /// Host: spawns a thruster at a pose, fired by <paramref name="controller"/>'s keys, or the local keys with none.
+    /// Outside a session it spawns once this peer hosts.
+    /// </summary>
+    public static ThrusterProp Spawn(Float3 position, Quaternion rotation, float force, KeyCode forward, KeyCode back,
+        bool toggle, Player controller = null)
     {
-        var go = new GameObject("Thruster");
-        var collider = go.AddComponent<CylinderCollider>();
-        collider.Radius = Radius;
-        collider.Height = Height;
-        go.AddComponent<Rigidbody3D>().Mass = 1f;
-        go.AddComponent<Prop>();
+        GameObject go = Networking.SpawnPrefab(GameManager.Instance.ThrusterPrefab, position, rotation);
+        var thruster = go.GetComponent<ThrusterProp>();
+        thruster.Set(force, forward, back, toggle);
+        thruster.Controller = controller;
+        return thruster;
+    }
 
+    public override void OnEnable()
+    {
+        if (_flame.IsValid()) return;
+
+        // Built here rather than stored in the prefab, as the meshes and materials are made in code.
         if (s_body.IsNotValid()) s_body = Materials.Lit(new Color(0.2f, 0.2f, 0.22f, 1f), 0.8f, 0.4f);
         if (s_flame.IsNotValid()) s_flame = Materials.Lit(new Color(0f, 0f, 0f, 1f), 0f, 1f).Emissive(new Color(1f, 0.55f, 0.15f, 1f), 6f);
 
         var nozzle = new GameObject("Nozzle");
-        nozzle.SetParent(go, false);
+        nozzle.SetParent(GameObject, false);
         nozzle.Transform.LocalScale = new Float3(Radius * 2f, Height, Radius * 2f);
         var renderer = nozzle.AddComponent<MeshRenderer>();
         renderer.Mesh = Shapes.Cylinder;
         renderer.Material = s_body;
 
         var flame = new GameObject("Flame");
-        flame.SetParent(go, false);
+        flame.SetParent(GameObject, false);
         flame.Transform.LocalPosition = new Float3(0f, Height * 0.5f + 0.15f, 0f);
         flame.Transform.LocalScale = new Float3(Radius * 1.3f, 0.3f, Radius * 1.3f);
-        var glow = flame.AddComponent<MeshRenderer>();
-        glow.Mesh = Shapes.Cylinder;
-        glow.Material = s_flame;
-        glow.Enabled = false;
-
-        var prop = go.AddComponent<ThrusterProp>();
-        prop.Set(force, forward, back, toggle);
-        return go;
+        _flame = flame.AddComponent<MeshRenderer>();
+        _flame.Mesh = Shapes.Cylinder;
+        _flame.Material = s_flame;
+        _flame.Enabled = false;
     }
 
     public void Set(float force, KeyCode forward, KeyCode back, bool toggle)
@@ -76,7 +82,7 @@ public sealed class ThrusterProp : Component
         Forward = forward;
         Back = back;
         Toggle = toggle;
-        _thrust = 0;
+        Thrust = 0;
     }
 
     public override void Update()
@@ -89,26 +95,23 @@ public sealed class ThrusterProp : Component
         {
             if (Toggle && (!Controller.IsValid() || Controller.IsLocalPlayer || Controller.EquipmentInput.Revision != _inputRevision))
             {
-                if (Pressed(Forward)) _thrust = _thrust == 1 ? 0 : 1;
-                if (Pressed(Back)) _thrust = _thrust == -1 ? 0 : -1;
+                if (Pressed(Forward)) Thrust = Thrust == 1 ? 0 : 1;
+                if (Pressed(Back)) Thrust = Thrust == -1 ? 0 : -1;
             }
             else if (!Toggle)
             {
-                _thrust = (Down(Forward) ? 1 : 0) - (Down(Back) ? 1 : 0);
+                Thrust = (Down(Forward) ? 1 : 0) - (Down(Back) ? 1 : 0);
             }
         }
 
         if (Controller.IsValid()) _inputRevision = Controller.EquipmentInput.Revision;
 
-        if (_flame.IsNotValid())
-            foreach (MeshRenderer r in GetComponentsInChildren<MeshRenderer>())
-                if (r.GameObject.Name == "Flame") _flame = r;
-        if (_flame.IsValid()) _flame.Enabled = _thrust != 0;
+        if (_flame.IsValid()) _flame.Enabled = Thrust != 0;
         // Once a thruster has its loop the clip is ignored, so a force change takes a new loop.
         if (_soundForce != Force) GameAudio.StopLoop(this);
         _soundForce = Force;
         float size = ThrusterSound.Size(Force);
-        GameAudio.SetLoop(this, ThrusterSound.Clip(Force), _thrust != 0, Transform.Position, true,
+        GameAudio.SetLoop(this, ThrusterSound.Clip(Force), Thrust != 0, Transform.Position, true,
             0.15f + size * 0.2f, maxDistance: 35f + size * 45f);
     }
 
@@ -116,7 +119,7 @@ public sealed class ThrusterProp : Component
 
     public override void FixedUpdate()
     {
-        if (Networking.IsClient || _thrust == 0) return;
+        if (Networking.IsClient || Thrust == 0) return;
 
         // Push the welded body directly at the nozzle, so a heavy prop is not dragged through the weld
         // by a one kilogram thruster.
@@ -127,7 +130,7 @@ public sealed class ThrusterProp : Component
 
         Float3 direction = Transform.Rotation * -Float3.UnitY;
         body.SetActive(true);
-        body.AddForceAtPosition(direction * (Force * _thrust), Transform.Position);
+        body.AddForceAtPosition(direction * (Force * Thrust), Transform.Position);
     }
 
     private static bool Usable(KeyCode key) => key != KeyCode.Unknown && key != SpawnMenu.SwallowedKey;

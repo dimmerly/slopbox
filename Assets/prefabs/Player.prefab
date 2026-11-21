@@ -1,0 +1,146 @@
+{
+  "$id": 1,
+  "$type": "Prowl.Runtime.GameObject, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "Name": "Player",
+  "Identifier": "f6ce5bea-0410-4f87-a8cf-5fc06e2c0458",
+  "Static": 0B,
+  "Enabled": 1B,
+  "EnabledInHierarchy": 1B,
+  "TagIndex": 0,
+  "LayerIndex": 0,
+  "HideFlags": 0,
+  "Transform": {
+    "$id": 2,
+    "$type": "Prowl.Vector.Transform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "_localPosition": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F
+    },
+    "_localScale": {
+      "X": 1F,
+      "Y": 1F,
+      "Z": 1F
+    },
+    "_localRotation": {
+      "X": 0F,
+      "Y": 0F,
+      "Z": 0F,
+      "W": 1F
+    }
+  },
+  "Components": [
+    {
+      "$id": 3,
+      "$type": "Prowl.Runtime.CharacterController, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "Shape": 1L,
+      "Radius": 0.5F,
+      "Height": 1.8F,
+      "SkinWidth": 0.02F,
+      "CollisionMask": {
+        "mask": 4294967295U
+      },
+      "MaxSlopeAngle": 55F,
+      "SnapDownDistance": 0.5F,
+      "StepSize": 0.3F,
+      "RideMovingPlatforms": true,
+      "MaxDepenetrationIterations": 8,
+      "DepenetrationBias": 0.001F,
+      "_identifier": "c8efd7ef-d085-4864-878f-51328cca13e2",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewCharacterController"
+    },
+    {
+      "$id": 4,
+      "$type": "Slopbox.PlayerController, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "NormalSpeed": 4.5F,
+      "SprintSpeed": 7.5F,
+      "SlowWalkSpeed": 2F,
+      "DuckSpeedScale": 0.34F,
+      "Acceleration": 10F,
+      "AirAcceleration": 10F,
+      "Friction": 6F,
+      "StopSpeed": 1.9F,
+      "AirSpeedCap": 0.6F,
+      "Gravity": 15F,
+      "JumpHeight": 0.85F,
+      "JumpBuffer": 0.1F,
+      "Radius": 0.4F,
+      "StandHeight": 1.83F,
+      "DuckHeight": 1.05F,
+      "StandEyeHeight": 1.65F,
+      "DuckEyeHeight": 0.88F,
+      "StepSize": 0.4F,
+      "MaxSlope": 46F,
+      "EyeSpeed": 10F,
+      "NoclipSpeed": 10F,
+      "NoclipFastSpeed": 30F,
+      "NoclipSlowSpeed": 3F,
+      "PushForce": 500F,
+      "Velocity": {
+        "X": 0F,
+        "Y": 0F,
+        "Z": 0F
+      },
+      "_identifier": "3c503100-ebc7-4ec4-b04b-3a49ecf26cac",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewPlayerController"
+    },
+    {
+      "$id": 5,
+      "$type": "Prowl.Runtime.Networking.NetworkAnimator, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "Animator": NULL,
+      "ParameterTolerance": 0.01F,
+      "SendInterval": 0.1F,
+      "_identifier": "db22b5dd-0814-476a-bcd8-253c48e66e9d",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkAnimator"
+    },
+    {
+      "$id": 6,
+      "$type": "Slopbox.Player, Slopbox.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "Yaw": 0F,
+      "Pitch": 0F,
+      "_identifier": "e56e6494-f76b-407c-986a-4bfb198765db",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewPlayer"
+    },
+    {
+      "$id": 7,
+      "$type": "Prowl.Runtime.Networking.NetworkTransform, Prowl.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "SyncPosition": true,
+      "SyncRotation": true,
+      "SyncScale": false,
+      "Interpolate": true,
+      "SendInterval": 1,
+      "Target": NULL,
+      "_identifier": "6a2d2297-e47b-401b-a737-441fb30567be",
+      "_enabled": true,
+      "_enabledInHierarchy": true,
+      "HideFlags": 0L,
+      "Name": "NewNetworkTransform"
+    }
+  ],
+  "Children": [
+
+  ],
+  "Prefab": {
+    "$id": 8,
+    "AssetId": "00000000-0000-0000-0000-000000000000",
+    "SourceIdentifier": "f6ce5bea-0410-4f87-a8cf-5fc06e2c0458",
+    "Overrides": {
+      "$id": 9,
+      "$values": [
+
+      ]
+    }
+  }
+}

@@ -12,8 +12,8 @@ namespace Slopbox;
 public enum SpawnIcon { Model, Cube, Sphere, Cylinder, Plate, Light }
 
 /// <summary>
-/// One entry in the spawn menu. <see cref="Create"/> builds the object detached from the scene, fully
-/// set up with its physics; the <see cref="Spawner"/> places it and adds it.
+/// One entry in the spawn menu. Spawning it makes a networked <see cref="Prop"/> shell from <see cref="Shell"/>,
+/// and every peer builds the visible part under it with <see cref="CreateModel"/> from its own content.
 /// </summary>
 public abstract class Spawnable
 {
@@ -33,8 +33,15 @@ public abstract class Spawnable
     /// <summary>How strongly the spawn menu thumbnail is lit. Textured models tend to be dark and want more.</summary>
     public virtual float ThumbnailLighting => 0.6f;
 
-    /// <summary>Builds the object, not yet in any scene. Return null if it could not be made.</summary>
-    public abstract GameObject Create();
+    /// <summary>
+    /// Builds what the prop shows and collides with, not yet in any scene: renderers and colliders, no rigidbody
+    /// and no <see cref="Prop"/>. Colliders join the shell's rigidbody. <paramref name="mass"/> is what the body
+    /// should weigh, or 0 to leave it. Return null if it could not be made.
+    /// </summary>
+    public abstract GameObject CreateModel(out float mass);
+
+    /// <summary>The networked prefab the model goes under: a prop with a rigidbody unless overridden.</summary>
+    public virtual PrefabAsset Shell(GameManager game) => game.PropPrefab;
 
     /// <summary>False for entries too big to preview or place in batches, such as maps. They get no thumbnail and the placer skips them.</summary>
     public virtual bool IsProp => true;
@@ -97,8 +104,9 @@ public sealed class ModelSpawnable : Spawnable
         Group = parts.Length > 2 ? Prettify(parts[^2]).Replace(" And ", " & ") : "";
     }
 
-    public override GameObject Create()
+    public override GameObject CreateModel(out float mass)
     {
+        mass = 0f;
         if (_prefab.IsNotValid()) _prefab = AssetDatabase.Get<PrefabAsset>(AssetId);
         PrefabAsset prefab = _prefab;
         if (prefab.IsNotValid()) return null;
@@ -114,26 +122,22 @@ public sealed class ModelSpawnable : Spawnable
         go.Transform.Position = Float3.Zero;
         go.Transform.Rotation = Quaternion.Identity;
 
-        AddBoxPhysics(go, Id);
+        mass = AddBox(go);
         return go;
     }
 
     /// <summary>
-    /// Makes a model a prop: one box around the whole model, a rigidbody weighed by the box's volume, and a
-    /// <see cref="Prop"/>. Flat models get a little thickness so they cannot tunnel.
+    /// Gives a model one box collider around all of it, and returns a mass for it by the box's volume. Flat
+    /// models get a little thickness so they cannot tunnel.
     /// </summary>
-    public static void AddBoxPhysics(GameObject go, string spawnId)
+    public static float AddBox(GameObject go)
     {
         AABB bounds = Spawner.LocalBounds(go);
         Float3 size = Maths.Max(bounds.Size, new Float3(0.02f));
         var collider = go.AddComponent<BoxCollider>();
         collider.Size = size;
         collider.Center = bounds.Center;
-
-        var body = go.AddComponent<Rigidbody3D>();
-        body.Mass = Math.Clamp(size.X * size.Y * size.Z * Density, 2f, 500f);
-
-        go.AddComponent<Prop>().SpawnId = spawnId;
+        return Math.Clamp(size.X * size.Y * size.Z * Density, 2f, 500f);
     }
 }
 
@@ -156,14 +160,15 @@ public sealed class MountSpawnable : Spawnable
         Group = loader.Mount.Title + "/" + KindOf(loader.RelativePath, loader.Mount is Slopbox.Mounting.Source.SourceMount);
     }
 
-    public override GameObject Create()
+    public override GameObject CreateModel(out float mass)
     {
+        mass = 0f;
         var model = Loader.GetOrCreate<MountedModel>();
         if (model == null || model.Parts.Count == 0) return null;
 
         GameObject go = model.Instantiate(skinned: false);
         go.Name = Name;
-        ModelSpawnable.AddBoxPhysics(go, Id);
+        mass = ModelSpawnable.AddBox(go);
         return go;
     }
 
@@ -224,8 +229,9 @@ public sealed class ShapeSpawnable : Spawnable
         _mass = mass;
     }
 
-    public override GameObject Create()
+    public override GameObject CreateModel(out float mass)
     {
+        mass = _mass;
         // Every spawn of this entry shares one mesh and material. Tinting clones the material per prop.
         if (_mesh.IsNotValid())
         {
@@ -258,8 +264,6 @@ public sealed class ShapeSpawnable : Spawnable
                 break;
         }
 
-        go.AddComponent<Rigidbody3D>().Mass = _mass;
-        go.AddComponent<Prop>().SpawnId = Id;
         return go;
     }
 }
@@ -284,8 +288,12 @@ public sealed class MapSpawnable : Spawnable
         Group = loader.Mount.Title + "/Maps";
     }
 
-    public override GameObject Create()
+    /// <summary>A map doesn't move, so its shell has no rigidbody.</summary>
+    public override PrefabAsset Shell(GameManager game) => game.MapPrefab;
+
+    public override GameObject CreateModel(out float mass)
     {
+        mass = 0f;
         var map = Loader.GetOrCreate<MountedMap>();
         if (map == null || map.Parts.Count == 0) return null;
 
@@ -298,7 +306,6 @@ public sealed class MapSpawnable : Spawnable
 
         go.AddComponent<MapProp>().Bind(this, map, geometry);
         if (map.Audio != null) go.AddComponent<MapAmbience>().Bind(map, geometry);
-        go.AddComponent<Prop>().SpawnId = Id;
         return go;
     }
 }

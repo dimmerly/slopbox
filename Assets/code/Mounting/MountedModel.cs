@@ -144,7 +144,6 @@ public sealed class MountedModel : IDisposable
     {
         var skeleton = new GameObject("Skeleton");
         // Only ever a local visual, as the parts are
-        skeleton.Network.Mode = Prowl.Runtime.Networking.NetworkMode.Never;
         skeleton.SetParent(root, false);
         var bones = new Transform[Bones.Count];
         bool hierarchy = HasHierarchy;

@@ -62,6 +62,7 @@ public sealed class PhysPropTool : BaseTool
 
     private static void Apply(Rigidbody3D body, (bool Gravity, float Mass, float Restitution, float Friction) p)
     {
+        Prop.Reclaim(body);
         body.AffectedByGravity = p.Gravity;
         body.Mass = p.Mass;
         body.Restitution = p.Restitution;

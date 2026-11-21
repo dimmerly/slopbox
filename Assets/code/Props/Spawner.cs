@@ -43,23 +43,14 @@ public static class Spawner
     /// <summary>Builds <paramref name="spawnable"/> so it rests on a surface at <paramref name="point"/>.</summary>
     public static GameObject Spawn(Spawnable spawnable, Float3 point, Float3 normal, Quaternion rotation)
     {
-        GameObject go;
-        try
-        {
-            go = spawnable.Create();
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-            go = null;
-        }
-
-        if (go.IsNotValid())
+        Prop prop = Prop.Spawn(spawnable, point, rotation);
+        if (prop.IsNotValid())
         {
             Notify.Error($"Could not spawn {spawnable.Name}");
             return null;
         }
 
+        GameObject go = prop.GameObject;
         // Push the object out along the normal until the bounds corner deepest into the surface touches it.
         AABB bounds = LocalBounds(go);
         Float3 localDown = Quaternion.Inverse(rotation) * -normal;
@@ -69,9 +60,7 @@ public static class Spawner
             localDown.Z >= 0f ? bounds.Max.Z : bounds.Min.Z);
         float lift = -Float3.Dot(rotation * deepest, normal);
 
-        go.Transform.Position = point + normal * (lift + 0.01f);
-        go.Transform.Rotation = rotation;
-        go.MoveTo(SceneInstance.Active.ActiveSection);
+        go.Network.Teleport(point + normal * (lift + 0.01f), rotation);
         return go;
     }
 

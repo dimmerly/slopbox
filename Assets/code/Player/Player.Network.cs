@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Prowl.Courier;
 using Prowl.Runtime;
 using Prowl.Runtime.Networking;
 using Prowl.Runtime.Resources;
@@ -9,15 +10,21 @@ namespace Slopbox;
 
 public sealed partial class Player
 {
-    [Sync] public float AimYaw { get; set; }
-    [Sync] public float AimPitch { get; set; }
-    [Sync] public Float3 MoveVelocity { get; set; }
-    [Sync] public float EyeLevel { get; set; } = 1.65f;
-    [Sync] public int EquipmentSlot { get; set; }
-    [Sync] public bool LightOn { get; set; }
-    [Sync(SyncFlags.FromHost)] public bool NetworkHolding { get; set; }
-    [Sync(SyncFlags.FromHost)] public Float3 HeldPoint { get; set; }
-    [Sync(SyncFlags.FromHost)] public string ToolStatus { get; set; } = "";
+    [Sync(SyncFlags.FromOwner)] public float AimYaw { get; set; }
+    [Sync(SyncFlags.FromOwner)] public float AimPitch { get; set; }
+    [Sync(SyncFlags.FromOwner)] public Float3 MoveVelocity { get; set; }
+    [Sync(SyncFlags.FromOwner)] public float EyeLevel { get; set; } = 1.65f;
+    [Sync(SyncFlags.FromOwner)] public int EquipmentSlot { get; set; }
+    [Sync(SyncFlags.FromOwner)] public bool LightOn { get; set; }
+    [Sync] public bool NetworkHolding { get; set; }
+    [Sync] public Float3 HeldPoint { get; set; }
+    /// <summary>What is held and where on it, so a client draws the beam to the held object as it shows it.</summary>
+    [Sync] public GameObject HeldObject { get; set; }
+    [Sync] public Float3 HeldAnchor { get; set; }
+    /// <summary>What a client holds and where on it, for a prop it drives itself.</summary>
+    [Sync(SyncFlags.FromOwner)] public GameObject LocalHeld { get; set; }
+    [Sync(SyncFlags.FromOwner)] public Float3 LocalHeldAnchor { get; set; }
+    [Sync] public string ToolStatus { get; set; } = "";
     private Beam _networkBeam;
     public ToolRegistry Tools { get; } = new();
     public UndoHistory Undo { get; } = new();
@@ -72,7 +79,7 @@ public sealed partial class Player
         _pendingInput = default;
     }
 
-    [Rpc.Host(RpcFlags.OwnerOnly)]
+    [Rpc.Host]
     private void SubmitEquipment(EquipmentInput input)
     {
         if (!Networking.IsHost || !_ready) return;
@@ -88,7 +95,7 @@ public sealed partial class Player
         Yaw = AimYaw; Pitch = AimPitch;
     }
 
-    [Rpc.Host(RpcFlags.OwnerOnly)]
+    [Rpc.Host]
     public void RequestSpawn(string id)
     {
         if (!Networking.IsHost) return;
@@ -97,14 +104,26 @@ public sealed partial class Player
         RunAuthoritative(() => Spawner.SpawnAtCrosshair(this, source));
     }
 
-    [Rpc.Host(RpcFlags.OwnerOnly)]
+    /// <summary>Asks the host to hand <paramref name="target"/> over, so this player's client moves it itself.</summary>
+    [Rpc.Host]
+    public void RequestControl(GameObject target)
+    {
+        if (!Networking.IsHost || target.IsNotValid() || !target.TryGetComponent(out Rigidbody3D body)) return;
+        NetPeer peer = Network.Owner;
+        if (peer == null || !Prop.ClientMayDrive(body) || target.Network.Owner == peer) return;
+        // The prop stays in the world when its driver leaves, back with the host.
+        target.Network.Orphaned = NetworkOrphaned.ClearOwner;
+        target.Network.AssignOwnership(peer);
+    }
+
+    [Rpc.Host]
     public void RequestUndo()
     {
         if (!Networking.IsHost) return;
         RunAuthoritative(() => Undo.UndoLast());
     }
 
-    [Rpc.Host(RpcFlags.OwnerOnly)]
+    [Rpc.Host]
     public void RequestTool(string name, string settings, int action, string payload, string listed)
     {
         if (!Networking.IsHost || !_ready) return;
@@ -120,7 +139,7 @@ public sealed partial class Player
         ReceiveTool(name, ToolSettings.Write(tool), tool is DuplicatorTool dupe ? dupe.NetworkCopy : "", tool is AnimationTool animation ? animation.SelectedObject : null);
     }
 
-    [Rpc.Owner(RpcFlags.HostOnly)]
+    [Rpc.Owner]
     private void ReceiveTool(string name, string settings, string copied, GameObject selected)
     {
         if (!IsLocalPlayer) return;
@@ -131,10 +150,10 @@ public sealed partial class Player
         if (tool is DuplicatorTool dupe && copied.Length > 0) dupe.LoadNetworkCopy(copied);
     }
 
-    [Rpc.Owner(RpcFlags.HostOnly)]
+    [Rpc.Owner]
     public void ReceiveNotice(string message, NotifyKind kind) => Notify.Post(message, kind);
 
-    [Rpc.Host(RpcFlags.OwnerOnly)]
+    [Rpc.Host]
     public void RequestAnimation(GameObject target, int sequence, float speed)
     {
         if (!Networking.IsHost || target.IsNotValid()) return;
@@ -153,27 +172,53 @@ public sealed partial class Player
         finally { game.ActingPlayer = previous; }
     }
 
-    [Rpc.Broadcast(RpcFlags.HostOnly)]
+    [Rpc.Broadcast]
     public void ShowToolShot(Float3 point) => Get<ToolGun>().ShowShot(point);
 
     internal void UpdateNetworkEffects()
     {
+        PhysicsHold hold = ActiveEquipment is Physgun ph ? ph.Hold : ActiveEquipment is GravityGun gg ? gg.Hold : null;
+        bool holdingHere = hold != null && hold.IsHolding;
+
         if (Networking.IsHost)
         {
-            NetworkHolding = ActiveEquipment is Physgun phys && phys.IsHolding || ActiveEquipment is GravityGun grav && grav.IsHolding;
-            HeldPoint = ActiveEquipment is Physgun p ? p.HoldPoint : ActiveEquipment is GravityGun g ? g.HoldPoint : Float3.Zero;
+            NetworkHolding = holdingHere;
+            HeldPoint = holdingHere ? hold.WorldAnchor : Float3.Zero;
+            HeldObject = holdingHere ? hold.Body.GameObject : null;
+            HeldAnchor = holdingHere ? hold.LocalAnchor : Float3.Zero;
             if (!IsLocalPlayer) EquipmentInput.KeysPressed = "";
         }
-        else if (Networking.IsClient)
+        else if (Networking.IsClient && IsLocalPlayer)
         {
-            if (NetworkHolding && ActiveEquipment is Physgun)
-            {
-                if (_networkBeam == null || !_networkBeam.IsValid) _networkBeam = new Beam("Physgun Beam", new Color(0.3f, 1.1f, 3f, 1f), 0.015f);
-                _networkBeam.Curve(MuzzlePosition, Maths.Lerp(MuzzlePosition, HeldPoint, 0.5f) - Float3.UnitY * 0.2f, HeldPoint);
-            }
-            else _networkBeam?.Hide();
-            GameAudio.SetLoop(this, "hum", NetworkHolding, EyePosition, true, 0.1f);
+            LocalHeld = holdingHere ? hold.Body.GameObject : null;
+            LocalHeldAnchor = holdingHere ? hold.LocalAnchor : Float3.Zero;
         }
+        if (!Network.Active) return;
+
+        // A hold run on this peer draws its own beam. One run elsewhere is drawn here from what it synced: the
+        // host's, or the client's own for a prop it drives.
+        GameObject held = null;
+        Float3 end = Float3.Zero;
+        bool shown = false;
+        if (!holdingHere && NetworkHolding)
+        {
+            (held, end, shown) = (HeldObject, HeldPoint, true);
+            if (held.IsValid()) end = held.Transform.Position + held.Transform.Rotation * HeldAnchor;
+        }
+        else if (!holdingHere && LocalHeld.IsValid())
+        {
+            held = LocalHeld;
+            end = held.Transform.Position + held.Transform.Rotation * LocalHeldAnchor;
+            shown = true;
+        }
+
+        if (shown && ActiveEquipment is Physgun)
+        {
+            if (_networkBeam == null || !_networkBeam.IsValid) _networkBeam = new Beam("Physgun Beam", new Color(0.3f, 1.1f, 3f, 1f), 0.015f);
+            _networkBeam.Curve(MuzzlePosition, Maths.Lerp(MuzzlePosition, end, 0.5f) - Float3.UnitY * 0.2f, end);
+        }
+        else _networkBeam?.Hide();
+        GameAudio.SetLoop(this, "hum", shown, EyePosition, true, 0.1f);
     }
 
     internal void UpdateNetworkPlayer()

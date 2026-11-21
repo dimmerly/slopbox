@@ -90,7 +90,7 @@ public sealed partial class Player
         }
 
         CaptureEquipmentInput();
-        if (!Networking.IsClient) ActiveEquipment?.Update();
+        if (!Networking.IsClient || ActiveEquipment is { RunsOnClient: true }) ActiveEquipment?.Update();
         else if (ActiveEquipment is ToolGun toolgun) toolgun.Update();
     }
 

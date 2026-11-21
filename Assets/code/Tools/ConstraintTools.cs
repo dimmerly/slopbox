@@ -61,12 +61,7 @@ public sealed class RopeTool : TwoPointTool
         float length = Float3.Distance(pointA, pointB) + Slack;
         DistanceLimitConstraint rope = Constraints.Rope(a, pointA, b, pointB, length);
 
-        var visual = new GameObject("Rope");
-        RopeVisual draw = visual.AddComponent<RopeVisual>();
-        draw.Constraint = rope;
-        draw.Color = Color;
-        draw.Width = Width;
-        visual.MoveTo(Prowl.Runtime.Resources.SceneInstance.Active.ActiveSection);
+        GameObject visual = RopeVisual.Create(rope, Color, Width).GameObject;
 
         Undo.Add("Rope", rope, visual);
         return true;
